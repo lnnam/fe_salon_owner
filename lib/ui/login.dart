@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:salonapp/constants.dart';
@@ -5,6 +6,7 @@ import 'package:salonapp/services/helper.dart';
 import 'package:salonapp/api/api_manager.dart';
 import 'package:salonapp/model/user.dart';
 import 'package:salonapp/main.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 
 class Login extends StatefulWidget {
@@ -213,27 +215,26 @@ class _LoginState extends State<Login> {
 
   _login() async {
     if (_key.currentState?.validate() ?? false) {
-
       _key.currentState!.save();
 
-      dynamic result = await apiManager.salonLogin(salonkey!.trim(), username!.trim(), password!.trim());
+      dynamic result = await apiManager.salonLogin(
+          salonkey!.trim(), username!.trim(), password!.trim());
 
-        if (!context.mounted) return;
-        // await showProgress(context, 'loggingInPleaseWait'.tr(), false);
+      if (!context.mounted) return;
+      // await showProgress(context, 'loggingInPleaseWait'.tr(), false);
 
-        if (result != null && result is User) {
-            MyAppState.currentUser = result;
-            // pushAndRemoveUntil(context, HomeScreen(user: result), false);
-          //  print(result);
-            Navigator.pushReplacementNamed(context, '/dashboard');
-            
+      if (result != null && result is User) {
+        MyAppState.currentUser = result;
+       // Save token and user info to shared preferences
+        final prefs = await SharedPreferences.getInstance();
+        await prefs.setString('objuser', json.encode(result.toJson()));
+        Navigator.pushReplacementNamed(context, '/dashboard');
+      } else {
+        showAlertDialog(context, 'Couldn\'t Authenticate'.tr(),
+            'Login failed, Please try again.'.tr());
+      }
 
-          } else {
-            showAlertDialog(context, 'Couldn\'t Authenticate'.tr(),
-                'Login failed, Please try again.'.tr());
-          } 
-
-     // await myPopup(context, result);
+      // await myPopup(context, result);
 
       //  dynamic result = await apiManager.salonLogin(salonkey!.trim(),  username!.trim(), password!.trim());
       //  showAlertDialog(context, 'kdjfdskfjk', result);

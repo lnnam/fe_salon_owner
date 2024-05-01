@@ -7,6 +7,8 @@ import 'package:salonapp/ui/home.dart';
 import 'package:salonapp/ui/login.dart';
 import 'package:salonapp/ui/dashboard.dart';
 import 'package:salonapp/model/user.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -43,19 +45,20 @@ class MyAppState extends State<MyApp> with WidgetsBindingObserver {
       theme: ThemeData(
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
         useMaterial3: true,
+        
       ),
       // home: const Login(title: 'Salon management system'),
-      //home:  Dashboard(),
-      initialRoute: '/',
+       initialRoute: '/',
       routes: {
         '/': (context) => AuthChecker(),
         '/dashboard': (context) => Dashboard(),
         '/login': (context) => Login(title: 'Salon management system'),
         '/logout': (context) => Login(title: 'Salon management system'),
-      },
+      }, 
     );
   }
 }
+
 
 class AuthChecker extends StatelessWidget {
   
@@ -66,10 +69,6 @@ class AuthChecker extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-
-    final  user = MyAppState.currentUser;
-
-   print(MyAppState.currentUser); // Print user details
 
     return FutureBuilder<bool>(
       future: Future<bool>.delayed(Duration(seconds: 2), () => false), // Implement this method in ApiService
@@ -87,3 +86,4 @@ class AuthChecker extends StatelessWidget {
     );
   }
 }
+
