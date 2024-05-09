@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:salonapp/services/helper.dart';
+import 'package:salonapp/constants.dart';
 
 
-class AppDrawer extends StatelessWidget {
+class AppDrawerDashboard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Drawer(
@@ -10,7 +12,7 @@ class AppDrawer extends StatelessWidget {
         children: <Widget>[
           DrawerHeader(
             decoration: BoxDecoration(
-              color: Colors.blue,
+              color:  Color(COLOR_PRIMARY),
             ),
             child: Text(
               'Salon name ',
@@ -21,21 +23,21 @@ class AppDrawer extends StatelessWidget {
             ),
           ),
           ListTile(
-            title: Text('Dashboard'),
+            title: Text('Profile'),
             onTap: () {
-              Navigator.pushReplacementNamed(context, '/dashboard');
+              Navigator.pushReplacementNamed(context, '/profile');
             },
           ),
           ListTile(
-            title: Text('Appointment'),
+            title: Text('Setting'),
             onTap: () {
-              Navigator.pushReplacementNamed(context, '/appointment');
+              Navigator.pushReplacementNamed(context, '/setting');
             },
           ),
           ListTile(
             title: Text('Logout'),
             onTap: () {
-              Navigator.pushReplacementNamed(context, '/signout');
+              logout(context);
             },
           ),
         ],

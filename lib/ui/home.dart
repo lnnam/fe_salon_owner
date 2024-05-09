@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:salonapp/ui/common/drawer.dart';
+import 'package:salonapp/ui/common/drawer_dashboard.dart';
 import 'package:salonapp/model/user.dart';
 
 class Home extends StatelessWidget {
@@ -11,8 +11,9 @@ class Home extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(
         title: Text('Salon APP'),
+        iconTheme: IconThemeData(color: Colors.white)
       ),
-      drawer: AppDrawer(),
+      drawer: AppDrawerDashboard(),
       body: Center(
         child: ElevatedButton(
           onPressed: () {

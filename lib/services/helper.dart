@@ -1,13 +1,18 @@
 import 'dart:async';
 import 'dart:io';
-
+import 'dart:convert';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:salonapp/constants.dart';
-import 'package:intl/intl.dart';
 import 'package:progress_dialog_null_safe/progress_dialog_null_safe.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:salonapp/model/user.dart';
+
+import 'dart:io' show Platform;
+
+
 
 String? validateFeild(String? value) {
   if (value?.isEmpty ?? true) {
@@ -295,3 +300,19 @@ String audioMessageTime(Duration? audioDuration) {
       twoDigits(audioDuration?.inSeconds.remainder(60) ?? 0);
   return '${twoDigitsHours(audioDuration?.inHours ?? 0)}$twoDigitMinutes:$twoDigitSeconds';
 }
+
+ logout(BuildContext context) async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    await prefs.clear();
+   // Navigator.popUntil(context, ModalRoute.withName('/'));
+    Navigator.pushReplacementNamed(context, '/login');
+  }
+
+
+Future<User> getCurrentUser() async {
+    final prefs = await SharedPreferences.getInstance();
+    final userData = prefs.getString('objuser') ?? '{}';
+    final userJson = json.decode(userData);
+    return User.fromJson(userJson);
+  }
+

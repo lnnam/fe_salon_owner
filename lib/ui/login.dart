@@ -7,22 +7,11 @@ import 'package:salonapp/api/api_manager.dart';
 import 'package:salonapp/model/user.dart';
 import 'package:salonapp/main.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
 
 
 class Login extends StatefulWidget {
-  const Login({super.key, required this.title});
-
-  // This widget is the home page of your application. It is stateful, meaning
-  // that it has a State object (defined below) that contains fields that affect
-  // how it looks.
-
-  // This class is the configuration for the state. It holds the values (in this
-  // case the title) provided by the parent (in this case the App widget) and
-  // used by the build method of the State. Fields in a Widget subclass are
-  // always marked "final".
-
-  final String title;
-
+  const Login({Key? key});
   @override
   State<Login> createState() => _LoginState();
 }
@@ -36,15 +25,17 @@ class _LoginState extends State<Login> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-          title: Text(widget.title, style: TextStyle(color: Colors.white)),
-          backgroundColor: Color(COLOR_PRIMARY),
-          iconTheme: IconThemeData(
-              color: isDarkMode(context) ? Colors.white : Colors.black),
-          elevation: 0.0),
+        title: Text("Beauty Salon", style: TextStyle(color: Colors.white)),
+        backgroundColor: Color(COLOR_PRIMARY),
+        iconTheme: IconThemeData(
+            color: isDarkMode(context) ? Colors.white : Colors.black),
+        elevation: 0.0,
+      ),
       body: Form(
         key: _key,
         child: ListView(
           children: <Widget>[
+            // Your form fields here...
             Padding(
               padding:
                   const EdgeInsets.only(top: 32.0, right: 16.0, left: 16.0),
@@ -181,13 +172,16 @@ class _LoginState extends State<Login> {
               ),
             ),
             Padding(
-              padding: const EdgeInsets.only(right: 40.0, left: 40.0, top: 40),
+              padding: const EdgeInsets.only(
+                  right: 40.0, left: 40.0, top: 40),
               child: ConstrainedBox(
-                constraints: const BoxConstraints(minWidth: double.infinity),
+                constraints: const BoxConstraints(
+                    minWidth: double.infinity),
                 child: ElevatedButton(
                   style: ElevatedButton.styleFrom(
                     backgroundColor: const Color(COLOR_PRIMARY),
-                    padding: const EdgeInsets.only(top: 12, bottom: 12),
+                    padding:
+                        const EdgeInsets.only(top: 12, bottom: 12),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(25.0),
                       side: const BorderSide(
@@ -200,7 +194,9 @@ class _LoginState extends State<Login> {
                     style: TextStyle(
                       fontSize: 20,
                       fontWeight: FontWeight.bold,
-                      color: isDarkMode(context) ? Colors.black : Colors.white,
+                      color: isDarkMode(context)
+                          ? Colors.black
+                          : Colors.white,
                     ),
                   ),
                   onPressed: () => _login(),
@@ -220,43 +216,41 @@ class _LoginState extends State<Login> {
       dynamic result = await apiManager.salonLogin(
           salonkey!.trim(), username!.trim(), password!.trim());
 
-      if (!context.mounted) return;
-      // await showProgress(context, 'loggingInPleaseWait'.tr(), false);
-
       if (result != null && result is User) {
-        MyAppState.currentUser = result;
-       // Save token and user info to shared preferences
-        final prefs = await SharedPreferences.getInstance();
-        await prefs.setString('objuser', json.encode(result.toJson()));
+        // Save token and user info
+        if (kIsWeb) {
+          // Store in cookies
+          //setCookie('objuser', json.encode(result.toJson()));
+           await setUserInfo(result);
+        } else {
+          // Store in SharedPreferences
+          await setUserInfo(result);
+        }
+
         Navigator.pushReplacementNamed(context, '/dashboard');
       } else {
-        showAlertDialog(context, 'Couldn\'t Authenticate'.tr(),
+        showAlertDialog(
+            context,
+            'Couldn\'t Authenticate'.tr(),
             'Login failed, Please try again.'.tr());
       }
-
-      // await myPopup(context, result);
-
-      //  dynamic result = await apiManager.salonLogin(salonkey!.trim(),  username!.trim(), password!.trim());
-      //  showAlertDialog(context, 'kdjfdskfjk', result);
-      //  print(result);
-
-      // await hideProgress();
-      /*  dynamic result = await apiManager.loginWithEmailAndPassword(
-          email!.trim(), password!.trim());
-      await hideProgress();
-      if (result != null && result is User) {
-        MyAppState.currentUser = result;
-        // pushAndRemoveUntil(context, HomeScreen(user: result), false);
-      } else if (result != null && result is String) {
-        showAlertDialog(context, 'Couldn\'t Authenticate'.tr(), result.tr());
-      } else {
-        showAlertDialog(context, 'Couldn\'t Authenticate'.tr(),
-            'Login failed, Please try again.'.tr());
-      } */
     } else {
       setState(() {
         _validate = AutovalidateMode.onUserInteraction;
       });
     }
+  }
+
+  // Function to set the cookie on the web platform
+/*   void setCookie(String name, String value) {
+    final cookieString = '$name=$value; Path=/';
+    html.window.document.cookie = cookieString;
+  } */
+
+  // Function to save user information using SharedPreferences
+  Future<void> setUserInfo(User user) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString('token', user.token);
+    await prefs.setString('objuser', json.encode(user.toJson()));
   }
 }

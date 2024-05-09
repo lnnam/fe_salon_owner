@@ -8,7 +8,7 @@ import 'package:salonapp/ui/login.dart';
 import 'package:salonapp/ui/dashboard.dart';
 import 'package:salonapp/model/user.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-
+import 'package:salonapp/ui/pos/home.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -45,45 +45,49 @@ class MyAppState extends State<MyApp> with WidgetsBindingObserver {
       theme: ThemeData(
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
         useMaterial3: true,
-        
       ),
-      // home: const Login(title: 'Salon management system'),
-       initialRoute: '/',
+      // home: AuthChecker(),
+      initialRoute: '/',
       routes: {
         '/': (context) => AuthChecker(),
-        '/dashboard': (context) => Dashboard(),
-        '/login': (context) => Login(title: 'Salon management system'),
-        '/logout': (context) => Login(title: 'Salon management system'),
-      }, 
-    );
-  }
-}
-
-
-class AuthChecker extends StatelessWidget {
-  
-  static Future<bool> verifyToken(String? token) async {
-    print(token);
-    return false;
-  }
-
-  @override
-  Widget build(BuildContext context) {
-
-    return FutureBuilder<bool>(
-      future: Future<bool>.delayed(Duration(seconds: 2), () => false), // Implement this method in ApiService
-      builder: (context, snapshot) {
-        if (snapshot.connectionState == ConnectionState.waiting) {
-          return Scaffold(
-            body: Center(child: CircularProgressIndicator()),
-          );
-        } else if (snapshot.hasData && snapshot.data!) {
-          return Dashboard();
-        } else {
-          return Login(title: 'Salon management system');
-        }
+        '/dashboard': (context) => AuthChecker(),
+        '/login': (context) => Login(),
+        '/logout': (context) => Login(),
       },
     );
   }
 }
 
+class AuthChecker extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return FutureBuilder<bool>(
+      future: _checkToken(),
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return Scaffold(
+            body: Center(
+              child: CircularProgressIndicator(),
+            ),
+          );
+        } else {
+          if (snapshot.hasData && snapshot.data == true) {
+            // Token is saved, proceed to main app
+            // Update currentUser in MyAppState
+            return Dashboard();
+          } else {
+            // Token is not saved, navigate to login page
+            return Login();
+          }
+        }
+      },
+    );
+  }
+
+  Future<bool> _checkToken() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    String? token = prefs.getString('token');
+    print(token);
+    return token != null;
+  }
+}
