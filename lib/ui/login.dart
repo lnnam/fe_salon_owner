@@ -8,7 +8,7 @@ import 'package:salonapp/model/user.dart';
 import 'package:salonapp/main.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
-
+import 'package:salonapp/main.dart';
 
 class Login extends StatefulWidget {
   const Login({Key? key});
@@ -224,9 +224,10 @@ class _LoginState extends State<Login> {
            await setUserInfo(result);
         } else {
           // Store in SharedPreferences
+          
           await setUserInfo(result);
         }
-
+        MyAppState.currentUser = result;
         Navigator.pushReplacementNamed(context, '/dashboard');
       } else {
         showAlertDialog(

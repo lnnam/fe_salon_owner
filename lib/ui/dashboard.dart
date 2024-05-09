@@ -10,19 +10,9 @@ import 'package:salonapp/ui/common/drawer_dashboard.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:salonapp/constants.dart';
 import 'package:salonapp/ui/booking/home.dart';
-import 'package:salonapp/ui/pos/home.dart';
 
 
 class Dashboard extends StatelessWidget {
-
-  Future<User> _getUserInfo() async {
-    final prefs = await SharedPreferences.getInstance();
-    final userData = prefs.getString('objuser') ?? '{}';
-    final userJson = json.decode(userData);
-    return User.fromJson(userJson);
-  }
-
-  MyAppState.currentUser = _getUserInfo();
 
   @override
   Widget build(BuildContext context) {
@@ -56,13 +46,13 @@ class Dashboard extends StatelessWidget {
               crossAxisCount: 2,
               children: [
                 _buildDashboardButton(context, 'Appointment', Icons.event,
-                    color, BookingHomeScreen()),
+                    color, '/booking'),
                 _buildDashboardButton(context, 'Go Sale', Icons.shopping_cart,
-                    color, SaleScreen()),
+                    color, '/pos'),
                 _buildDashboardButton(context, 'Go Check-in',
-                    Icons.check_circle, color, CheckInScreen()),
+                    Icons.check_circle, color, '/checkin'),
                 _buildDashboardButton(context, 'Go Check-out',
-                    Icons.check_circle_outline, color, CheckOutScreen()),
+                    Icons.check_circle_outline, color, '/checkout'),
               ],
             ),
           ),
@@ -77,31 +67,25 @@ class Dashboard extends StatelessWidget {
             children: [
               IconButton(
                 onPressed: () {
-                  Navigator.push(context,
-                      MaterialPageRoute(builder: (context) => BookingHomeScreen()));
+                 
                 },
                 icon: Icon(Icons.event, color: Colors.white),
               ),
               IconButton(
                 onPressed: () {
-                  Navigator.push(context,
-                      MaterialPageRoute(builder: (context) => SaleScreen()));
+                  
                 },
                 icon: Icon(Icons.shopping_cart, color: Colors.white),
               ),
               IconButton(
                 onPressed: () {
-                  Navigator.push(context,
-                      MaterialPageRoute(builder: (context) => CheckInScreen()));
+                  
                 },
                 icon: Icon(Icons.check_circle, color: Colors.white),
               ),
               IconButton(
                 onPressed: () {
-                  Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                          builder: (context) => CheckOutScreen()));
+                  
                 },
                 icon: Icon(Icons.check_circle_outline, color: Colors.white),
               ),
@@ -113,13 +97,13 @@ class Dashboard extends StatelessWidget {
   }
 
   Widget _buildDashboardButton(BuildContext context, String title,
-      IconData icon, Color color, Widget screen) {
+      IconData icon, Color color, String route) {
     return Padding(
       padding: const EdgeInsets.all(8.0),
       child: InkWell(
         onTap: () {
-          Navigator.push(
-              context, MaterialPageRoute(builder: (context) => screen));
+         // Navigator.push( context, MaterialPageRoute(builder: (context) => screen));
+          Navigator.pushReplacementNamed(context, route);
         },
         child: Card(
           elevation: 3,

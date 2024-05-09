@@ -1,5 +1,6 @@
-import 'package:flutter/material.dart';
 import 'constants.dart';
+import 'dart:convert';
+import 'package:flutter/material.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:salonapp/services/helper.dart';
 import 'package:salonapp/api/api_manager.dart';
@@ -9,6 +10,8 @@ import 'package:salonapp/ui/dashboard.dart';
 import 'package:salonapp/model/user.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:salonapp/ui/pos/home.dart';
+import 'package:salonapp/ui/booking/home.dart';
+
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -36,6 +39,31 @@ class MyApp extends StatefulWidget {
 
 class MyAppState extends State<MyApp> with WidgetsBindingObserver {
   static User? currentUser;
+ // static Future<User> currentUser;
+
+  @override
+  void initState() {
+    super.initState();
+    _initializeCurrentUser();
+  }
+
+  Future<void> _initializeCurrentUser() async {
+    final user = await _getUserInfo();
+    setState(() {
+      currentUser = user;
+          print('fdsfdsfdsfsdfsdfsdf');
+
+    });
+  }
+
+
+  Future<User> _getUserInfo() async {
+    final prefs = await SharedPreferences.getInstance();
+    final userData = prefs.getString('objuser') ?? '{}';
+    final userJson = json.decode(userData);
+    return User.fromJson(userJson);
+  }
+
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
@@ -51,6 +79,10 @@ class MyAppState extends State<MyApp> with WidgetsBindingObserver {
       routes: {
         '/': (context) => AuthChecker(),
         '/dashboard': (context) => AuthChecker(),
+        '/booking': (context) => BookingHomeScreen(),
+        '/pos': (context) => SaleScreen(),
+        '/checkin': (context) => CheckInScreen(),
+        '/checkout': (context) => CheckOutScreen(),
         '/login': (context) => Login(),
         '/logout': (context) => Login(),
       },
@@ -87,7 +119,6 @@ class AuthChecker extends StatelessWidget {
   Future<bool> _checkToken() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     String? token = prefs.getString('token');
-    print(token);
     return token != null;
   }
 }

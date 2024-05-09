@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/widgets.dart';
 import 'package:salonapp/model/booking.dart';
 import 'package:salonapp/api/api_manager.dart';
 import 'package:salonapp/constants.dart';
@@ -101,8 +102,9 @@ class BookingHomeScreen extends StatelessWidget {
         onPressed: () {
           // Add your onPressed functionality here
         },
-        child: Icon(Icons.add), // Add icon
+        child: Icon(Icons.add,  color: Colors.white,), // Add icon
         backgroundColor: color, // Set background color
+        
       ),
       bottomNavigationBar: BottomNavigationBar(
         items: [
