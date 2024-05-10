@@ -5,6 +5,7 @@ import 'package:salonapp/api/api_manager.dart';
 import 'package:salonapp/constants.dart';
 import 'package:intl/intl.dart';
 import 'package:salonapp/ui/common/drawer_booking.dart';
+import 'package:salonapp/ui/booking/calendar.dart';
 
 class BookingHomeScreen extends StatelessWidget {
   @override
@@ -19,6 +20,7 @@ class BookingHomeScreen extends StatelessWidget {
       body: FutureBuilder<List<Booking>>(
         future: apiManager.ListBooking(),
         builder: (context, snapshot) {
+         
           if (snapshot.connectionState == ConnectionState.waiting) {
             return Center(child: CircularProgressIndicator());
           } else if (snapshot.hasError) {
@@ -98,14 +100,19 @@ class BookingHomeScreen extends StatelessWidget {
           }
         },
       ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () {
-          // Add your onPressed functionality here
-        },
-        child: Icon(Icons.add,  color: Colors.white,), // Add icon
-        backgroundColor: color, // Set background color
-        
-      ),
+    floatingActionButton: FloatingActionButton(
+  onPressed: () {
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (context) => Calendar()),
+    );
+  },
+  child: Icon(Icons.add, color: Colors.white),
+  backgroundColor: color,
+),
+
+ 
+      
       bottomNavigationBar: BottomNavigationBar(
         items: [
           BottomNavigationBarItem(

@@ -1,4 +1,5 @@
 import 'package:http/http.dart' as http;
+import 'package:flutter/material.dart';
 import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import 'package:salonapp/config/app_config.dart';
@@ -62,14 +63,22 @@ class MyHttp {
       return json.decode(response.body);
     } else {
       // Request failed, throw error
-      throw 'Request failed with status: ${response.statusCode}';
+      if(response.statusCode == 401)
+        throw 'Your session has expired. Please log in again.';
+      else 
+        throw 'Request failed with status: ${response.statusCode}';
     }
   }
 
   Future<List<Booking>> ListBooking() async {
-    final response = await fetchFromServer(AppConfig.api_url_booking_home);
-      List<dynamic> data = response;
-      return data.map<Booking>((item) => Booking.fromJson(item)).toList();
-     //return response;
+   
+      try {
+          final response = await fetchFromServer(AppConfig.api_url_booking_home);
+          List<dynamic> data = response;
+          return data.map<Booking>((item) => Booking.fromJson(item)).toList();
+      } catch (error) {
+        // Handle error
+        throw error;
+      }
   }
 }
