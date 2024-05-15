@@ -104,7 +104,7 @@ class BookingHomeScreen extends StatelessWidget {
   onPressed: () {
     Navigator.push(
       context,
-      MaterialPageRoute(builder: (context) => Calendar()),
+      MaterialPageRoute(builder: (context) => BookingCalendarPage()),
     );
   },
   child: Icon(Icons.add, color: Colors.white),
