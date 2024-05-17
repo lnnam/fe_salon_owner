@@ -11,9 +11,13 @@ import 'package:salonapp/model/user.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:salonapp/ui/pos/home.dart';
 import 'package:salonapp/ui/booking/home.dart';
+import 'package:flutter/rendering.dart';
 
 
 void main() async {
+    debugPaintBaselinesEnabled = true; // Enable debug paint
+
+
   WidgetsFlutterBinding.ensureInitialized();
   await EasyLocalization.ensureInitialized();
   //runApp(const MyApp());
@@ -66,6 +70,7 @@ class MyAppState extends State<MyApp> with WidgetsBindingObserver {
 
   @override
   Widget build(BuildContext context) {
+    const color = Color(COLOR_PRIMARY);
     return MaterialApp(
       localizationsDelegates: context.localizationDelegates,
       supportedLocales: context.supportedLocales,
@@ -73,6 +78,18 @@ class MyAppState extends State<MyApp> with WidgetsBindingObserver {
       theme: ThemeData(
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
         useMaterial3: true,
+        scaffoldBackgroundColor: Colors.white,
+       
+        appBarTheme: AppBarTheme(
+          color: color, // Set default app bar background color
+          iconTheme: IconThemeData(color: Colors.white),
+         titleTextStyle: Theme.of(context).textTheme.headline6?.copyWith(
+        fontFamily: 'OpenSans',
+        fontSize: 20,
+        color: Colors.white,
+      ),
+        ),
+        
       ),
       // home: AuthChecker(),
       initialRoute: '/',

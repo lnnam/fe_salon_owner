@@ -19,9 +19,10 @@ class Dashboard extends StatelessWidget {
     final color = Color(COLOR_PRIMARY);
     return Scaffold(
       appBar: AppBar(
-        title: Text('Dashboard', style: TextStyle(color: Colors.white)),
-        iconTheme: IconThemeData(color: Colors.white),
-        backgroundColor: color, // Set app bar color
+        title: Text('Dashboard'),
+       // iconTheme: IconThemeData(color: Colors.white),
+        
+       // backgroundColor: color, // Set app bar color
       ),
       drawer: AppDrawerDashboard(),
       body: Column(

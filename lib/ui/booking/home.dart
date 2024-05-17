@@ -6,6 +6,8 @@ import 'package:salonapp/constants.dart';
 import 'package:intl/intl.dart';
 import 'package:salonapp/ui/common/drawer_booking.dart';
 import 'package:salonapp/ui/booking/calendar.dart';
+import 'package:salonapp/ui/booking/staff.dart';
+
 
 class BookingHomeScreen extends StatelessWidget {
   @override
@@ -104,7 +106,7 @@ class BookingHomeScreen extends StatelessWidget {
   onPressed: () {
     Navigator.push(
       context,
-      MaterialPageRoute(builder: (context) => BookingCalendarPage()),
+      MaterialPageRoute(builder: (context) => StaffPage()),
     );
   },
   child: Icon(Icons.add, color: Colors.white),
