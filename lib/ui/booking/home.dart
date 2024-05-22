@@ -1,13 +1,11 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/widgets.dart';
 import 'package:salonapp/model/booking.dart';
 import 'package:salonapp/api/api_manager.dart';
 import 'package:salonapp/constants.dart';
 import 'package:intl/intl.dart';
 import 'package:salonapp/ui/common/drawer_booking.dart';
-import 'package:salonapp/ui/booking/calendar.dart';
 import 'package:salonapp/ui/booking/staff.dart';
-
+import 'package:salonapp/services/helper.dart';
 
 class BookingHomeScreen extends StatelessWidget {
   @override
@@ -16,26 +14,20 @@ class BookingHomeScreen extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(
         title: Text('Appointment', style: TextStyle(color: Colors.white)),
-        backgroundColor: color, // Set app bar color
+        backgroundColor: color,
       ),
       drawer: AppDrawerBooking(),
       body: FutureBuilder<List<Booking>>(
         future: apiManager.ListBooking(),
         builder: (context, snapshot) {
-         
           if (snapshot.connectionState == ConnectionState.waiting) {
             return Center(child: CircularProgressIndicator());
           } else if (snapshot.hasError) {
             return Center(child: Text('Error: ${snapshot.error}'));
+          } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
+            return Center(child: Text('No bookings available.'));
           } else {
-            // Group the list of bookings by date
             final groupedBookings = _groupBookingsByDate(snapshot.data!);
-
-            /*  // Sort the dates in descending order
-            final sortedDates = groupedBookings.keys.toList();
-            sortedDates.sort((a, b) => b.compareTo(a)); */
-
-            // Sort the dates in ascending order
             final sortedDates = groupedBookings.keys.toList();
             sortedDates.sort((a, b) => a.compareTo(b));
 
@@ -48,12 +40,9 @@ class BookingHomeScreen extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Container(
-                      // Header container
-                      width: double.infinity, // Set width to 100% of the screen
-                      color: color.withOpacity(
-                          0.2), // Use a transparent version of the primary color
-                      padding:
-                          EdgeInsets.symmetric(vertical: 8.0, horizontal: 16.0),
+                      width: double.infinity,
+                      color: color.withOpacity(0.2),
+                      padding: EdgeInsets.symmetric(vertical: 8.0, horizontal: 16.0),
                       child: Text(
                         _formatDate(date),
                         style: TextStyle(
@@ -65,15 +54,22 @@ class BookingHomeScreen extends StatelessWidget {
                     ),
                     Column(
                       children: bookings.map((booking) {
+                        ImageProvider imageProvider;
+                        try {
+                          imageProvider = getImage(booking.customerphoto) ??
+                              AssetImage('assets/default_avatar.png');
+                        } catch (e) {
+                          print('Error loading image: $e');
+                          imageProvider = AssetImage('assets/default_avatar.png');
+                        }
                         return Card(
-                          margin: EdgeInsets.symmetric(
-                              vertical: 8.0, horizontal: 16.0),
+                          margin: EdgeInsets.symmetric(vertical: 8.0, horizontal: 16.0),
                           elevation: 4.0,
                           child: ListTile(
                             contentPadding: EdgeInsets.all(16.0),
                             leading: CircleAvatar(
-                              backgroundImage: NetworkImage(
-                                  'https://example.com/thumbnail1.jpg'),
+                              backgroundImage: imageProvider,
+                              child: imageProvider is AssetImage ? Icon(Icons.person) : null,
                             ),
                             title: Text(
                               '${booking.bookingtime}: ${booking.customername}, ${booking.servicename}, Staff: ${booking.staffname}',
@@ -102,19 +98,16 @@ class BookingHomeScreen extends StatelessWidget {
           }
         },
       ),
-    floatingActionButton: FloatingActionButton(
-  onPressed: () {
-    Navigator.push(
-      context,
-      MaterialPageRoute(builder: (context) => StaffPage()),
-    );
-  },
-  child: Icon(Icons.add, color: Colors.white),
-  backgroundColor: color,
-),
-
- 
-      
+      floatingActionButton: FloatingActionButton(
+        onPressed: () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(builder: (context) => StaffPage()),
+          );
+        },
+        child: Icon(Icons.add, color: Colors.white),
+        backgroundColor: color,
+      ),
       bottomNavigationBar: BottomNavigationBar(
         items: [
           BottomNavigationBarItem(
@@ -134,20 +127,18 @@ class BookingHomeScreen extends StatelessWidget {
             label: 'Log',
           ),
         ],
-        selectedItemColor: color, // Set selected item color
-        unselectedItemColor: Colors.grey, // Set unselected item color
-        showSelectedLabels: true, // Show selected item's label
-        showUnselectedLabels: true, // Show unselected items' labels
+        selectedItemColor: color,
+        unselectedItemColor: Colors.grey,
+        showSelectedLabels: true,
+        showUnselectedLabels: true,
       ),
     );
   }
 
-  static Map<DateTime, List<Booking>> _groupBookingsByDate(
-      List<Booking> bookings) {
+  static Map<DateTime, List<Booking>> _groupBookingsByDate(List<Booking> bookings) {
     Map<DateTime, List<Booking>> groupedBookings = {};
     for (var booking in bookings) {
-      final date = DateTime.parse(
-          booking.bookingdate); // Parse bookingdate string to DateTime object
+      final date = DateTime.parse(booking.bookingdate);
       if (groupedBookings.containsKey(date)) {
         groupedBookings[date]!.add(booking);
       } else {
@@ -158,7 +149,6 @@ class BookingHomeScreen extends StatelessWidget {
   }
 
   String _formatDate(DateTime dateTime) {
-    //return '${dateTime.year}-${_twoDigits(dateTime.month)}-${_twoDigits(dateTime.day)}';
     return DateFormat('EEEE, d MMMM yyyy').format(dateTime);
   }
 }

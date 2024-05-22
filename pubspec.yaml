@@ -69,6 +69,7 @@ flutter:
   assets:
     - assets/images/
     - assets/translations/
+    - assets/default_avatar.png
   fonts:
     - family: Roboto
       fonts:

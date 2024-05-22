@@ -316,3 +316,14 @@ Future<User> getCurrentUser() async {
     return User.fromJson(userJson);
   }
 
+ImageProvider? getImage(String base64String) {
+    try {
+      return MemoryImage(
+        base64Decode(
+          base64String.split(',').last,
+        ),
+      );
+    } catch (e) {
+      return null; // Return null if there's an error
+    }
+  }

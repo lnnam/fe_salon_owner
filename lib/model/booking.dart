@@ -10,10 +10,12 @@ class Booking {
   final String created_datetime;
   final String bookingdate;
   final String bookingtime;
+  String customerphoto;
 
   Booking({
     required this.customername,
     required this.datetimebooking,
+    required this.customerphoto,
     required this.staffname,
     required this.servicename,
     required this.numbooked,
@@ -35,6 +37,7 @@ class Booking {
 
     return Booking(
       customername: json['customername'],
+      customerphoto: json['photobase64'] != null && json['photobase64'] != '' ? json['photobase64'] : 'Unknown',
       datetimebooking: bookingDateTime,
       staffname: json['staffname'],
       servicename: json['servicename'],
