@@ -98,7 +98,7 @@ class MyHttp {
       }
   }
 
-  Future<List<Service>> listServices() async {
+  Future<List<Service>> ListServices() async {
     try {
       final response = await fetchFromServer(AppConfig.api_url_booking_service);
       List<dynamic> data = response;

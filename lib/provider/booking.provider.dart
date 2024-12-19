@@ -3,12 +3,17 @@ import 'package:salonapp/model/booking.dart';
 
 class BookingProvider with ChangeNotifier {
   
-  final OnBooking _onbooking = OnBooking(staffkey: '');
+  final OnBooking _onbooking = OnBooking(staffkey: '', servicekey: '');
 
   OnBooking get onbooking => _onbooking;
 
   void setStaff(int staffkey) {
     _onbooking.staffkey = staffkey.toString();
+    notifyListeners();
+  }
+
+  void setService(int servicekey) {
+    _onbooking.servicekey = servicekey.toString();
     notifyListeners();
   }
 
@@ -21,10 +26,6 @@ class BookingProvider with ChangeNotifier {
     notifyListeners();
   }
 
-  void setService(String service) {
-    // _onbooking.service = service;
-    notifyListeners();
-  }
 
   void setCustomerDetails(String name, String email) {
     // _onbooking.customerName = name;
