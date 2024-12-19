@@ -12,9 +12,11 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:salonapp/ui/pos/home.dart';
 import 'package:salonapp/ui/booking/home.dart';
 import 'package:flutter/rendering.dart';
+import 'package:salonapp/provider/booking.provider.dart';
+import 'package:provider/provider.dart';
 
 
-void main() async {
+ void main() async {
     debugPaintBaselinesEnabled = true; // Enable debug paint
 
 
@@ -30,9 +32,13 @@ void main() async {
         fallbackLocale: const Locale('en'),
         useFallbackTranslations: true,
         useOnlyLangCode: true,
-        child: const MyApp()),
+        child: ChangeNotifierProvider(
+        create: (context) => BookingProvider(),
+        child: MyApp(),
+      ),),
   );
-}
+} 
+
 
 class MyApp extends StatefulWidget {
   const MyApp({Key? key}) : super(key: key);

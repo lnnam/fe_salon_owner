@@ -1,12 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
-import 'package:provider/provider.dart';
 import 'package:salonapp/api/api_manager.dart';
 import 'package:salonapp/model/staff.dart';
 import 'package:salonapp/services/helper.dart';
-import 'package:salonapp/provider/booking.provider.dart';
-import 'calendar.dart'; // Import SchedulePage
+
 
 class StaffPage extends StatelessWidget {
   @override
@@ -51,6 +49,7 @@ class StaffPage extends StatelessWidget {
                         contentPadding: EdgeInsets.zero,
                         leading: CircleAvatar(
                           radius: 30,
+                          //backgroundImage: MemoryImage(base64Decode(staff.photo.split(',').last)),
                           backgroundImage: getImage(staff.photo),
                           child: getImage(staff.photo) == null
                               ? Icon(Icons.person)
@@ -66,16 +65,7 @@ class StaffPage extends StatelessWidget {
                         ),
                         trailing: Icon(Icons.arrow_forward_ios),
                         onTap: () {
-                          // Set the selected staff when a staff name is clicked
-                          Provider.of<BookingProvider>(context, listen: false).setStaff(staff.staffkey);
-                          // Navigate to the SchedulePage
-                           print('Selected Staff: ${Provider.of<BookingProvider>(context, listen: false).getStaff()}');
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) => BookingCalendarPage(), // Navigate to SchedulePage
-                            ),
-                          );
+                          // Handle tap on staff member
                         },
                       ),
                     ),
@@ -88,4 +78,5 @@ class StaffPage extends StatelessWidget {
       ),
     );
   }
+  
 }

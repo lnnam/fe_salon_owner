@@ -6,6 +6,7 @@ import 'package:salonapp/config/app_config.dart';
 import 'package:salonapp/model/user.dart';
 import 'package:salonapp/model/booking.dart';
 import 'package:salonapp/model/staff.dart';
+import 'package:salonapp/model/service.dart';
 import 'package:salonapp/services/helper.dart';
 
 class MyHttp {
@@ -95,5 +96,17 @@ class MyHttp {
 
         throw error;
       }
+  }
+
+  Future<List<Service>> listServices() async {
+    try {
+      final response = await fetchFromServer(AppConfig.api_url_booking_service);
+      List<dynamic> data = response;
+      return data.map<Service>((item) => Service.fromJson(item)).toList();
+    } catch (error) {
+      // Handle error
+      print(error);
+      throw error;
+    }
   }
 }
