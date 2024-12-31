@@ -1,6 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import 'package:salonapp/provider/booking.provider.dart';
 import 'package:booking_calendar/booking_calendar.dart';
 import 'package:salonapp/constants.dart';
+import 'customer.dart'; // Import SchedulePage
+
 
 class BookingCalendarPage extends StatefulWidget {
   @override
@@ -32,7 +36,14 @@ class _BookingCalendarPageState extends State<BookingCalendarPage> {
     await Future.delayed(const Duration(seconds: 1));
     converted.add(DateTimeRange(
         start: newBooking.bookingStart, end: newBooking.bookingEnd));
-    print('${newBooking.toJson()} has been uploaded');
+   // print('${newBooking.toJson()} has been uploaded');
+    Provider.of<BookingProvider>(context, listen: false).setSchedule(newBooking.toJson());
+     Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => CustomerPage(), // Navigate to SchedulePage
+                            ),
+                          );
   }
 
   List<DateTimeRange> convertStreamResultMock({required dynamic streamResult}) {

@@ -18,7 +18,7 @@ class ServicePage extends StatelessWidget {
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
             return Center(child: CircularProgressIndicator());
-          } else if (snapshot.hasError) {d
+          } else if (snapshot.hasError) {
             return Center(child: Text('Error: ${snapshot.error}'));
           } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
             return Center(child: Text('No services found'));
@@ -60,7 +60,7 @@ class ServicePage extends StatelessWidget {
                           // Handle tap on service
                           Provider.of<BookingProvider>(context, listen: false).setService(service.pkey);
                           // Print the service name to the console
-                          print('Selected Service: ${Provider.of<BookingProvider>(context, listen: false).onbooking.servicekey}');
+                        //  print('Selected Service: ${Provider.of<BookingProvider>(context, listen: false).onbooking.servicekey}');
                           Navigator.push(
                             context,
                             MaterialPageRoute(
@@ -80,4 +80,36 @@ class ServicePage extends StatelessWidget {
       ),
     );
   }
-}
+}/* 
+
+class BookingProvider with ChangeNotifier {
+  
+  final OnBooking _onbooking = OnBooking(staffkey: '', servicekey: '');
+
+  OnBooking get onbooking => _onbooking;
+
+  void setStaff(int staffkey) {
+    _onbooking.staffkey = staffkey.toString();
+    notifyListeners();
+  }
+
+  void setService(String servicekey) {
+    _onbooking.servicekey = servicekey;
+    notifyListeners();
+  }
+
+  String getStaff() {
+    return _onbooking.staffkey;
+  }
+
+  void setSchedule(DateTime schedule) {
+    // _onbooking.schedule = schedule;
+    notifyListeners();
+  }
+
+  void setCustomerDetails(String name, String email) {
+    // _onbooking.customerName = name;
+    // _onbooking.customerEmail = email;
+    notifyListeners();
+  }
+} */

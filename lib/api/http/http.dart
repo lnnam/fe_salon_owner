@@ -7,6 +7,7 @@ import 'package:salonapp/model/user.dart';
 import 'package:salonapp/model/booking.dart';
 import 'package:salonapp/model/staff.dart';
 import 'package:salonapp/model/service.dart';
+import 'package:salonapp/model/customer.dart';
 import 'package:salonapp/services/helper.dart';
 
 class MyHttp {
@@ -90,6 +91,20 @@ class MyHttp {
           final response = await fetchFromServer(AppConfig.api_url_booking_staff);
           List<dynamic> data = response;
           return data.map<Staff>((item) => Staff.fromJson(item)).toList();
+      } catch (error) {
+        // Handle error
+                print(error);
+
+        throw error;
+      }
+  }
+
+    Future<List<Customer>> ListCustomer() async {
+   
+      try {
+          final response = await fetchFromServer(AppConfig.api_url_booking_customer);
+          List<dynamic> data = response;
+          return data.map<Customer>((item) => Customer.fromJson(item)).toList();
       } catch (error) {
         // Handle error
                 print(error);

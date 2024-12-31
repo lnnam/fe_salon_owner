@@ -6,7 +6,7 @@ import 'package:salonapp/api/api_manager.dart';
 import 'package:salonapp/model/staff.dart';
 import 'package:salonapp/services/helper.dart';
 import 'package:salonapp/provider/booking.provider.dart';
-import 'calendar.dart'; // Import SchedulePage
+import 'service.dart'; // Import SchedulePage
 
 class StaffPage extends StatelessWidget {
   @override
@@ -69,11 +69,10 @@ class StaffPage extends StatelessWidget {
                           // Set the selected staff when a staff name is clicked
                           Provider.of<BookingProvider>(context, listen: false).setStaff(staff.staffkey);
                           // Navigate to the SchedulePage
-                           print('Selected Staff: ${Provider.of<BookingProvider>(context, listen: false).getStaff()}');
                           Navigator.push(
                             context,
                             MaterialPageRoute(
-                              builder: (context) => BookingCalendarPage(), // Navigate to SchedulePage
+                              builder: (context) => ServicePage(), // Navigate to SchedulePage
                             ),
                           );
                         },

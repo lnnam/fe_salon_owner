@@ -54,17 +54,18 @@ class Booking {
 }
 
 class OnBooking {
-   String staffkey; // Unique identifier for the booking
- //  String cusomterkey; // ID of the staff assigned to the booking
-   String servicekey; // ID of the customer who made the booking
-  // DateTime dateTime; // Date and time of the booking
+   int staffkey; // Unique identifier for the booking
+   int cusomterkey; // ID of the staff assigned to the booking
+   int servicekey; // ID of the customer who made the booking
+   Map<String, dynamic>? schedule;
+
 
   // Constructor
   OnBooking({
-    required this.staffkey,
-   // required this.cusomterkey,
-    required this.servicekey,
-   // required this.dateTime,
+       required this.staffkey,
+       required this.cusomterkey,
+       required this.servicekey,
+       this.schedule,
   });
 
 }
