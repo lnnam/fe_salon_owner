@@ -68,6 +68,7 @@ class MyHttp {
       // Request failed, throw error
       if(response.statusCode == 401)
         throw 'Your session has expired. Please log in again.';
+  
       else 
         throw 'Request failed with status: ${response.statusCode}';
     }

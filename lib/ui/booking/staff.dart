@@ -67,7 +67,7 @@ class StaffPage extends StatelessWidget {
                         trailing: Icon(Icons.arrow_forward_ios),
                         onTap: () {
                           // Set the selected staff when a staff name is clicked
-                          Provider.of<BookingProvider>(context, listen: false).setStaff(staff.staffkey);
+                          Provider.of<BookingProvider>(context, listen: false).setStaff(staff.toJson());
                           // Navigate to the SchedulePage
                           Navigator.push(
                             context,

@@ -58,7 +58,7 @@ class ServicePage extends StatelessWidget {
                         trailing: Icon(Icons.arrow_forward_ios),
                         onTap: () {
                           // Handle tap on service
-                          Provider.of<BookingProvider>(context, listen: false).setService(service.pkey);
+                          Provider.of<BookingProvider>(context, listen: false).setService(service.toJson());
                           // Print the service name to the console
                         //  print('Selected Service: ${Provider.of<BookingProvider>(context, listen: false).onbooking.servicekey}');
                           Navigator.push(

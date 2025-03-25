@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:salonapp/api/api_manager.dart';
@@ -5,6 +6,7 @@ import 'package:salonapp/model/customer.dart';
 import 'package:salonapp/provider/booking.provider.dart';
 import 'package:salonapp/services/helper.dart';
 import 'dart:convert';
+import 'Summary.dart';
 
 class CustomerPage extends StatefulWidget {
   @override
@@ -122,7 +124,13 @@ class _CustomerPageState extends State<CustomerPage> {
                     trailing: Icon(Icons.arrow_forward_ios),
                     onTap: () {
                       // Set the selected customer when a customer name is clicked
-                      Provider.of<BookingProvider>(context, listen: false).setCustomerDetails(customer.fullname, customer.email);
+                      Provider.of<BookingProvider>(context, listen: false).setCustomerDetails(customer.toJson());
+                       Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => SummaryPage(), // Navigate to SchedulePage
+                            ),
+                          );
                       // Print the customer details to the console
                       // Navigate to the next page if needed
                     },

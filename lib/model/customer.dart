@@ -16,7 +16,7 @@ class Customer {
 
   factory Customer.fromJson(Map<String, dynamic> json) {
     return Customer(
-      customerkey: json['customerkey'] ?? 0,
+      customerkey: json['pkey'] ?? 0,
       fullname: json['fullname'] ?? 'Unknown',
       email: json['email'] ?? 'Unknown',
       phone: json['phone'] ?? 'Unknown',
