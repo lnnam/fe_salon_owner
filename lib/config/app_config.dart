@@ -6,6 +6,7 @@ class AppConfig{
   static const  api_url_booking_staff = '$api_url/api/booking/staff';
   static const  api_url_booking_service = '$api_url/api/booking/service';
   static const  api_url_booking_customer = '$api_url/api/booking/customer';
+  static const  api_url_booking_add = '$api_url/api/booking/add';
   
 
 }

@@ -78,6 +78,7 @@ class MyHttp {
    
       try {
           final response = await fetchFromServer(AppConfig.api_url_booking_home);
+         // print('url test: ${response}');
           List<dynamic> data = response;
           return data.map<Booking>((item) => Booking.fromJson(item)).toList();
       } catch (error) {
@@ -125,4 +126,54 @@ class MyHttp {
       throw error;
     }
   }
+
+  //BOOKING 
+
+
+
+Future<dynamic> AddBooking(
+  String customerKey,
+  String serviceKey,
+  String staffKey,
+  String date,
+  String schedule,
+  String note,
+  String customerName,
+  String staffName,
+  String serviceName,
+) async {
+ //  print('url test: ${AppConfig.api_url_booking_add}');
+  try {
+    final response = await http.post(
+      Uri.parse(AppConfig.api_url_booking_add),
+      headers: <String, String>{
+        'Content-Type': 'application/json; charset=UTF-8',
+      },
+      body: jsonEncode(<String, String>{
+        'customerkey': customerKey,
+        'servicekey': serviceKey,
+        'staffkey': staffKey,
+        'date': date,
+        'datetime': schedule,
+        'note': note,
+        'customername': customerName,
+        'staffname': staffName,
+        'servicename': serviceName,  
+        'userkey': '1',
+      }),
+    );
+
+    if (response.statusCode == 201) {
+      return User.fromJson(jsonDecode(response.body));
+    } else {
+      //return null;  // Booking failed
+      print('Error: ${response.statusCode}, Response: ${response.body}');
+
+    }
+  } catch (e) {
+    return e;  // Return error for debugging
+  }
+}
+
+
 }

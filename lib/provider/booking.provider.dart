@@ -43,16 +43,20 @@ void setCustomerDetails(Map<String, dynamic> customer) {
   // Mapping OnBooking data to bookingDetails
   Map<String, dynamic> get bookingDetails {
     String formattedSchedule = 'Not Available';
+    String ScheduleDate = 'Not Available';
     if (_onbooking.schedule != null && _onbooking.schedule?['bookingStart'] != null) {
       try {
         DateTime dateTime = DateTime.parse(_onbooking.schedule?['bookingStart']);
         formattedSchedule = DateFormat('HH:mm, dd/MM/yyyy').format(dateTime);
+        ScheduleDate = DateFormat('yyyy-MM-dd').format(dateTime);
       } catch (e) {
         print('Error parsing schedule date: $e');
       }
     }
     return {
-      'schedule': formattedSchedule,
+      'date': ScheduleDate,
+      'schedule': _onbooking.schedule?['bookingStart'],
+      'formattedschedule': formattedSchedule,
       'customerName': _onbooking.customer?['fullname'],
       'customerKey': _onbooking.staff?['customerkey'].toString(),
       'staffName': _onbooking.staff?['fullname'].toString(),

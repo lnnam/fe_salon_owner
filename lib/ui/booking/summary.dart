@@ -1,48 +1,121 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:salonapp/provider/booking.provider.dart';
+import 'package:salonapp/api/api_manager.dart';
+import 'package:salonapp/services/helper.dart';
+import 'package:easy_localization/easy_localization.dart';
+import 'home.dart'; // Import Home
 
-class SummaryPage extends StatelessWidget {
-  // Sample booking details, replace with actual data from your app or provider
- 
+
+class SummaryPage extends StatefulWidget {
+  @override
+  _SummaryPageState createState() => _SummaryPageState();
+}
+
+class _SummaryPageState extends State<SummaryPage> {
+  bool isLoading = false; // Loading state for the booking process
+
+  // Method to handle booking
+      _addBooking(BuildContext context) async {
+  setState(() {
+    isLoading = true;
+  });
+
+  final bookingProvider = Provider.of<BookingProvider>(context, listen: false);
+  final bookingDetails = bookingProvider.bookingDetails;
+
+  String customerKey = bookingDetails['customerKey'] ?? '';
+  String serviceKey = bookingDetails['serviceKey'] ?? '';
+  String staffKey = bookingDetails['staffKey'] ?? '';
+  String date = bookingDetails['date'] ?? '';
+  String schedule = bookingDetails['schedule'] ?? '';
+  String formattedschedule = bookingDetails['formattedschedule'] ?? '';
+  
+  String note = bookingDetails['note'] ?? '';
+  String customerName = bookingDetails['customerName'] ?? '';
+  String staffName = bookingDetails['staffName'] ?? '';
+  String serviceName = bookingDetails['serviceName'] ?? '';
+
+  dynamic result = await apiManager.AddBooking(
+    customerKey, serviceKey, staffKey, date, schedule, 
+    note, customerName, staffName, serviceName
+  );
+
+  setState(() {
+    isLoading = false;
+  });
+
+  if (result != null) {
+    // Show success dialog with custom-styled button
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text("Success"),
+          content: Text("Booking Added"),
+          actions: [
+            Center(  // Center the button
+              child: ElevatedButton(
+                onPressed: () {
+                  Navigator.of(context).pop(); // Close dialog
+                 // Navigator.pushReplacementNamed(context, '/dashboard'); // Navigate
+                  Navigator.push( context,  MaterialPageRoute(
+                              builder: (context) => BookingHomeScreen()
+                            ));
+                },
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.blue,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  padding: EdgeInsets.symmetric(horizontal: 32, vertical: 14),
+                ),
+                child: Text(
+                  "OK",
+                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white),
+                ),
+              ),
+            ),
+          ],
+        );
+      },
+    );
+  } else {
+    // Show error dialog
+    showAlertDialog(
+      context,
+      'Error : '.tr(),
+      'Booking not saved. Contact support!'.tr(),
+    );
+  }
+}
 
   @override
   Widget build(BuildContext context) {
     final bookingProvider = Provider.of<BookingProvider>(context);
     final bookingDetails = bookingProvider.bookingDetails;
+
     return Scaffold(
       appBar: AppBar(
         title: Text('Summary Booking'),
-        backgroundColor: Colors.blue, // Using blue instead of deep purple
+        backgroundColor: Colors.blue,
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: ListView(
           children: [
-            // Schedule Row
-            _buildInfoRow('Schedule', bookingDetails['schedule'] ?? 'Not Available', Icons.schedule),
+            _buildInfoRow('Schedule', bookingDetails['formattedschedule'] ?? 'Not Available', Icons.schedule),
             SizedBox(height: 12),
-
-            // Customer Name Row
             _buildInfoRow('Customer Name', bookingDetails['customerName'] ?? 'Not Available', Icons.person),
             SizedBox(height: 12),
-
-            // Staff Row
             _buildInfoRow('Staff', bookingDetails['staffName'] ?? 'Not Available', Icons.people),
             SizedBox(height: 12),
-
-            // Service Row
             _buildInfoRow('Service', bookingDetails['serviceName'] ?? 'Not Available', Icons.star),
             SizedBox(height: 12),
 
-            // Note Section (Textbox for note)
             Text(
               'Note:',
-              style: TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.bold,
-                color: Colors.black, // Changed to black for a neutral look
-              ),
+              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.black),
             ),
             SizedBox(height: 8),
             TextField(
@@ -51,7 +124,7 @@ class SummaryPage extends StatelessWidget {
                 border: OutlineInputBorder(),
                 contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 10),
                 focusedBorder: OutlineInputBorder(
-                  borderSide: BorderSide(color: Colors.blue, width: 2), // Changed border color to blue
+                  borderSide: BorderSide(color: Colors.blue, width: 2),
                 ),
                 enabledBorder: OutlineInputBorder(
                   borderSide: BorderSide(color: Colors.grey, width: 1),
@@ -59,28 +132,27 @@ class SummaryPage extends StatelessWidget {
               ),
               maxLines: 3,
               onChanged: (value) {
-                // Handle note change if needed
+               // bookingProvider.updateNote(value); // Save the note in provider
               },
             ),
             SizedBox(height: 16),
 
-            // Confirm Button (Submit button to finalize the booking)
             Center(
               child: ElevatedButton(
-                onPressed: () {
-                  // Handle confirmation or next step logic
-                },
+                onPressed: isLoading ? null : () => _addBooking(context),
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.blue, // Changed to blue
+                  backgroundColor: Colors.blue,
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(12),
                   ),
                   padding: EdgeInsets.symmetric(horizontal: 32, vertical: 14),
                 ),
-                child: Text(
-                  'Confirm Booking',
-                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white, ),
-                ),
+                child: isLoading
+                    ? CircularProgressIndicator(color: Colors.white)
+                    : Text(
+                        'Confirm Booking',
+                        style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white),
+                      ),
               ),
             ),
           ],
@@ -89,7 +161,6 @@ class SummaryPage extends StatelessWidget {
     );
   }
 
-  // Method to build each row with the edit icon on the left and arrow icon on the right
   Widget _buildInfoRow(String label, String value, IconData icon) {
     return Container(
       decoration: BoxDecoration(
@@ -100,7 +171,7 @@ class SummaryPage extends StatelessWidget {
             color: Colors.black.withOpacity(0.1),
             spreadRadius: 2,
             blurRadius: 6,
-            offset: Offset(0, 3), // Position of the shadow
+            offset: Offset(0, 3),
           ),
         ],
       ),
@@ -108,11 +179,8 @@ class SummaryPage extends StatelessWidget {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Icon(
-            icon,
-            color: Colors.blue, // Changed icon color to blue
-          ),
-          SizedBox(width: 12), // Space between the icon and the text
+          Icon(icon, color: Colors.blue),
+          SizedBox(width: 12),
           Expanded(
             child: Text(
               '$label: $value',
@@ -120,11 +188,7 @@ class SummaryPage extends StatelessWidget {
               overflow: TextOverflow.ellipsis,
             ),
           ),
-          Icon(
-            Icons.arrow_forward_ios,
-            color: Colors.blue, // Arrow icon color
-            size: 16,
-          ),
+          Icon(Icons.arrow_forward_ios, color: Colors.blue, size: 16),
         ],
       ),
     );
