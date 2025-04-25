@@ -1,12 +1,14 @@
 import 'package:intl/intl.dart';
 
 class Booking {
+  final String customerkey;
   final String customername;
   final DateTime datetimebooking;
+  final String staffkey;
   final String staffname;
   final String servicename;
-  final int servicekey;
-  final int numbooked;
+  final String servicekey;
+  final String numbooked;
   final String customertype;
   final DateTime created_datetime;
   final String bookingdate;
@@ -14,8 +16,10 @@ class Booking {
   final String customerphoto;
 
   Booking({
+    required this.customerkey,
     required this.customername,
     required this.datetimebooking,
+    required this.staffkey,
     required this.staffname,
     required this.servicename,
     required this.servicekey,
@@ -32,15 +36,17 @@ class Booking {
     String formattedBookingDate = DateFormat('yyyy-MM-dd').format(bookingDateTime);
     String formattedBookingTime = DateFormat('HH:mm').format(bookingDateTime);
     //String createdDateTime = DateFormat('HH:mm yyyy-MM-dd').format(DateTime.parse(json['dateactivated']));
-    String createdDateTime = DateTime.parse(json['dateactivated']);
+    DateTime createdDateTime = DateTime.parse(json['dateactivated']);
 
     return Booking(
       customername: json['customername'] ?? 'Unknown',
+      customerkey: json['customerkey'].toString() ?? 'Unknown',
+      staffkey: json['staffkey'].toString() ?? 'Unknown',
       datetimebooking: bookingDateTime,
       staffname: json['staffname'] ?? 'N/A',
       servicename: json['servicename'] ?? 'N/A',
-      servicekey: json['servicekey'] is int ? json['servicekey'] : int.tryParse(json['servicekey'].toString()) ?? 0,
-      numbooked: json['pkey'] is int ? json['pkey'] : int.tryParse(json['pkey'].toString()) ?? 0,
+      servicekey: json['servicekey'].toString(),
+      numbooked: json['pkey'].toString(),
       customertype: json['customertype'] ?? 'N/A',
       created_datetime: createdDateTime,
       bookingdate: formattedBookingDate,

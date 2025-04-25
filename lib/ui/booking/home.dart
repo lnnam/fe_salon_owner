@@ -6,6 +6,8 @@ import 'package:intl/intl.dart';
 import 'package:salonapp/ui/common/drawer_booking.dart';
 import 'package:salonapp/ui/booking/staff.dart';
 import 'package:salonapp/services/helper.dart';
+import 'summary.dart'; // Import Home
+
 
 class BookingHomeScreen extends StatelessWidget {
   @override
@@ -79,13 +81,19 @@ class BookingHomeScreen extends StatelessWidget {
                               ),
                             ),
                             subtitle: Text(
-                              'Number of Visits: 10, Created on: ${booking.created_datetime}',
+                              'Number of Visits: 10, Created on: ${_formatDateTime(booking.created_datetime)}',
                               style: TextStyle(
                                 color: color,
                               ),
                             ),
                             onTap: () {
                               // Handle onTap event
+                               Navigator.push(
+    context,
+    MaterialPageRoute(
+      builder: (context) => SummaryPage(booking: booking), // 👈 Pass booking
+    ),
+  );
                             },
                           ),
                         );
@@ -150,5 +158,8 @@ class BookingHomeScreen extends StatelessWidget {
 
   String _formatDate(DateTime dateTime) {
     return DateFormat('EEEE, d MMMM yyyy').format(dateTime);
+  }
+  String _formatDateTime(DateTime dateTime) {
+    return DateFormat('HH:mm, EEEE, d MMMM').format(dateTime);
   }
 }

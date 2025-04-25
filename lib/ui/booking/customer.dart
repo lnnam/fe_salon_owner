@@ -7,6 +7,8 @@ import 'package:salonapp/provider/booking.provider.dart';
 import 'package:salonapp/services/helper.dart';
 import 'dart:convert';
 import 'Summary.dart';
+import 'package:salonapp/model/booking.dart';
+
 
 class CustomerPage extends StatefulWidget {
   @override
