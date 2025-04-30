@@ -4,7 +4,7 @@ import 'package:salonapp/provider/booking.provider.dart';
 import 'package:booking_calendar/booking_calendar.dart';
 import 'package:salonapp/constants.dart';
 import 'customer.dart'; // Import SchedulePage
-
+import 'summary.dart';
 
 class BookingCalendarPage extends StatefulWidget {
   @override
@@ -38,12 +38,27 @@ class _BookingCalendarPageState extends State<BookingCalendarPage> {
         start: newBooking.bookingStart, end: newBooking.bookingEnd));
    // print('${newBooking.toJson()} has been uploaded');
     Provider.of<BookingProvider>(context, listen: false).setSchedule(newBooking.toJson());
-     Navigator.push(
+   
+
+                          // Check if serviceKey is set
+                          final serviceKey = bookingProvider.bookingDetails['serviceKey'];
+                          if (serviceKey != null && serviceKey.toString().isNotEmpty) {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(builder: (context) => SummaryPage()),
+                            );
+                          } else {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(builder: (context) => CustomerPage()),
+                            );
+                          }
+    /*  Navigator.push(
                             context,
                             MaterialPageRoute(
                               builder: (context) => CustomerPage(), // Navigate to SchedulePage
                             ),
-                          );
+                          ); */
   }
 
   List<DateTimeRange> convertStreamResultMock({required dynamic streamResult}) {

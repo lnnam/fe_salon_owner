@@ -65,4 +65,25 @@ void setCustomerDetails(Map<String, dynamic> customer) {
       'serviceKey': _onbooking.service?['servicekey'].toString(),
     };
   }
+
+  void setBookingFromModel(Booking booking) {
+  _onbooking.customer = {
+    'customerkey': booking.customerkey,
+    'fullname': booking.customername,
+  };
+  _onbooking.staff = {
+    'staffkey': booking.staffkey,
+    'fullname': booking.staffname,
+  };
+  _onbooking.service = {
+    'servicekey': booking.servicekey,
+    'name': booking.servicename,
+  };
+  _onbooking.schedule = {
+    'bookingStart': '${booking.bookingdate}T${booking.bookingtime}',
+  };
+
+  notifyListeners();
+}
+
 }

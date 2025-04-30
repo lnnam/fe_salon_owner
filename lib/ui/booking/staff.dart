@@ -6,7 +6,8 @@ import 'package:salonapp/api/api_manager.dart';
 import 'package:salonapp/model/staff.dart';
 import 'package:salonapp/services/helper.dart';
 import 'package:salonapp/provider/booking.provider.dart';
-import 'service.dart'; // Import SchedulePage
+import 'service.dart';
+import 'summary.dart';
 
 class StaffPage extends StatelessWidget {
   @override
@@ -66,15 +67,24 @@ class StaffPage extends StatelessWidget {
                         ),
                         trailing: Icon(Icons.arrow_forward_ios),
                         onTap: () {
-                          // Set the selected staff when a staff name is clicked
-                          Provider.of<BookingProvider>(context, listen: false).setStaff(staff.toJson());
-                          // Navigate to the SchedulePage
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) => ServicePage(), // Navigate to SchedulePage
-                            ),
-                          );
+                          final bookingProvider = Provider.of<BookingProvider>(context, listen: false);
+
+                          // Set staff
+                          bookingProvider.setStaff(staff.toJson());
+
+                          // Check if serviceKey is set
+                          final serviceKey = bookingProvider.bookingDetails['serviceKey'];
+                          if (serviceKey != null && serviceKey.toString().isNotEmpty) {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(builder: (context) => SummaryPage()),
+                            );
+                          } else {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(builder: (context) => ServicePage()),
+                            );
+                          }
                         },
                       ),
                     ),
