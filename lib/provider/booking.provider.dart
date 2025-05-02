@@ -8,10 +8,10 @@ class BookingProvider with ChangeNotifier {
 
   OnBooking get onbooking => _onbooking;
 
-  /* void setStaff(int staffkey) {
-    _onbooking.staffkey = staffkey;
+  void setEditMode(bool mode) {
+    _onbooking.editMode = mode;
     notifyListeners();
-  } */
+  } 
 
   void setStaff(Map<String, dynamic> staff) {
      _onbooking.staff  = staff;

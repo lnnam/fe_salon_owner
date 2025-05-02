@@ -68,13 +68,12 @@ class StaffPage extends StatelessWidget {
                         trailing: Icon(Icons.arrow_forward_ios),
                         onTap: () {
                           final bookingProvider = Provider.of<BookingProvider>(context, listen: false);
+                          bool isEditMode = Provider.of<BookingProvider>(context).onbooking.editMode ?? false;
 
                           // Set staff
                           bookingProvider.setStaff(staff.toJson());
 
-                          // Check if serviceKey is set
-                          final serviceKey = bookingProvider.bookingDetails['serviceKey'];
-                          if (serviceKey != null && serviceKey.toString().isNotEmpty) {
+                          if (isEditMode) {
                             Navigator.push(
                               context,
                               MaterialPageRoute(builder: (context) => SummaryPage()),

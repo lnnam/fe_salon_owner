@@ -38,6 +38,8 @@ class _SummaryPageState extends State<SummaryPage> {
   void initState() {
     super.initState();
      final bookingProvider = Provider.of<BookingProvider>(context, listen: false);
+      // ✅ Set edit mode to true
+      bookingProvider.setEditMode(true);
     if (widget.booking != null) {
       final booking = widget.booking!;
       customerKey = booking.customerkey;

@@ -39,7 +39,7 @@ class _BookingCalendarPageState extends State<BookingCalendarPage> {
    // print('${newBooking.toJson()} has been uploaded');
     Provider.of<BookingProvider>(context, listen: false).setSchedule(newBooking.toJson());
    
-
+      final bookingProvider = Provider.of<BookingProvider>(context, listen: false);
                           // Check if serviceKey is set
                           final serviceKey = bookingProvider.bookingDetails['serviceKey'];
                           if (serviceKey != null && serviceKey.toString().isNotEmpty) {

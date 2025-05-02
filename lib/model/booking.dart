@@ -63,11 +63,14 @@ class OnBooking {
   Map<String, dynamic>? customer;
   Map<String, dynamic>? service;
   Map<String, dynamic>? schedule;
+  bool editMode;
 
   OnBooking({
     this.staff,
     this.customer,
     this.service,
     this.schedule,
+    this.editMode = false, // default to false
   });
 }
+
