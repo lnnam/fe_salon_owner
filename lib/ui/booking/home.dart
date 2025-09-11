@@ -7,27 +7,36 @@ import 'package:salonapp/ui/common/drawer_booking.dart';
 import 'package:salonapp/ui/booking/staff.dart';
 import 'package:salonapp/services/helper.dart';
 import 'summary.dart'; // Import Home
+import 'package:provider/provider.dart';
+import 'package:salonapp/provider/booking.provider.dart';
 
 
 class BookingHomeScreen extends StatelessWidget {
+  const BookingHomeScreen({super.key});
+
   @override
   Widget build(BuildContext context) {
-    final color = Color(COLOR_PRIMARY);
+    // Set editMode to false when home page loads
+  final bookingProvider = Provider.of<BookingProvider>(context, listen: false);
+    bookingProvider.onbooking.editMode = false;
+    print('editMode is now: ${bookingProvider.onbooking.editMode}');
+
+    const color = Color(COLOR_PRIMARY);
     return Scaffold(
       appBar: AppBar(
-        title: Text('Appointment', style: TextStyle(color: Colors.white)),
+        title: const Text('Appointment', style: TextStyle(color: Colors.white)),
         backgroundColor: color,
       ),
-      drawer: AppDrawerBooking(),
+      drawer: const AppDrawerBooking(),
       body: FutureBuilder<List<Booking>>(
         future: apiManager.ListBooking(),
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
-            return Center(child: CircularProgressIndicator());
+            return const Center(child: CircularProgressIndicator());
           } else if (snapshot.hasError) {
             return Center(child: Text('Error: ${snapshot.error}'));
           } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
-            return Center(child: Text('No bookings available.'));
+            return const Center(child: Text('No bookings available.'));
           } else {
             final groupedBookings = _groupBookingsByDate(snapshot.data!);
             final sortedDates = groupedBookings.keys.toList();
@@ -44,10 +53,10 @@ class BookingHomeScreen extends StatelessWidget {
                     Container(
                       width: double.infinity,
                       color: color.withOpacity(0.2),
-                      padding: EdgeInsets.symmetric(vertical: 8.0, horizontal: 16.0),
+                      padding: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 16.0),
                       child: Text(
                         _formatDate(date),
-                        style: TextStyle(
+                        style: const TextStyle(
                           fontSize: 20,
                           fontWeight: FontWeight.bold,
                           color: color,
@@ -59,30 +68,30 @@ class BookingHomeScreen extends StatelessWidget {
                         ImageProvider imageProvider;
                         try {
                           imageProvider = getImage(booking.customerphoto) ??
-                              AssetImage('assets/default_avatar.png');
+                              const AssetImage('assets/default_avatar.png');
                         } catch (e) {
                           print('Error loading image: $e');
-                          imageProvider = AssetImage('assets/default_avatar.png');
+                          imageProvider = const AssetImage('assets/default_avatar.png');
                         }
                         return Card(
-                          margin: EdgeInsets.symmetric(vertical: 8.0, horizontal: 16.0),
+                          margin: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 16.0),
                           elevation: 4.0,
                           child: ListTile(
-                            contentPadding: EdgeInsets.all(16.0),
+                            contentPadding: const EdgeInsets.all(16.0),
                             leading: CircleAvatar(
                               backgroundImage: imageProvider,
-                              child: imageProvider is AssetImage ? Icon(Icons.person) : null,
+                              child: imageProvider is AssetImage ? const Icon(Icons.person) : null,
                             ),
                             title: Text(
                               '${booking.bookingtime}: ${booking.customername}, ${booking.servicename}, Staff: ${booking.staffname}',
-                              style: TextStyle(
+                              style: const TextStyle(
                                 color: color,
                                 fontWeight: FontWeight.bold,
                               ),
                             ),
                             subtitle: Text(
                               'Number of Visits: 10, Created on: ${_formatDateTime(booking.created_datetime)}',
-                              style: TextStyle(
+                              style: const TextStyle(
                                 color: color,
                               ),
                             ),
@@ -110,14 +119,14 @@ class BookingHomeScreen extends StatelessWidget {
         onPressed: () {
           Navigator.push(
             context,
-            MaterialPageRoute(builder: (context) => StaffPage()),
+            MaterialPageRoute(builder: (context) => const StaffPage()),
           );
         },
-        child: Icon(Icons.add, color: Colors.white),
         backgroundColor: color,
+        child: const Icon(Icons.add, color: Colors.white),
       ),
       bottomNavigationBar: BottomNavigationBar(
-        items: [
+        items: const [
           BottomNavigationBarItem(
             icon: Icon(Icons.search),
             label: 'Find',

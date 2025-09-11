@@ -3,6 +3,8 @@ import 'package:salonapp/ui/common/drawer_dashboard.dart';
 import 'package:salonapp/model/user.dart';
 
 class Home extends StatelessWidget {
+  const Home({super.key});
+
   @override
   Widget build(BuildContext context) {
 
@@ -10,16 +12,16 @@ class Home extends StatelessWidget {
 
     return Scaffold(
       appBar: AppBar(
-        title: Text('Salon APP'),
-        iconTheme: IconThemeData(color: Colors.white)
+        title: const Text('Salon APP'),
+        iconTheme: const IconThemeData(color: Colors.white)
       ),
-      drawer: AppDrawerDashboard(),
+      drawer: const AppDrawerDashboard(),
       body: Center(
         child: ElevatedButton(
           onPressed: () {
             Navigator.pushNamed(context, '/dashboard');
           },
-          child: Text('Go to dashboard'),
+          child: const Text('Go to dashboard'),
         ),
       ),
     );

@@ -15,7 +15,7 @@ import 'service.dart';   // ⬅️ Replace with actual path
 class SummaryPage extends StatefulWidget {
   final Booking? booking;
 
-  const SummaryPage({Key? key, this.booking}) : super(key: key);
+  const SummaryPage({super.key, this.booking});
 
   @override
   _SummaryPageState createState() => _SummaryPageState();
@@ -94,8 +94,8 @@ class _SummaryPageState extends State<SummaryPage> {
         context: context,
         builder: (BuildContext context) {
           return AlertDialog(
-            title: Text("Success"),
-            content: Text("Booking Added"),
+            title: const Text("Success"),
+            content: const Text("Booking Added"),
             actions: [
               Center(
                 child: ElevatedButton(
@@ -103,7 +103,7 @@ class _SummaryPageState extends State<SummaryPage> {
                     Navigator.of(context).pop();
                     Navigator.push(
                       context,
-                      MaterialPageRoute(builder: (context) => BookingHomeScreen()),
+                      MaterialPageRoute(builder: (context) => const BookingHomeScreen()),
                     );
                   },
                   style: ElevatedButton.styleFrom(
@@ -111,9 +111,9 @@ class _SummaryPageState extends State<SummaryPage> {
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(12),
                     ),
-                    padding: EdgeInsets.symmetric(horizontal: 32, vertical: 14),
+                    padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 14),
                   ),
-                  child: Text(
+                  child: const Text(
                     "OK",
                     style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white),
                   ),
@@ -136,7 +136,7 @@ class _SummaryPageState extends State<SummaryPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Summary Booking'),
+        title: const Text('Summary Booking'),
         backgroundColor: Colors.blue,
       ),
       body: Padding(
@@ -148,40 +148,40 @@ class _SummaryPageState extends State<SummaryPage> {
               label: 'Schedule',
               value: '${_formatDate(bookingDate)} at ${_formatTime(bookingTime)}',
               icon: Icons.schedule,
-              onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => BookingCalendarPage())),
+              onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const BookingCalendarPage())),
             ),
-            SizedBox(height: 12),
+            const SizedBox(height: 12),
             _buildInfoRow(
               context,
               label: 'Customer Name',
               value: customerName,
               icon: Icons.person,
-              onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => CustomerPage())),
+              onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const CustomerPage())),
             ),
-            SizedBox(height: 12),
+            const SizedBox(height: 12),
             _buildInfoRow(
               context,
               label: 'Staff',
               value: staffName,
               icon: Icons.people,
-              onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => StaffPage())),
+              onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const StaffPage())),
             ),
-            SizedBox(height: 12),
+            const SizedBox(height: 12),
             _buildInfoRow(
               context,
               label: 'Service',
               value: serviceName,
               icon: Icons.star,
-              onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => ServicePage())),
+              onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const ServicePage())),
             ),
-            SizedBox(height: 12),
-            Text(
+            const SizedBox(height: 12),
+            const Text(
               'Note:',
               style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.black),
             ),
-            SizedBox(height: 8),
+            const SizedBox(height: 8),
             TextField(
-              decoration: InputDecoration(
+              decoration: const InputDecoration(
                 hintText: 'Enter any notes here...',
                 border: OutlineInputBorder(),
                 contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 10),
@@ -199,7 +199,7 @@ class _SummaryPageState extends State<SummaryPage> {
                 });
               },
             ),
-            SizedBox(height: 16),
+            const SizedBox(height: 16),
             Column(
               children: [
                 ElevatedButton(
@@ -209,25 +209,25 @@ class _SummaryPageState extends State<SummaryPage> {
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(12),
                     ),
-                    padding: EdgeInsets.symmetric(horizontal: 32, vertical: 14),
+                    padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 14),
                   ),
                   child: isLoading
-                      ? CircularProgressIndicator(color: Colors.white)
-                      : Text(
+                      ? const CircularProgressIndicator(color: Colors.white)
+                      : const Text(
                           'Confirm Booking',
                           style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white),
                         ),
                 ),
-                SizedBox(height: 12),
+                const SizedBox(height: 12),
                 TextButton(
                   onPressed: () {
                     Navigator.pushAndRemoveUntil(
                       context,
-                      MaterialPageRoute(builder: (_) => BookingHomeScreen()),
+                      MaterialPageRoute(builder: (_) => const BookingHomeScreen()),
                       (route) => false,
                     );
                   },
-                  child: Text(
+                  child: const Text(
                     'Cancel Booking',
                     style: TextStyle(color: Colors.red, fontWeight: FontWeight.w600),
                   ),
@@ -253,23 +253,23 @@ class _SummaryPageState extends State<SummaryPage> {
               color: Colors.black.withOpacity(0.1),
               spreadRadius: 2,
               blurRadius: 6,
-              offset: Offset(0, 3),
+              offset: const Offset(0, 3),
             ),
           ],
         ),
-        padding: EdgeInsets.all(12),
+        padding: const EdgeInsets.all(12),
         child: Row(
           children: [
             Icon(icon, color: Colors.blue),
-            SizedBox(width: 12),
+            const SizedBox(width: 12),
             Expanded(
               child: Text(
                 '$label: $value',
-                style: TextStyle(fontSize: 16, color: Colors.black87),
+                style: const TextStyle(fontSize: 16, color: Colors.black87),
                 overflow: TextOverflow.ellipsis,
               ),
             ),
-            Icon(Icons.arrow_forward_ios, size: 16, color: Colors.grey),
+            const Icon(Icons.arrow_forward_ios, size: 16, color: Colors.grey),
           ],
         ),
       ),

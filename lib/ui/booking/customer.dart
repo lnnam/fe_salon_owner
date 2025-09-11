@@ -1,22 +1,21 @@
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:salonapp/api/api_manager.dart';
 import 'package:salonapp/model/customer.dart';
 import 'package:salonapp/provider/booking.provider.dart';
 import 'package:salonapp/services/helper.dart';
-import 'dart:convert';
 import 'Summary.dart';
-import 'package:salonapp/model/booking.dart';
 
 
 class CustomerPage extends StatefulWidget {
+  const CustomerPage({super.key});
+
   @override
   _CustomerPageState createState() => _CustomerPageState();
 }
 
 class _CustomerPageState extends State<CustomerPage> {
-  TextEditingController _searchController = TextEditingController();
+  final TextEditingController _searchController = TextEditingController();
   List<Customer> _customerList = [];
   List<Customer> _filteredCustomerList = [];
 
@@ -61,7 +60,7 @@ class _CustomerPageState extends State<CustomerPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Customers'),
+        title: const Text('Customers'),
       ),
       body: Column(
         children: [
@@ -69,7 +68,7 @@ class _CustomerPageState extends State<CustomerPage> {
             padding: const EdgeInsets.all(8.0),
             child: TextField(
               controller: _searchController,
-              decoration: InputDecoration(
+              decoration: const InputDecoration(
                 labelText: 'Search Customers',
                 border: OutlineInputBorder(),
                 prefixIcon: Icon(Icons.search),
@@ -86,7 +85,7 @@ class _CustomerPageState extends State<CustomerPage> {
 
   Widget _buildCustomerList() {
     return _filteredCustomerList.isEmpty
-        ? Center(child: Text('No customers found'))
+        ? const Center(child: Text('No customers found'))
         : ListView.builder(
             itemCount: _filteredCustomerList.length,
             itemBuilder: (BuildContext context, int index) {
@@ -102,7 +101,7 @@ class _CustomerPageState extends State<CustomerPage> {
                         color: Colors.grey.withOpacity(0.5),
                         spreadRadius: 2,
                         blurRadius: 5,
-                        offset: Offset(0, 3),
+                        offset: const Offset(0, 3),
                       ),
                     ],
                   ),
@@ -112,25 +111,25 @@ class _CustomerPageState extends State<CustomerPage> {
                       radius: 30,
                       backgroundImage: getImage(customer.photo),
                       child: getImage(customer.photo) == null
-                          ? Icon(Icons.person)
+                          ? const Icon(Icons.person)
                           : null,
                     ),
                     title: Text(
                       customer.fullname,
-                      style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                      style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                     ),
                     subtitle: Text(
                       'Email: ${customer.email}',
                       style: TextStyle(fontSize: 14, color: Colors.grey[600]),
                     ),
-                    trailing: Icon(Icons.arrow_forward_ios),
+                    trailing: const Icon(Icons.arrow_forward_ios),
                     onTap: () {
                       // Set the selected customer when a customer name is clicked
                       Provider.of<BookingProvider>(context, listen: false).setCustomerDetails(customer.toJson());
                        Navigator.push(
                             context,
                             MaterialPageRoute(
-                              builder: (context) => SummaryPage(), // Navigate to SchedulePage
+                              builder: (context) => const SummaryPage(), // Navigate to SchedulePage
                             ),
                           );
                       // Print the customer details to the console

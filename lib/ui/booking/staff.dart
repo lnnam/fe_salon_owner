@@ -10,21 +10,23 @@ import 'service.dart';
 import 'summary.dart';
 
 class StaffPage extends StatelessWidget {
+  const StaffPage({super.key});
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Staffs'),
+        title: const Text('Staffs'),
       ),
       body: FutureBuilder<List<Staff>>(
         future: apiManager.ListStaff(),
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
-            return Center(child: CircularProgressIndicator());
+            return const Center(child: CircularProgressIndicator());
           } else if (snapshot.hasError) {
             return Center(child: Text('Error: ${snapshot.error}'));
           } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
-            return Center(child: Text('No staff found'));
+            return const Center(child: Text('No staff found'));
           } else {
             final staffList = snapshot.data!;
             return Container(
@@ -44,7 +46,7 @@ class StaffPage extends StatelessWidget {
                             color: Colors.grey.withOpacity(0.5),
                             spreadRadius: 2,
                             blurRadius: 5,
-                            offset: Offset(0, 3),
+                            offset: const Offset(0, 3),
                           ),
                         ],
                       ),
@@ -54,21 +56,21 @@ class StaffPage extends StatelessWidget {
                           radius: 30,
                           backgroundImage: getImage(staff.photo),
                           child: getImage(staff.photo) == null
-                              ? Icon(Icons.person)
+                              ? const Icon(Icons.person)
                               : null,
                         ),
                         title: Text(
                           staff.fullname,
-                          style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                          style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                         ),
                         subtitle: Text(
                           'Position: ${staff.position}',
                           style: TextStyle(fontSize: 14, color: Colors.grey[600]),
                         ),
-                        trailing: Icon(Icons.arrow_forward_ios),
+                        trailing: const Icon(Icons.arrow_forward_ios),
                         onTap: () {
                           final bookingProvider = Provider.of<BookingProvider>(context, listen: false);
-                          bool isEditMode = Provider.of<BookingProvider>(context).onbooking.editMode ?? false;
+                          final isEditMode = bookingProvider.onbooking?.editMode ?? false;
 
                           // Set staff
                           bookingProvider.setStaff(staff.toJson());
@@ -76,12 +78,12 @@ class StaffPage extends StatelessWidget {
                           if (isEditMode) {
                             Navigator.push(
                               context,
-                              MaterialPageRoute(builder: (context) => SummaryPage()),
+                              MaterialPageRoute(builder: (context) => const SummaryPage()),
                             );
                           } else {
                             Navigator.push(
                               context,
-                              MaterialPageRoute(builder: (context) => ServicePage()),
+                              MaterialPageRoute(builder: (context) => const ServicePage()),
                             );
                           }
                         },

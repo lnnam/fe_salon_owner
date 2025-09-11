@@ -5,23 +5,27 @@ import 'package:salonapp/model/service.dart';
 import 'package:salonapp/services/helper.dart';
 import 'package:salonapp/provider/booking.provider.dart';
 import 'calendar.dart'; // Import SchedulePage
+import 'summary.dart';
+
 
 class ServicePage extends StatelessWidget {
+  const ServicePage({super.key});
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Services'),
+        title: const Text('Services'),
       ),
       body: FutureBuilder<List<Service>>(
         future: apiManager.ListServices(),
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
-            return Center(child: CircularProgressIndicator());
+            return const Center(child: CircularProgressIndicator());
           } else if (snapshot.hasError) {
             return Center(child: Text('Error: ${snapshot.error}'));
           } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
-            return Center(child: Text('No services found'));
+            return const Center(child: Text('No services found'));
           } else {
             final serviceList = snapshot.data!;
             return Container(
@@ -41,7 +45,7 @@ class ServicePage extends StatelessWidget {
                             color: Colors.grey.withOpacity(0.5),
                             spreadRadius: 2,
                             blurRadius: 5,
-                            offset: Offset(0, 3),
+                            offset: const Offset(0, 3),
                           ),
                         ],
                       ),
@@ -49,25 +53,35 @@ class ServicePage extends StatelessWidget {
                         contentPadding: EdgeInsets.zero,
                         title: Text(
                           service.name,
-                          style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                          style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                         ),
                         subtitle: Text(
                           'Price: \$${service.price}',
                           style: TextStyle(fontSize: 14, color: Colors.grey[600]),
                         ),
-                        trailing: Icon(Icons.arrow_forward_ios),
+                        trailing: const Icon(Icons.arrow_forward_ios),
                         onTap: () {
                           // Handle tap on service
-                          Provider.of<BookingProvider>(context, listen: false).setService(service.toJson());
-                          // Print the service name to the console
-                        //  print('Selected Service: ${Provider.of<BookingProvider>(context, listen: false).onbooking.servicekey}');
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) => BookingCalendarPage(), // Navigate to SchedulePage
-                            ),
-                          );
-                          // Navigate to the next page if needed
+                        
+
+                          final bookingProvider = Provider.of<BookingProvider>(context, listen: false);
+                          final isEditMode = bookingProvider.onbooking?.editMode ?? false;
+
+                          // Set staff
+                          bookingProvider.setService(service.toJson());
+
+                          if (isEditMode) {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(builder: (context) => const SummaryPage()),
+                            );
+                          } else {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(builder: (context) => const BookingCalendarPage()),
+                            );
+                          }
+
                         },
                       ),
                     ),

@@ -8,10 +8,9 @@ import 'package:salonapp/model/user.dart';
 import 'package:salonapp/main.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
-import 'package:salonapp/main.dart';
 
 class Login extends StatefulWidget {
-  const Login({Key? key});
+  const Login({super.key});
   @override
   State<Login> createState() => _LoginState();
 }
@@ -25,8 +24,8 @@ class _LoginState extends State<Login> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text("Beauty Salon", style: TextStyle(color: Colors.white)),
-        backgroundColor: Color(COLOR_PRIMARY),
+        title: const Text("Beauty Salon", style: TextStyle(color: Colors.white)),
+        backgroundColor: const Color(COLOR_PRIMARY),
         iconTheme: IconThemeData(
             color: isDarkMode(context) ? Colors.white : Colors.black),
         elevation: 0.0,

@@ -1,16 +1,17 @@
 import 'package:flutter/material.dart';
-import 'package:salonapp/services/helper.dart';
 import 'package:salonapp/constants.dart';
 
 
 class AppDrawerBooking extends StatelessWidget {
+  const AppDrawerBooking({super.key});
+
   @override
   Widget build(BuildContext context) {
     return Drawer(
       child: ListView(
         padding: EdgeInsets.zero,
         children: <Widget>[
-          DrawerHeader(
+          const DrawerHeader(
             decoration: BoxDecoration(
               color:  Color(COLOR_PRIMARY),
             ),
@@ -23,19 +24,19 @@ class AppDrawerBooking extends StatelessWidget {
             ),
           ),
           ListTile(
-            title: Text('Dashboard'),
+            title: const Text('Dashboard'),
             onTap: () {
               Navigator.pushReplacementNamed(context, '/dashboard');
             },
           ),
           ListTile(
-            title: Text('Go Sale'),
+            title: const Text('Go Sale'),
             onTap: () {
               Navigator.pushReplacementNamed(context, '/setting');
             },
           ),
           ListTile(
-            title: Text('Go Checkout'),
+            title: const Text('Go Checkout'),
             onTap: () {
               Navigator.pushReplacementNamed(context, '/setting');
             },

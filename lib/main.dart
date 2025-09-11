@@ -34,14 +34,14 @@ import 'package:provider/provider.dart';
         useOnlyLangCode: true,
         child: ChangeNotifierProvider(
         create: (context) => BookingProvider(),
-        child: MyApp(),
+        child: const MyApp(),
       ),),
   );
 } 
 
 
 class MyApp extends StatefulWidget {
-  const MyApp({Key? key}) : super(key: key);
+  const MyApp({super.key});
 
   @override
   MyAppState createState() => MyAppState();
@@ -88,8 +88,8 @@ class MyAppState extends State<MyApp> with WidgetsBindingObserver {
        
         appBarTheme: AppBarTheme(
           color: color, // Set default app bar background color
-          iconTheme: IconThemeData(color: Colors.white),
-         titleTextStyle: Theme.of(context).textTheme.headline6?.copyWith(
+          iconTheme: const IconThemeData(color: Colors.white),
+         titleTextStyle: Theme.of(context).textTheme.titleLarge?.copyWith(
         fontFamily: 'OpenSans',
         fontSize: 20,
         color: Colors.white,
@@ -100,27 +100,29 @@ class MyAppState extends State<MyApp> with WidgetsBindingObserver {
       // home: AuthChecker(),
       initialRoute: '/',
       routes: {
-        '/': (context) => AuthChecker(),
-        '/dashboard': (context) => AuthChecker(),
-        '/booking': (context) => BookingHomeScreen(),
-        '/pos': (context) => SaleScreen(),
-        '/checkin': (context) => CheckInScreen(),
-        '/checkout': (context) => CheckOutScreen(),
-        '/login': (context) => Login(),
-        '/logout': (context) => Login(),
+        '/': (context) => const AuthChecker(),
+        '/dashboard': (context) => const AuthChecker(),
+        '/booking': (context) => const BookingHomeScreen(),
+        '/pos': (context) => const SaleScreen(),
+        '/checkin': (context) => const CheckInScreen(),
+        '/checkout': (context) => const CheckOutScreen(),
+        '/login': (context) => const Login(),
+        '/logout': (context) => const Login(),
       },
     );
   }
 }
 
 class AuthChecker extends StatelessWidget {
+  const AuthChecker({super.key});
+
   @override
   Widget build(BuildContext context) {
     return FutureBuilder<bool>(
       future: _checkToken(),
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
-          return Scaffold(
+          return const Scaffold(
             body: Center(
               child: CircularProgressIndicator(),
             ),
@@ -129,10 +131,10 @@ class AuthChecker extends StatelessWidget {
           if (snapshot.hasData && snapshot.data == true) {
             // Token is saved, proceed to main app
             // Update currentUser in MyAppState
-            return Dashboard();
+            return const Dashboard();
           } else {
             // Token is not saved, navigate to login page
-            return Login();
+            return const Login();
           }
         }
       },

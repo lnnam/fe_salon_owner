@@ -1,7 +1,5 @@
 import 'package:http/http.dart' as http;
-import 'package:flutter/material.dart';
 import 'dart:convert';
-import 'package:flutter/foundation.dart';
 import 'package:salonapp/config/app_config.dart';
 import 'package:salonapp/model/user.dart';
 import 'package:salonapp/model/booking.dart';
@@ -66,11 +64,11 @@ class MyHttp {
       return json.decode(response.body);
     } else {
       // Request failed, throw error
-      if(response.statusCode == 401)
+      if(response.statusCode == 401) {
         throw 'Your session has expired. Please log in again.';
-  
-      else 
+      } else {
         throw 'Request failed with status: ${response.statusCode}';
+      }
     }
   }
 
@@ -83,7 +81,7 @@ class MyHttp {
           return data.map<Booking>((item) => Booking.fromJson(item)).toList();
       } catch (error) {
         // Handle error
-        throw error;
+        rethrow;
       }
   }
 
@@ -97,7 +95,7 @@ class MyHttp {
         // Handle error
                 print(error);
 
-        throw error;
+        rethrow;
       }
   }
 
@@ -111,7 +109,7 @@ class MyHttp {
         // Handle error
                 print(error);
 
-        throw error;
+        rethrow;
       }
   }
 
@@ -123,7 +121,7 @@ class MyHttp {
     } catch (error) {
       // Handle error
       print(error);
-      throw error;
+      rethrow;
     }
   }
 

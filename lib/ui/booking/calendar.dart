@@ -7,6 +7,8 @@ import 'customer.dart'; // Import SchedulePage
 import 'summary.dart';
 
 class BookingCalendarPage extends StatefulWidget {
+  const BookingCalendarPage({super.key});
+
   @override
   _BookingCalendarPageState createState() => _BookingCalendarPageState();
 }
@@ -38,27 +40,40 @@ class _BookingCalendarPageState extends State<BookingCalendarPage> {
         start: newBooking.bookingStart, end: newBooking.bookingEnd));
    // print('${newBooking.toJson()} has been uploaded');
     Provider.of<BookingProvider>(context, listen: false).setSchedule(newBooking.toJson());
-   
+/*    
       final bookingProvider = Provider.of<BookingProvider>(context, listen: false);
                           // Check if serviceKey is set
                           final serviceKey = bookingProvider.bookingDetails['serviceKey'];
                           if (serviceKey != null && serviceKey.toString().isNotEmpty) {
                             Navigator.push(
                               context,
-                              MaterialPageRoute(builder: (context) => SummaryPage()),
+                              MaterialPageRoute(builder: (context) => const SummaryPage()),
                             );
                           } else {
                             Navigator.push(
                               context,
-                              MaterialPageRoute(builder: (context) => CustomerPage()),
+                              MaterialPageRoute(builder: (context) => const CustomerPage()),
+                            );
+                          } */
+
+
+
+                           final bookingProvider = Provider.of<BookingProvider>(context, listen: false);
+                          final isEditMode = bookingProvider.onbooking?.editMode ?? false;
+
+
+                          if (isEditMode) {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(builder: (context) => const SummaryPage()),
+                            );
+                          } else {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(builder: (context) => const CustomerPage()),
                             );
                           }
-    /*  Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) => CustomerPage(), // Navigate to SchedulePage
-                            ),
-                          ); */
+
   }
 
   List<DateTimeRange> convertStreamResultMock({required dynamic streamResult}) {
@@ -93,7 +108,7 @@ class _BookingCalendarPageState extends State<BookingCalendarPage> {
 
   @override
   Widget build(BuildContext context) {
-    final color = Color(COLOR_PRIMARY);
+    const color = Color(COLOR_PRIMARY);
     return Scaffold(
         appBar: AppBar(
            title: const Text('Booking Calendar',  style: TextStyle(color: Colors.white)),

@@ -13,18 +13,20 @@ import 'package:salonapp/ui/booking/home.dart';
 
 
 class Dashboard extends StatelessWidget {
+  const Dashboard({super.key});
+
 
   @override
   Widget build(BuildContext context) {
-    final color = Color(COLOR_PRIMARY);
+    const color = Color(COLOR_PRIMARY);
     return Scaffold(
       appBar: AppBar(
-        title: Text('Dashboard'),
+        title: const Text('Dashboard'),
        // iconTheme: IconThemeData(color: Colors.white),
         
        // backgroundColor: color, // Set app bar color
       ),
-      drawer: AppDrawerDashboard(),
+      drawer: const AppDrawerDashboard(),
       body: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
@@ -35,9 +37,9 @@ class Dashboard extends StatelessWidget {
               children: [
                 Text(
                   'Welcome, salon name ${MyAppState.currentUser!.salonname}!',
-                  style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                  style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
                 ),
-                SizedBox(height: 8),
+                const SizedBox(height: 8),
                 Text('User: ${MyAppState.currentUser!.username}'),
               ],
             ),
@@ -61,7 +63,7 @@ class Dashboard extends StatelessWidget {
       ),
       bottomNavigationBar: BottomAppBar(
         color: color,
-        child: Container(
+        child: SizedBox(
           height: 56.0,
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceAround,
@@ -70,25 +72,25 @@ class Dashboard extends StatelessWidget {
                 onPressed: () {
                  
                 },
-                icon: Icon(Icons.event, color: Colors.white),
+                icon: const Icon(Icons.event, color: Colors.white),
               ),
               IconButton(
                 onPressed: () {
                   
                 },
-                icon: Icon(Icons.shopping_cart, color: Colors.white),
+                icon: const Icon(Icons.shopping_cart, color: Colors.white),
               ),
               IconButton(
                 onPressed: () {
                   
                 },
-                icon: Icon(Icons.check_circle, color: Colors.white),
+                icon: const Icon(Icons.check_circle, color: Colors.white),
               ),
               IconButton(
                 onPressed: () {
                   
                 },
-                icon: Icon(Icons.check_circle_outline, color: Colors.white),
+                icon: const Icon(Icons.check_circle_outline, color: Colors.white),
               ),
             ],
           ),
@@ -113,10 +115,10 @@ class Dashboard extends StatelessWidget {
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               Icon(icon, size: 50, color: Colors.white),
-              SizedBox(height: 8),
+              const SizedBox(height: 8),
               Text(
                 title,
-                style: TextStyle(
+                style: const TextStyle(
                     fontSize: 16,
                     fontWeight: FontWeight.bold,
                     color: Colors.white),
@@ -132,14 +134,16 @@ class Dashboard extends StatelessWidget {
 
 
 class CheckInScreen extends StatelessWidget {
+  const CheckInScreen({super.key});
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Check-in'),
+        title: const Text('Check-in'),
         backgroundColor: Colors.blue, // Set app bar color
       ),
-      body: Center(
+      body: const Center(
         child: Text('Check-in Screen'),
       ),
     );
@@ -147,14 +151,16 @@ class CheckInScreen extends StatelessWidget {
 }
 
 class CheckOutScreen extends StatelessWidget {
+  const CheckOutScreen({super.key});
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Check-out'),
+        title: const Text('Check-out'),
         backgroundColor: Colors.blue, // Set app bar color
       ),
-      body: Center(
+      body: const Center(
         child: Text('Check-out Screen'),
       ),
     );
