@@ -31,6 +31,15 @@ class BookingHomeScreen extends StatelessWidget {
       body: FutureBuilder<List<Booking>>(
         future: apiManager.ListBooking(),
         builder: (context, snapshot) {
+          print('Calling ListBooking...');
+          if (snapshot.hasError) {
+  return Center(child: Text('Error: ${snapshot.error}'));
+}else if (!snapshot.hasData || snapshot.data!.isEmpty) {
+  print('No data or empty list: ${snapshot.data}');
+  return const Center(child: Text('No bookings available.'));
+}
+
+
           if (snapshot.connectionState == ConnectionState.waiting) {
             return const Center(child: CircularProgressIndicator());
           } else if (snapshot.hasError) {
