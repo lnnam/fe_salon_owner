@@ -13,6 +13,12 @@ class BookingProvider with ChangeNotifier {
     notifyListeners();
   } 
 
+  void setNote(String note) {
+    _onbooking.note = note;
+    print('note: ${_onbooking.note}');
+    notifyListeners();
+  } 
+
   void setStaff(Map<String, dynamic> staff) {
      _onbooking.staff  = staff;
  //   print('Staff: ${_onbooking.staff}');
@@ -36,7 +42,7 @@ void setCustomerDetails(Map<String, dynamic> customer) {
  _onbooking.customer  = customer;
   //   _onbooking.customerName  = name;
    //  _onbooking.customerEmail = email;
-   // print('customer: ${_onbooking.customer}');
+//   print('customer: ${_onbooking.customer}');
     notifyListeners();
   }
 
@@ -57,12 +63,13 @@ void setCustomerDetails(Map<String, dynamic> customer) {
       'date': ScheduleDate,
       'schedule': _onbooking.schedule?['bookingStart'],
       'formattedschedule': formattedSchedule,
-      'customerName': _onbooking.customer?['fullname'],
-      'customerKey': _onbooking.staff?['customerkey'].toString(),
-      'staffName': _onbooking.staff?['fullname'].toString(),
-      'staffKey': _onbooking.staff?['staffkey'].toString(),
-      'serviceName': _onbooking.service?['name'].toString(),
-      'serviceKey': _onbooking.service?['servicekey'].toString(),
+      'customername': _onbooking.customer?['fullname'],
+      'customerkey': _onbooking.customer?['customerkey'].toString(),
+      'staffname': _onbooking.staff?['fullname'].toString(),
+      'staffkey': _onbooking.staff?['staffkey'].toString(),
+      'servicename': _onbooking.service?['name'].toString(),
+      'servicekey': _onbooking.service?['servicekey'].toString(),
+      'note': _onbooking.note,
     };
   }
 

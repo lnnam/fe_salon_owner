@@ -173,5 +173,31 @@ Future<dynamic> AddBooking(
   }
 }
 
+Future<bool> deleteBooking(int bookingId) async {
+  try {
+    // Get current user and token
+    final User currentUser = await getCurrentUser();
+    final String token = currentUser.token;
+
+    final response = await http.delete(
+      Uri.parse('${AppConfig.api_url_booking_del}/$bookingId'),
+      headers: <String, String>{
+        'Authorization': 'Bearer $token', // <-- Add token here
+        'Content-Type': 'application/json; charset=UTF-8',
+      },
+    );
+
+    if (response.statusCode == 200 || response.statusCode == 204) {
+      // Successfully deleted
+      return true;
+    } else {
+      print('Delete failed: ${response.statusCode}, ${response.body}');
+      return false;
+    }
+  } catch (e) {
+    print('Delete error: $e');
+    return false;
+  }
+}
 
 }

@@ -1,6 +1,7 @@
 import 'package:intl/intl.dart';
 
 class Booking {
+  final int pkey; // <-- Add this line as int
   final String customerkey;
   final String customername;
   final DateTime datetimebooking;
@@ -14,8 +15,10 @@ class Booking {
   final String bookingdate;
   final String bookingtime;
   final String customerphoto;
+  final String note;
 
   Booking({
+    required this.pkey, // <-- Add this line
     required this.customerkey,
     required this.customername,
     required this.datetimebooking,
@@ -29,24 +32,42 @@ class Booking {
     required this.bookingdate,
     required this.bookingtime,
     required this.customerphoto,
+    required this.note,
   });
 
   factory Booking.fromJson(Map<String, dynamic> json) {
-    DateTime bookingDateTime = DateTime.parse(json['datetime']);
-    String formattedBookingDate = DateFormat('yyyy-MM-dd').format(bookingDateTime);
-    String formattedBookingTime = DateFormat('HH:mm').format(bookingDateTime);
-    //String createdDateTime = DateFormat('HH:mm yyyy-MM-dd').format(DateTime.parse(json['dateactivated']));
-    DateTime createdDateTime = DateTime.parse(json['dateactivated']);
+    DateTime bookingDateTime;
+    String formattedBookingDate = '';
+    String formattedBookingTime = '';
+
+    if (json['datetime'] != null && json['datetime'] != '') {
+      bookingDateTime = DateTime.parse(json['datetime']);
+      formattedBookingDate = DateFormat('yyyy-MM-dd').format(bookingDateTime);
+      formattedBookingTime = DateFormat('HH:mm').format(bookingDateTime);
+    } else {
+      bookingDateTime = json['dateactivated'] != null && json['dateactivated'] != ''
+          ? DateTime.parse(json['dateactivated'])
+          : DateTime.now();
+      formattedBookingDate = DateFormat('yyyy-MM-dd').format(bookingDateTime);
+      formattedBookingTime = '';
+    }
+
+    DateTime createdDateTime = json['dateactivated'] != null && json['dateactivated'] != ''
+        ? DateTime.parse(json['dateactivated'])
+        : DateTime.now();
 
     return Booking(
+      pkey: json['pkey'] is int
+          ? json['pkey']
+          : int.tryParse(json['pkey']?.toString() ?? '') ?? 0, // <-- Parse as int
       customername: json['customername'] ?? 'Unknown',
-      customerkey: json['customerkey'].toString() ?? 'Unknown',
-      staffkey: json['staffkey'].toString() ?? 'Unknown',
+      customerkey: json['customerkey']?.toString() ?? 'Unknown',
+      staffkey: json['staffkey']?.toString() ?? 'Unknown',
       datetimebooking: bookingDateTime,
       staffname: json['staffname'] ?? 'N/A',
       servicename: json['servicename'] ?? 'N/A',
-      servicekey: json['servicekey'].toString(),
-      numbooked: json['pkey'].toString(),
+      servicekey: json['servicekey']?.toString() ?? 'Unknown',
+      numbooked: json['pkey']?.toString() ?? 'Unknown',
       customertype: json['customertype'] ?? 'N/A',
       created_datetime: createdDateTime,
       bookingdate: formattedBookingDate,
@@ -54,6 +75,7 @@ class Booking {
       customerphoto: json['photobase64'] != null && json['photobase64'] != ''
           ? json['photobase64']
           : 'Unknown',
+      note: json['note'] ?? '',
     );
   }
 }
@@ -64,6 +86,7 @@ class OnBooking {
   Map<String, dynamic>? service;
   Map<String, dynamic>? schedule;
   bool editMode;
+  String note ;
 
   OnBooking({
     this.staff,
@@ -71,6 +94,7 @@ class OnBooking {
     this.service,
     this.schedule,
     this.editMode = false, // default to false
+    this.note = ''
   });
 }
 

@@ -61,7 +61,7 @@ class MyAppState extends State<MyApp> with WidgetsBindingObserver {
     final user = await _getUserInfo();
     setState(() {
       currentUser = user;
-          print('fdsfdsfdsfsdfsdfsdf');
+          print('Current user: $currentUser');
 
     });
   }

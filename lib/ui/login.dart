@@ -208,15 +208,18 @@ class _LoginState extends State<Login> {
     );
   }
 
-  _login() async {
-    if (_key.currentState?.validate() ?? false) {
-      _key.currentState!.save();
+  void _login() async {
+  if (_key.currentState?.validate() ?? false) {
+    _key.currentState!.save();
 
+    try {
       dynamic result = await apiManager.salonLogin(
-          salonkey!.trim(), username!.trim(), password!.trim());
+        salonkey!.trim(), username!.trim(), password!.trim());
+
+      print('salonLogin result: $result');
 
       if (result != null && result is User) {
-        // Save token and user info
+         // Save token and user info
         if (kIsWeb) {
           // Store in cookies
           //setCookie('objuser', json.encode(result.toJson()));
@@ -230,16 +233,33 @@ class _LoginState extends State<Login> {
         Navigator.pushReplacementNamed(context, '/dashboard');
       } else {
         showAlertDialog(
-            context,
-            'Couldn\'t Authenticate'.tr(),
-            'Login failed, Please try again.'.tr());
+          context,
+          'Couldn\'t Authenticate'.tr(),
+          'Login failed, Please try again.'.tr());
       }
-    } else {
-      setState(() {
-        _validate = AutovalidateMode.onUserInteraction;
-      });
+    } catch (e) {
+      // Show dialog if server is not connected
+      showDialog(
+        context: context,
+        builder: (context) => AlertDialog(
+          title: const Text('Error'),
+          content: const Text('Unable to connect to the server'),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: const Text('OK'),
+            ),
+          ],
+        ),
+      );
     }
+  } else {
+    setState(() {
+      _validate = AutovalidateMode.onUserInteraction;
+    });
   }
+}
+
 
   // Function to set the cookie on the web platform
 /*   void setCookie(String name, String value) {
