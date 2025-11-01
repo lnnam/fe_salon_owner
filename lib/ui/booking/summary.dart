@@ -11,6 +11,7 @@ import 'calendar.dart'; // ⬅️ Replace with actual path
 import 'staff.dart'; // ⬅️ Replace with actual path
 import 'customer.dart'; // ⬅️ Replace with actual path
 import 'service.dart'; // ⬅️ Replace with actual path
+import 'booking_actions.dart';
 
 class SummaryPage extends StatefulWidget {
   final Booking? booking;
@@ -33,6 +34,7 @@ class _SummaryPageState extends State<SummaryPage> {
   late String customerName;
   late String staffName;
   late String serviceName;
+  late int bookingkey;
   late TextEditingController noteController;
 
   @override
@@ -59,6 +61,7 @@ class _SummaryPageState extends State<SummaryPage> {
       print('widget');
 
       final booking = widget.booking!;
+      bookingkey = booking.pkey;
       customerKey = booking.customerkey;
       serviceKey = booking.servicekey;
       staffKey = booking.staffkey;
@@ -71,6 +74,7 @@ class _SummaryPageState extends State<SummaryPage> {
       bookingProvider.setBookingFromModel(booking);
     } else {
       print('bookingProvider');
+      bookingkey = 0;
       final bookingProvider =
           Provider.of<BookingProvider>(context, listen: false);
       final bookingDetails = bookingProvider.bookingDetails;
@@ -88,75 +92,6 @@ class _SummaryPageState extends State<SummaryPage> {
     }
 
     noteController = TextEditingController(text: note);
-  }
-
-  _addBooking(BuildContext context) async {
-    setState(() {
-      isLoading = true;
-    });
-
-    final result = await apiManager.AddBooking(
-      customerKey,
-      serviceKey,
-      staffKey,
-      bookingDate,
-      bookingTime,
-      note,
-      customerName,
-      staffName,
-      serviceName,
-    );
-
-    setState(() {
-      isLoading = false;
-    });
-
-    if (result != null) {
-      showDialog(
-        context: context,
-        builder: (BuildContext context) {
-          return AlertDialog(
-            title: const Text("Success"),
-            content: const Text("Booking Added"),
-            actions: [
-              Center(
-                child: ElevatedButton(
-                  onPressed: () {
-                    Navigator.of(context).pop();
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                          builder: (context) => const BookingHomeScreen()),
-                    );
-                  },
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.blue,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    padding: const EdgeInsets.symmetric(
-                        horizontal: 32, vertical: 14),
-                  ),
-                  child: const Text(
-                    "OK",
-                    style: TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.white),
-                  ),
-                ),
-              ),
-            ],
-          );
-        },
-      );
-    } else {
-      showAlertDialog(
-        context,
-        'Error : '.tr(),
-        'Booking not saved. Contact support!'.tr(),
-      );
-    }
   }
 
   Future<void> _deleteBooking(BuildContext context) async {
@@ -317,7 +252,23 @@ class _SummaryPageState extends State<SummaryPage> {
             Column(
               children: [
                 ElevatedButton(
-                  onPressed: isLoading ? null : () => _addBooking(context),
+                  onPressed: isLoading
+                      ? null
+                      : () => saveBooking(
+                            context,
+                            bookingkey,
+                            (bool val) => setState(
+                                () => isLoading = val), // <-- Accepts a bool
+                            customerKey,
+                            serviceKey,
+                            staffKey,
+                            bookingDate,
+                            bookingTime,
+                            note,
+                            customerName,
+                            staffName,
+                            serviceName,
+                          ),
                   style: ElevatedButton.styleFrom(
                     backgroundColor: Colors.blue,
                     shape: RoundedRectangleBorder(
@@ -339,7 +290,14 @@ class _SummaryPageState extends State<SummaryPage> {
                 const SizedBox(height: 12),
                 if (widget.booking != null)
                   TextButton(
-                    onPressed: isLoading ? null : () => _deleteBooking(context),
+                    onPressed: isLoading
+                        ? null
+                        : () => deleteBookingAction(
+                              context,
+                              isLoading,
+                              (val) => setState(() => isLoading = val),
+                              widget.booking,
+                            ),
                     child: const Text(
                       'Delete',
                       style: TextStyle(
