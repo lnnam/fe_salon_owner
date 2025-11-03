@@ -61,25 +61,28 @@ class _SummaryPageState extends State<SummaryPage> {
       print('widget');
 
       final booking = widget.booking!;
+     // print('Booking from widget: ${booking.toJson()}');
+     
       bookingkey = booking.pkey;
       customerKey = booking.customerkey;
       serviceKey = booking.servicekey;
       staffKey = booking.staffkey;
       bookingDate = booking.bookingdate;
-      //bookingTime = booking.bookingtime;
       bookingTime = DateFormat('HH:mm, dd/MM/yyyy').format(booking.bookingtime);
       customerName = booking.customername;
       staffName = booking.staffname;
       serviceName = booking.servicename;
       note = booking.note;
+      bookingProvider.setBookingKey(bookingkey); // ✅ Added here
       bookingProvider.setBookingFromModel(booking);
     } else {
       print('bookingProvider');
-      bookingkey = 0;
+
       final bookingProvider =
           Provider.of<BookingProvider>(context, listen: false);
       final bookingDetails = bookingProvider.bookingDetails;
       //   print('Booking : ${bookingDetails}');
+      bookingkey = bookingDetails['bookingkey'] ?? 0;
       customerKey = bookingDetails['customerkey'] ?? '';
       serviceKey = bookingDetails['servicekey'] ?? '';
       staffKey = bookingDetails['staffkey'] ?? '';

@@ -87,6 +87,7 @@ class OnBooking {
   Map<String, dynamic>? schedule;
   bool editMode;
   String note ;
+  int bookingkey ;
 
   OnBooking({
     this.staff,
@@ -94,7 +95,8 @@ class OnBooking {
     this.service,
     this.schedule,
     this.editMode = false, // default to false
-    this.note = ''
+    this.note = '',
+    this.bookingkey = 0,
   });
 }
 

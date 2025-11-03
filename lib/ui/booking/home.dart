@@ -19,7 +19,8 @@ class BookingHomeScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     // Set editMode to false when home page loads
   final bookingProvider = Provider.of<BookingProvider>(context, listen: false);
-    bookingProvider.onbooking.editMode = false;
+    //bookingProvider.onbooking.editMode = false;
+    bookingProvider.resetBooking();
     print('editMode is now: ${bookingProvider.onbooking.editMode}');
 
     const color = Color(COLOR_PRIMARY);

@@ -38,8 +38,9 @@ class _BookingCalendarPageState extends State<BookingCalendarPage> {
     await Future.delayed(const Duration(seconds: 1));
     converted.add(DateTimeRange(
         start: newBooking.bookingStart, end: newBooking.bookingEnd));
-   // print('${newBooking.toJson()} has been uploaded');
-    Provider.of<BookingProvider>(context, listen: false).setSchedule(newBooking.toJson());
+    // print('${newBooking.toJson()} has been uploaded');
+    Provider.of<BookingProvider>(context, listen: false)
+        .setSchedule(newBooking.toJson());
 /*    
       final bookingProvider = Provider.of<BookingProvider>(context, listen: false);
                           // Check if serviceKey is set
@@ -56,28 +57,25 @@ class _BookingCalendarPageState extends State<BookingCalendarPage> {
                             );
                           } */
 
+    final bookingProvider =
+        Provider.of<BookingProvider>(context, listen: false);
+    final isEditMode = bookingProvider.onbooking?.editMode ?? false;
 
-
-                           final bookingProvider = Provider.of<BookingProvider>(context, listen: false);
-                          final isEditMode = bookingProvider.onbooking?.editMode ?? false;
-
-
-                          if (isEditMode) {
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(builder: (context) => const SummaryPage()),
-                            );
-                          } else {
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(builder: (context) => const CustomerPage()),
-                            );
-                          }
-
+    if (isEditMode) {
+      Navigator.push(
+        context,
+        MaterialPageRoute(builder: (context) => const SummaryPage()),
+      );
+    } else {
+      Navigator.push(
+        context,
+        MaterialPageRoute(builder: (context) => const CustomerPage()),
+      );
+    }
   }
 
   List<DateTimeRange> convertStreamResultMock({required dynamic streamResult}) {
-    DateTime first = now;
+   /*  DateTime first = now;
     DateTime tomorrow = now.add(const Duration(days: 1));
     DateTime second = now.add(const Duration(minutes: 55));
     DateTime third = now.subtract(const Duration(minutes: 240));
@@ -95,7 +93,8 @@ class _BookingCalendarPageState extends State<BookingCalendarPage> {
     converted.add(DateTimeRange(
         start: DateTime(tomorrow.year, tomorrow.month, tomorrow.day, 5, 0),
         end: DateTime(tomorrow.year, tomorrow.month, tomorrow.day, 23, 0)));
-    return converted;
+    return converted; */
+    return [];
   }
 
   List<DateTimeRange> generatePauseSlots() {
@@ -110,29 +109,32 @@ class _BookingCalendarPageState extends State<BookingCalendarPage> {
   Widget build(BuildContext context) {
     const color = Color(COLOR_PRIMARY);
     return Scaffold(
-        appBar: AppBar(
-           title: const Text('Booking Calendar',  style: TextStyle(color: Colors.white)),
-           backgroundColor: color, // Set app bar color
+      appBar: AppBar(
+        title: const Text('Booking Calendar',
+            style: TextStyle(color: Colors.white)),
+        backgroundColor: color, // Set app bar color
+      ),
+      body: Center(
+        child: BookingCalendar(
+          bookingService: mockBookingService,
+          convertStreamResultToDateTimeRanges: convertStreamResultMock,
+          getBookingStream: getBookingStreamMock,
+          uploadBooking: uploadBookingMock,
+          pauseSlots: generatePauseSlots(),
+          pauseSlotText: 'LUNCH',
+          hideBreakTime: false,
+          loadingWidget: const Text('Fetching data...'),
+          uploadingWidget: const CircularProgressIndicator(),
+          locale: 'en_GB',
+          // ✅ Start from the current day
+
+          startingDayOfWeek: StartingDayOfWeek.monday,
+          wholeDayIsBookedWidget:
+              const Text('Sorry, for this day everything is booked'),
+          //disabledDates: [DateTime(2023, 1, 20)],
+          //disabledDays: [6, 7],
         ),
-        body: Center(
-          child: BookingCalendar(
-            bookingService: mockBookingService,
-            convertStreamResultToDateTimeRanges: convertStreamResultMock,
-            getBookingStream: getBookingStreamMock,
-            uploadBooking: uploadBookingMock,
-            pauseSlots: generatePauseSlots(),
-            pauseSlotText: 'LUNCH',
-            hideBreakTime: false,
-            loadingWidget: const Text('Fetching data...'),
-            uploadingWidget: const CircularProgressIndicator(),
-            locale: 'en_GB',
-            startingDayOfWeek: StartingDayOfWeek.tuesday,
-            wholeDayIsBookedWidget:
-                const Text('Sorry, for this day everything is booked'),
-            //disabledDates: [DateTime(2023, 1, 20)],
-            //disabledDays: [6, 7],
-          ),
-        ),
-      );
+      ),
+    );
   }
 }

@@ -8,11 +8,29 @@ class BookingProvider with ChangeNotifier {
 
   OnBooking get onbooking => _onbooking;
 
+  void resetBooking() {
+    _onbooking
+      ..bookingkey = 0
+      ..note = ''
+      ..staff = {}
+      ..service = {}
+      ..schedule = {}
+      ..editMode = false;
+
+    print('BookingProvider reset: booking cleared');
+    notifyListeners();
+  }
+
   void setEditMode(bool mode) {
     _onbooking.editMode = mode;
     notifyListeners();
   } 
 
+  void setBookingKey(int pkey) {
+    _onbooking.bookingkey = pkey;
+      print('bookingkey: ${_onbooking.bookingkey}');
+    notifyListeners();
+  } 
   void setNote(String note) {
     _onbooking.note = note;
     print('note: ${_onbooking.note}');
@@ -60,6 +78,7 @@ void setCustomerDetails(Map<String, dynamic> customer) {
       }
     }
     return {
+      'bookingkey': _onbooking.bookingkey,
       'date': ScheduleDate,
       'schedule': _onbooking.schedule?['bookingStart'],
       'formattedschedule': formattedSchedule,
@@ -87,7 +106,7 @@ void setCustomerDetails(Map<String, dynamic> customer) {
     'name': booking.servicename,
   };
   _onbooking.schedule = {
-    'bookingStart': '${booking.bookingdate}T${booking.bookingtime}',
+    'bookingStart': '${booking.bookingtime}',
   };
 
   notifyListeners();
