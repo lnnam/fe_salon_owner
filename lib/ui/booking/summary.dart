@@ -66,7 +66,8 @@ class _SummaryPageState extends State<SummaryPage> {
       serviceKey = booking.servicekey;
       staffKey = booking.staffkey;
       bookingDate = booking.bookingdate;
-      bookingTime = booking.bookingtime;
+      //bookingTime = booking.bookingtime;
+      bookingTime = DateFormat('HH:mm, dd/MM/yyyy').format(booking.bookingtime);
       customerName = booking.customername;
       staffName = booking.staffname;
       serviceName = booking.servicename;
@@ -280,7 +281,7 @@ class _SummaryPageState extends State<SummaryPage> {
                   child: isLoading
                       ? const CircularProgressIndicator(color: Colors.white)
                       : const Text(
-                          'Confirm Booking',
+                          'Save Booking',
                           style: TextStyle(
                               fontSize: 16,
                               fontWeight: FontWeight.bold,

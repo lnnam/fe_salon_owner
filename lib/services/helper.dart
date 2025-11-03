@@ -327,3 +327,20 @@ ImageProvider? getImage(String base64String) {
       return null; // Return null if there's an error
     }
   }
+
+String formatBookingTime(dynamic bookingTime) {
+  try {
+    if (bookingTime is DateTime) {
+      return DateFormat('HH:mm').format(bookingTime);
+    } else if (bookingTime is String && bookingTime.isNotEmpty) {
+      try {
+        return DateFormat('HH:mm').format(DateFormat('HH:mm').parse(bookingTime));
+      } catch (_) {
+        return DateFormat('HH:mm').format(DateTime.parse(bookingTime));
+      }
+    }
+  } catch (_) {
+    // ignore and fallback
+  }
+  return bookingTime.toString();
+}

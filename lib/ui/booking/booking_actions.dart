@@ -20,7 +20,20 @@ Future<void> saveBooking(
 ) async {
   setLoading(true);
 
-  final result = await apiManager.AddBooking(
+  print({
+  'bookingKey': bookingKey,
+  'customerKey': customerKey,
+  'serviceKey': serviceKey,
+  'staffKey': staffKey,
+  'bookingDate': bookingDate,
+  'bookingTime': bookingTime,
+  'note': note,
+  'customerName': customerName,
+  'staffName': staffName,
+  'serviceName': serviceName,
+});
+
+  final result = await apiManager.SaveBooking(
     bookingKey,
     customerKey,
     serviceKey,
@@ -41,7 +54,7 @@ Future<void> saveBooking(
       builder: (BuildContext context) {
         return AlertDialog(
           title: const Text("Success"),
-          content: const Text("Booking Added"),
+          content: const Text("Booking Saved Successfully"),
           actions: [
             Center(
               child: ElevatedButton(

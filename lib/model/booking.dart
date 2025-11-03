@@ -13,7 +13,7 @@ class Booking {
   final String customertype;
   final DateTime created_datetime;
   final String bookingdate;
-  final String bookingtime;
+  final DateTime bookingtime;
   final String customerphoto;
   final String note;
 
@@ -71,7 +71,7 @@ class Booking {
       customertype: json['customertype'] ?? 'N/A',
       created_datetime: createdDateTime,
       bookingdate: formattedBookingDate,
-      bookingtime: formattedBookingTime,
+      bookingtime: bookingDateTime,
       customerphoto: json['photobase64'] != null && json['photobase64'] != ''
           ? json['photobase64']
           : 'Unknown',

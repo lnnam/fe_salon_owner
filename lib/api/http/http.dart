@@ -129,7 +129,7 @@ class MyHttp {
 
 
 
-Future<dynamic> AddBooking(
+Future<dynamic> SaveBooking(
   int bookingKey,
   String customerKey,
   String serviceKey,
@@ -144,11 +144,12 @@ Future<dynamic> AddBooking(
  //  print('url test: ${AppConfig.api_url_booking_add}');
   try {
     final response = await http.post(
-      Uri.parse(AppConfig.api_url_booking_add),
+      Uri.parse(AppConfig.api_url_booking_save),
       headers: <String, String>{
         'Content-Type': 'application/json; charset=UTF-8',
       },
       body: jsonEncode(<String, String>{
+        'bookingkey': bookingKey.toString(),
         'customerkey': customerKey,
         'servicekey': serviceKey,
         'staffkey': staffKey,

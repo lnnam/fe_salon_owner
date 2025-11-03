@@ -9,6 +9,7 @@ import 'package:salonapp/services/helper.dart';
 import 'summary.dart'; // Import Home
 import 'package:provider/provider.dart';
 import 'package:salonapp/provider/booking.provider.dart';
+import 'package:salonapp/services/helper.dart';
 
 
 class BookingHomeScreen extends StatelessWidget {
@@ -92,7 +93,7 @@ class BookingHomeScreen extends StatelessWidget {
                               child: imageProvider is AssetImage ? const Icon(Icons.person) : null,
                             ),
                             title: Text(
-                              '${booking.bookingtime}: ${booking.customername}, ${booking.servicename}, Staff: ${booking.staffname}',
+                              '${formatBookingTime(booking.bookingtime)}: ${booking.customername}, ${booking.servicename}, Staff: ${booking.staffname}',
                               style: const TextStyle(
                                 color: color,
                                 fontWeight: FontWeight.bold,
