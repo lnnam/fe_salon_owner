@@ -14,6 +14,7 @@ class Booking {
   final DateTime created_datetime;
   final String bookingdate;
   final DateTime bookingtime;
+  final DateTime bookingstart;
   final String customerphoto;
   final String note;
 
@@ -29,6 +30,7 @@ class Booking {
     required this.numbooked,
     required this.customertype,
     required this.created_datetime,
+    required this.bookingstart,
     required this.bookingdate,
     required this.bookingtime,
     required this.customerphoto,
@@ -40,8 +42,8 @@ class Booking {
     String formattedBookingDate = '';
     String formattedBookingTime = '';
 
-    if (json['datetime'] != null && json['datetime'] != '') {
-      bookingDateTime = DateTime.parse(json['datetime']);
+    if (json['bookingstart'] != null && json['bookingstart'] != '') {
+      bookingDateTime = DateTime.parse(json['bookingstart']);
       formattedBookingDate = DateFormat('yyyy-MM-dd').format(bookingDateTime);
       formattedBookingTime = DateFormat('HH:mm').format(bookingDateTime);
     } else {
@@ -72,6 +74,9 @@ class Booking {
       created_datetime: createdDateTime,
       bookingdate: formattedBookingDate,
       bookingtime: bookingDateTime,
+      bookingstart: json['bookingstart'] != null && json['bookingstart'] != ''
+          ? DateTime.parse(json['bookingstart'])
+          : DateTime.now(),
       customerphoto: json['photobase64'] != null && json['photobase64'] != ''
           ? json['photobase64']
           : 'Unknown',

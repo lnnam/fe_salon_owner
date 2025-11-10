@@ -94,7 +94,7 @@ class BookingHomeScreen extends StatelessWidget {
                               child: imageProvider is AssetImage ? const Icon(Icons.person) : null,
                             ),
                             title: Text(
-                              '${formatBookingTime(booking.bookingtime)}: ${booking.customername}, ${booking.servicename}, Staff: ${booking.staffname}',
+                              '${formatBookingTime(booking.bookingstart)}: ${booking.customername}, ${booking.servicename}, Staff: ${booking.staffname}',
                               style: const TextStyle(
                                 color: color,
                                 fontWeight: FontWeight.bold,
