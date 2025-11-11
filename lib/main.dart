@@ -1,17 +1,16 @@
-import 'package:salonapp/ui/booking/customer_login.dart';
-
 import 'constants.dart';
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:easy_localization/easy_localization.dart';
+import 'package:salonapp/services/helper.dart';
+import 'package:salonapp/api/api_manager.dart';
+import 'package:salonapp/ui/home.dart';
 import 'package:salonapp/ui/login.dart';
 import 'package:salonapp/ui/dashboard.dart';
 import 'package:salonapp/model/user.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:salonapp/ui/pos/home.dart';
 import 'package:salonapp/ui/booking/home.dart';
-import 'package:salonapp/ui/booking/staff.dart';
-import 'package:salonapp/ui/booking/service.dart';
 import 'package:flutter/rendering.dart';
 import 'package:salonapp/provider/booking.provider.dart';
 import 'package:provider/provider.dart';
@@ -101,7 +100,7 @@ class MyAppState extends State<MyApp> with WidgetsBindingObserver {
       // home: AuthChecker(),
       initialRoute: '/',
       routes: {
-        '/': (context) => const CustomerLoginPage(),
+        '/': (context) => const AuthChecker(),
         '/dashboard': (context) => const AuthChecker(),
         '/booking': (context) => const BookingHomeScreen(),
         '/pos': (context) => const SaleScreen(),

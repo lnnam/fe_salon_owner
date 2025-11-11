@@ -4,9 +4,9 @@ import 'package:salonapp/api/api_manager.dart';
 import 'package:salonapp/model/service.dart';
 import 'package:salonapp/services/helper.dart';
 import 'package:salonapp/provider/booking.provider.dart';
-import 'package:salonapp/ui/booking/staff.dart';
 import 'calendar.dart'; // Import SchedulePage
 import 'summary.dart';
+
 
 class ServicePage extends StatelessWidget {
   const ServicePage({super.key});
@@ -15,7 +15,7 @@ class ServicePage extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Select Your Treatments'),
+        title: const Text('Services'),
       ),
       body: FutureBuilder<List<Service>>(
         future: apiManager.ListServices(),
@@ -35,38 +35,37 @@ class ServicePage extends StatelessWidget {
                 itemBuilder: (BuildContext context, int index) {
                   Service service = serviceList[index];
                   return Padding(
-                    padding: const EdgeInsets.symmetric(
-                        vertical: 10.0, horizontal: 20.0),
+                    padding: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 16.0),
                     child: Container(
                       decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.circular(12),
+                        color: Colors.grey[200],
+                        borderRadius: BorderRadius.circular(10),
                         boxShadow: [
                           BoxShadow(
-                            color: Colors.grey.withOpacity(0.2),
-                            spreadRadius: 1,
-                            blurRadius: 4,
-                            offset: const Offset(0, 2),
+                            color: Colors.grey.withOpacity(0.5),
+                            spreadRadius: 2,
+                            blurRadius: 5,
+                            offset: const Offset(0, 3),
                           ),
                         ],
                       ),
                       child: ListTile(
-                        contentPadding: const EdgeInsets.symmetric(
-                            horizontal: 16, vertical: 12),
+                        contentPadding: EdgeInsets.zero,
                         title: Text(
                           service.name,
-                          style: const TextStyle(
-                              fontSize: 16, fontWeight: FontWeight.w600),
+                          style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                         ),
-                        trailing: const Icon(Icons.arrow_forward_ios, size: 18),
+                        subtitle: Text(
+                          'Price: \$${service.price}',
+                          style: TextStyle(fontSize: 14, color: Colors.grey[600]),
+                        ),
+                        trailing: const Icon(Icons.arrow_forward_ios),
                         onTap: () {
                           // Handle tap on service
+                        
 
-                          final bookingProvider = Provider.of<BookingProvider>(
-                              context,
-                              listen: false);
-                          final isEditMode =
-                              bookingProvider.onbooking?.editMode ?? false;
+                          final bookingProvider = Provider.of<BookingProvider>(context, listen: false);
+                          final isEditMode = bookingProvider.onbooking?.editMode ?? false;
 
                           // Set staff
                           bookingProvider.setService(service.toJson());
@@ -74,16 +73,15 @@ class ServicePage extends StatelessWidget {
                           if (isEditMode) {
                             Navigator.push(
                               context,
-                              MaterialPageRoute(
-                                  builder: (context) => const SummaryPage()),
+                              MaterialPageRoute(builder: (context) => const SummaryPage()),
                             );
                           } else {
                             Navigator.push(
                               context,
-                              MaterialPageRoute(
-                                  builder: (context) => const StaffPage()),
+                              MaterialPageRoute(builder: (context) => const BookingCalendarPage()),
                             );
                           }
+
                         },
                       ),
                     ),
@@ -96,4 +94,36 @@ class ServicePage extends StatelessWidget {
       ),
     );
   }
-}
+}/* 
+
+class BookingProvider with ChangeNotifier {
+  
+  final OnBooking _onbooking = OnBooking(staffkey: '', servicekey: '');
+
+  OnBooking get onbooking => _onbooking;
+
+  void setStaff(int staffkey) {
+    _onbooking.staffkey = staffkey.toString();
+    notifyListeners();
+  }
+
+  void setService(String servicekey) {
+    _onbooking.servicekey = servicekey;
+    notifyListeners();
+  }
+
+  String getStaff() {
+    return _onbooking.staffkey;
+  }
+
+  void setSchedule(DateTime schedule) {
+    // _onbooking.schedule = schedule;
+    notifyListeners();
+  }
+
+  void setCustomerDetails(String name, String email) {
+    // _onbooking.customerName = name;
+    // _onbooking.customerEmail = email;
+    notifyListeners();
+  }
+} */

@@ -6,7 +6,6 @@ import 'package:salonapp/constants.dart';
 import 'customer.dart'; // Import SchedulePage
 import 'summary.dart';
 import 'package:salonapp/api/api_manager.dart';
-import 'package:salonapp/ui/booking/customer_login.dart';
 
 class BookingCalendarPage extends StatefulWidget {
   const BookingCalendarPage({super.key});
@@ -71,7 +70,7 @@ class _BookingCalendarPageState extends State<BookingCalendarPage> {
     } else {
       Navigator.push(
         context,
-        MaterialPageRoute(builder: (context) => const CustomerLoginPage()),
+        MaterialPageRoute(builder: (context) => const CustomerPage()),
       );
     }
   }

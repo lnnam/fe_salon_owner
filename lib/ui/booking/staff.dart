@@ -6,8 +6,6 @@ import 'package:salonapp/api/api_manager.dart';
 import 'package:salonapp/model/staff.dart';
 import 'package:salonapp/services/helper.dart';
 import 'package:salonapp/provider/booking.provider.dart';
-import 'package:salonapp/ui/booking/calendar.dart';
-import 'package:salonapp/ui/booking/schedule___.dart';
 import 'service.dart';
 import 'summary.dart';
 
@@ -18,7 +16,7 @@ class StaffPage extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Select Your Stylist'),
+        title: const Text('Staffs'),
       ),
       body: FutureBuilder<List<Staff>>(
         future: apiManager.ListStaff(),
@@ -38,26 +36,24 @@ class StaffPage extends StatelessWidget {
                 itemBuilder: (BuildContext context, int index) {
                   Staff staff = staffList[index];
                   return Padding(
-                    padding: const EdgeInsets.symmetric(
-                        vertical: 10.0, horizontal: 20.0),
+                    padding: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 16.0),
                     child: Container(
                       decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.circular(12),
+                        color: Colors.grey[200],
+                        borderRadius: BorderRadius.circular(10),
                         boxShadow: [
                           BoxShadow(
-                            color: Colors.grey.withOpacity(0.2),
-                            spreadRadius: 1,
-                            blurRadius: 4,
-                            offset: const Offset(0, 2),
+                            color: Colors.grey.withOpacity(0.5),
+                            spreadRadius: 2,
+                            blurRadius: 5,
+                            offset: const Offset(0, 3),
                           ),
                         ],
                       ),
                       child: ListTile(
-                        contentPadding: const EdgeInsets.symmetric(
-                            horizontal: 16, vertical: 12),
+                        contentPadding: EdgeInsets.zero,
                         leading: CircleAvatar(
-                          radius: 28,
+                          radius: 30,
                           backgroundImage: getImage(staff.photo),
                           child: getImage(staff.photo) == null
                               ? const Icon(Icons.person)
@@ -65,16 +61,16 @@ class StaffPage extends StatelessWidget {
                         ),
                         title: Text(
                           staff.fullname,
-                          style: const TextStyle(
-                              fontSize: 16, fontWeight: FontWeight.w600),
+                          style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                         ),
-                        trailing: const Icon(Icons.arrow_forward_ios, size: 18),
+                        subtitle: Text(
+                          'Position: ${staff.position}',
+                          style: TextStyle(fontSize: 14, color: Colors.grey[600]),
+                        ),
+                        trailing: const Icon(Icons.arrow_forward_ios),
                         onTap: () {
-                          final bookingProvider = Provider.of<BookingProvider>(
-                              context,
-                              listen: false);
-                          final isEditMode =
-                              bookingProvider.onbooking?.editMode ?? false;
+                          final bookingProvider = Provider.of<BookingProvider>(context, listen: false);
+                          final isEditMode = bookingProvider.onbooking?.editMode ?? false;
 
                           // Set staff
                           bookingProvider.setStaff(staff.toJson());
@@ -82,14 +78,12 @@ class StaffPage extends StatelessWidget {
                           if (isEditMode) {
                             Navigator.push(
                               context,
-                              MaterialPageRoute(
-                                  builder: (context) => const SummaryPage()),
+                              MaterialPageRoute(builder: (context) => const SummaryPage()),
                             );
                           } else {
                             Navigator.push(
                               context,
-                              MaterialPageRoute(
-                                  builder: (context) => const BookingCalendarPage()),
+                              MaterialPageRoute(builder: (context) => const ServicePage()),
                             );
                           }
                         },

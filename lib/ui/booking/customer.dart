@@ -6,6 +6,7 @@ import 'package:salonapp/provider/booking.provider.dart';
 import 'package:salonapp/services/helper.dart';
 import 'Summary.dart';
 
+
 class CustomerPage extends StatefulWidget {
   const CustomerPage({super.key});
 
@@ -15,7 +16,6 @@ class CustomerPage extends StatefulWidget {
 
 class _CustomerPageState extends State<CustomerPage> {
   final TextEditingController _searchController = TextEditingController();
-  final TextEditingController _emailPhoneController = TextEditingController();
   List<Customer> _customerList = [];
   List<Customer> _filteredCustomerList = [];
 
@@ -29,7 +29,6 @@ class _CustomerPageState extends State<CustomerPage> {
   @override
   void dispose() {
     _searchController.dispose();
-    _emailPhoneController.dispose();
     super.dispose();
   }
 
@@ -50,70 +49,18 @@ class _CustomerPageState extends State<CustomerPage> {
     setState(() {
       _filteredCustomerList = _customerList.where((customer) {
         return customer.fullname.toLowerCase().contains(query) ||
-            customer.email.toLowerCase().contains(query);
+               customer.email.toLowerCase().contains(query);
       }).toList();
     });
   }
 
-  void _showCreateCustomerDialog() {
-    showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          title: const Text('Search by Email or Phone'),
-          content: TextField(
-            controller: _emailPhoneController,
-            decoration: const InputDecoration(
-              labelText: 'Email or Phone Number',
-              border: OutlineInputBorder(),
-              prefixIcon: Icon(Icons.search),
-            ),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () {
-                Navigator.pop(context);
-                _emailPhoneController.clear();
-              },
-              child: const Text('Cancel'),
-            ),
-            ElevatedButton(
-              onPressed: () {
-                if (_emailPhoneController.text.isNotEmpty) {
-                  print('Search: ${_emailPhoneController.text}');
-                  Navigator.pop(context);
-                  _emailPhoneController.clear();
-                  // You can add API call here to search or create customer
-                } else {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                        content: Text('Please enter email or phone')),
-                  );
-                }
-              },
-              child: const Text('GO'),
-            ),
-          ],
-        );
-      },
-    );
-  }
+
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Customers'),
-        actions: [
-          Padding(
-            padding: const EdgeInsets.all(8.0),
-            child: ElevatedButton.icon(
-              onPressed: _showCreateCustomerDialog,
-              icon: const Icon(Icons.add),
-              label: const Text('New Customer'),
-            ),
-          ),
-        ],
       ),
       body: Column(
         children: [
@@ -144,8 +91,7 @@ class _CustomerPageState extends State<CustomerPage> {
             itemBuilder: (BuildContext context, int index) {
               Customer customer = _filteredCustomerList[index];
               return Padding(
-                padding:
-                    const EdgeInsets.symmetric(vertical: 8.0, horizontal: 16.0),
+                padding: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 16.0),
                 child: Container(
                   decoration: BoxDecoration(
                     color: Colors.grey[200],
@@ -170,8 +116,7 @@ class _CustomerPageState extends State<CustomerPage> {
                     ),
                     title: Text(
                       customer.fullname,
-                      style: const TextStyle(
-                          fontSize: 18, fontWeight: FontWeight.bold),
+                      style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                     ),
                     subtitle: Text(
                       'Email: ${customer.email}',
@@ -180,15 +125,13 @@ class _CustomerPageState extends State<CustomerPage> {
                     trailing: const Icon(Icons.arrow_forward_ios),
                     onTap: () {
                       // Set the selected customer when a customer name is clicked
-                      Provider.of<BookingProvider>(context, listen: false)
-                          .setCustomerDetails(customer.toJson());
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) =>
-                              const SummaryPage(), // Navigate to SchedulePage
-                        ),
-                      );
+                      Provider.of<BookingProvider>(context, listen: false).setCustomerDetails(customer.toJson());
+                       Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => const SummaryPage(), // Navigate to SchedulePage
+                            ),
+                          );
                       // Print the customer details to the console
                       // Navigate to the next page if needed
                     },
