@@ -11,14 +11,14 @@ import 'package:provider/provider.dart';
 import 'package:salonapp/provider/booking.provider.dart';
 import 'package:salonapp/services/helper.dart';
 
-
 class BookingHomeScreen extends StatelessWidget {
   const BookingHomeScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
     // Set editMode to false when home page loads
-  final bookingProvider = Provider.of<BookingProvider>(context, listen: false);
+    final bookingProvider =
+        Provider.of<BookingProvider>(context, listen: false);
     //bookingProvider.onbooking.editMode = false;
     bookingProvider.resetBooking();
     print('editMode is now: ${bookingProvider.onbooking.editMode}');
@@ -35,12 +35,11 @@ class BookingHomeScreen extends StatelessWidget {
         builder: (context, snapshot) {
           print('Calling ListBooking...');
           if (snapshot.hasError) {
-  return Center(child: Text('Error: ${snapshot.error}'));
-}else if (!snapshot.hasData || snapshot.data!.isEmpty) {
-  print('No data or empty list: ${snapshot.data}');
-  return const Center(child: Text('No bookings available.'));
-}
-
+            return Center(child: Text('Error: ${snapshot.error}'));
+          } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
+            print('No data or empty list: ${snapshot.data}');
+            return const Center(child: Text('No bookings available.'));
+          }
 
           if (snapshot.connectionState == ConnectionState.waiting) {
             return const Center(child: CircularProgressIndicator());
@@ -64,7 +63,8 @@ class BookingHomeScreen extends StatelessWidget {
                     Container(
                       width: double.infinity,
                       color: color.withOpacity(0.2),
-                      padding: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 16.0),
+                      padding: const EdgeInsets.symmetric(
+                          vertical: 8.0, horizontal: 16.0),
                       child: Text(
                         _formatDate(date),
                         style: const TextStyle(
@@ -82,38 +82,50 @@ class BookingHomeScreen extends StatelessWidget {
                               const AssetImage('assets/default_avatar.png');
                         } catch (e) {
                           print('Error loading image: $e');
-                          imageProvider = const AssetImage('assets/default_avatar.png');
+                          imageProvider =
+                              const AssetImage('assets/default_avatar.png');
                         }
                         return Card(
-                          margin: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 16.0),
+                          margin: const EdgeInsets.symmetric(
+                              vertical: 8.0, horizontal: 16.0),
                           elevation: 4.0,
+                          color: isBookingInPast(booking)
+                              ? Colors.grey[300]
+                              : Colors.white, // <-- Highlight past
                           child: ListTile(
                             contentPadding: const EdgeInsets.all(16.0),
                             leading: CircleAvatar(
                               backgroundImage: imageProvider,
-                              child: imageProvider is AssetImage ? const Icon(Icons.person) : null,
+                              child: imageProvider is AssetImage
+                                  ? const Icon(Icons.person)
+                                  : null,
                             ),
                             title: Text(
-                              '${formatBookingTime(booking.bookingstart)}: ${booking.customername}, ${booking.servicename}, Staff: ${booking.staffname}',
-                              style: const TextStyle(
-                                color: color,
+                              '${formatBookingTime(booking.bookingstart)}: ${booking.customername}, ${booking.servicename}, Staff: ${booking.staffname} (10)',
+                              style: TextStyle(
+                                color: isBookingInPast(booking)
+                                    ? Colors.grey
+                                    : color,
                                 fontWeight: FontWeight.bold,
                               ),
                             ),
                             subtitle: Text(
-                              'Number of Visits: 10, Created on: ${_formatDateTime(booking.created_datetime)}',
-                              style: const TextStyle(
-                                color: color,
+                              'Scheduled: ${_formatDateTime(booking.created_datetime)}',
+                              style: TextStyle(
+                                color: isBookingInPast(booking)
+                                    ? Colors.grey
+                                    : color,
                               ),
                             ),
                             onTap: () {
                               // Handle onTap event
-                               Navigator.push(
-    context,
-    MaterialPageRoute(
-      builder: (context) => SummaryPage(booking: booking), // 👈 Pass booking
-    ),
-  );
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) => SummaryPage(
+                                      booking: booking), // 👈 Pass booking
+                                ),
+                              );
                             },
                           ),
                         );
@@ -163,7 +175,8 @@ class BookingHomeScreen extends StatelessWidget {
     );
   }
 
-  static Map<DateTime, List<Booking>> _groupBookingsByDate(List<Booking> bookings) {
+  static Map<DateTime, List<Booking>> _groupBookingsByDate(
+      List<Booking> bookings) {
     Map<DateTime, List<Booking>> groupedBookings = {};
     for (var booking in bookings) {
       final date = DateTime.parse(booking.bookingdate);
@@ -179,7 +192,20 @@ class BookingHomeScreen extends StatelessWidget {
   String _formatDate(DateTime dateTime) {
     return DateFormat('EEEE, d MMMM yyyy').format(dateTime);
   }
+
   String _formatDateTime(DateTime dateTime) {
     return DateFormat('HH:mm, EEEE, d MMMM').format(dateTime);
   }
+
+bool isBookingInPast(Booking booking) {
+  final date = DateTime.parse(booking.bookingdate);
+  final bookingDateTime = DateTime(
+    date.year,
+    date.month,
+    date.day,
+    booking.bookingtime.hour,
+    booking.bookingtime.minute,
+  );
+  return bookingDateTime.isBefore(DateTime.now());
+}
 }
