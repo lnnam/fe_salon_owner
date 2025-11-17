@@ -19,9 +19,12 @@ class BookingHomeScreen extends StatelessWidget {
     // Set editMode to false when home page loads
     final bookingProvider =
         Provider.of<BookingProvider>(context, listen: false);
-    //bookingProvider.onbooking.editMode = false;
-    bookingProvider.resetBooking();
-    print('editMode is now: ${bookingProvider.onbooking.editMode}');
+
+    // Reset booking after build is complete
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      bookingProvider.resetBooking();
+      print('editMode is now: ${bookingProvider.onbooking.editMode}');
+    });
 
     const color = Color(COLOR_PRIMARY);
     return Scaffold(
@@ -52,88 +55,291 @@ class BookingHomeScreen extends StatelessWidget {
             final sortedDates = groupedBookings.keys.toList();
             sortedDates.sort((a, b) => a.compareTo(b));
 
-            return ListView.builder(
-              itemCount: sortedDates.length,
-              itemBuilder: (context, index) {
-                final date = sortedDates[index];
-                final bookings = groupedBookings[date]!;
-                return Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Container(
-                      width: double.infinity,
-                      color: color.withOpacity(0.2),
-                      padding: const EdgeInsets.symmetric(
-                          vertical: 8.0, horizontal: 16.0),
-                      child: Text(
-                        _formatDate(date),
-                        style: const TextStyle(
-                          fontSize: 20,
-                          fontWeight: FontWeight.bold,
-                          color: color,
+            return Container(
+              color: Colors.grey[50],
+              child: ListView.builder(
+                padding: const EdgeInsets.only(bottom: 16.0),
+                itemCount: sortedDates.length,
+                itemBuilder: (context, index) {
+                  final date = sortedDates[index];
+                  final bookings = groupedBookings[date]!;
+                  return Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Container(
+                        width: double.infinity,
+                        margin: const EdgeInsets.only(top: 16.0, bottom: 8.0),
+                        padding: const EdgeInsets.symmetric(
+                            vertical: 12.0, horizontal: 20.0),
+                        decoration: BoxDecoration(
+                          gradient: LinearGradient(
+                            colors: [
+                              color.withOpacity(0.15),
+                              color.withOpacity(0.05)
+                            ],
+                            begin: Alignment.centerLeft,
+                            end: Alignment.centerRight,
+                          ),
+                          border: Border(
+                            left: BorderSide(color: color, width: 4.0),
+                          ),
+                        ),
+                        child: Row(
+                          children: [
+                            Icon(Icons.calendar_today, color: color, size: 20),
+                            const SizedBox(width: 8),
+                            Text(
+                              _formatDate(date),
+                              style: const TextStyle(
+                                fontSize: 18,
+                                fontWeight: FontWeight.bold,
+                                color: color,
+                                letterSpacing: 0.5,
+                              ),
+                            ),
+                          ],
                         ),
                       ),
-                    ),
-                    Column(
-                      children: bookings.map((booking) {
-                        ImageProvider imageProvider;
-                        try {
-                          imageProvider = getImage(booking.customerphoto) ??
-                              const AssetImage('assets/default_avatar.png');
-                        } catch (e) {
-                          print('Error loading image: $e');
-                          imageProvider =
-                              const AssetImage('assets/default_avatar.png');
-                        }
-                        return Card(
-                          margin: const EdgeInsets.symmetric(
-                              vertical: 8.0, horizontal: 16.0),
-                          elevation: 4.0,
-                          color: isBookingInPast(booking)
-                              ? Colors.grey[300]
-                              : Colors.white, // <-- Highlight past
-                          child: ListTile(
-                            contentPadding: const EdgeInsets.all(16.0),
-                            leading: CircleAvatar(
-                              backgroundImage: imageProvider,
-                              child: imageProvider is AssetImage
-                                  ? const Icon(Icons.person)
-                                  : null,
-                            ),
-                            title: Text(
-                              '${formatBookingTime(booking.bookingstart)}: ${booking.customername}, ${booking.servicename}, Staff: ${booking.staffname} (10)',
-                              style: TextStyle(
-                                color: isBookingInPast(booking)
-                                    ? Colors.grey
-                                    : color,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                            subtitle: Text(
-                              'Scheduled: ${_formatDateTime(booking.created_datetime)}',
-                              style: TextStyle(
-                                color: isBookingInPast(booking)
-                                    ? Colors.grey
-                                    : color,
-                              ),
-                            ),
-                            onTap: () {
-                              // Handle onTap event
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                  builder: (context) => SummaryPage(
-                                      booking: booking), // 👈 Pass booking
+                      Column(
+                        children: bookings.map((booking) {
+                          ImageProvider imageProvider;
+                          try {
+                            imageProvider = getImage(booking.customerphoto) ??
+                                const AssetImage('assets/default_avatar.png');
+                          } catch (e) {
+                            print('Error loading image: $e');
+                            imageProvider =
+                                const AssetImage('assets/default_avatar.png');
+                          }
+                          final isPast = isBookingInPast(booking);
+
+                          // Debug: print createdby value
+                          print(
+                              'Booking ${booking.customername}: createdby = "${booking.createdby}" | toLowerCase = "${booking.createdby?.toLowerCase()}" | Show icon? ${booking.createdby?.toLowerCase() != 'salon'}');
+
+                          return Container(
+                            margin: const EdgeInsets.symmetric(
+                                vertical: 6.0, horizontal: 16.0),
+                            decoration: BoxDecoration(
+                              borderRadius: BorderRadius.circular(16.0),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: isPast
+                                      ? Colors.grey.withOpacity(0.2)
+                                      : color.withOpacity(0.2),
+                                  spreadRadius: 1,
+                                  blurRadius: 6,
+                                  offset: const Offset(0, 3),
                                 ),
-                              );
-                            },
-                          ),
-                        );
-                      }).toList(),
-                    ),
-                  ],
-                );
-              },
+                              ],
+                            ),
+                            child: Card(
+                              margin: EdgeInsets.zero,
+                              elevation: 0,
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(16.0),
+                                side: BorderSide(
+                                  color: isPast
+                                      ? Colors.grey[300]!
+                                      : color.withOpacity(0.3),
+                                  width: 1,
+                                ),
+                              ),
+                              color: isPast ? Colors.grey[100] : Colors.white,
+                              child: InkWell(
+                                onTap: () {
+                                  Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (context) =>
+                                          SummaryPage(booking: booking),
+                                    ),
+                                  );
+                                },
+                                borderRadius: BorderRadius.circular(16.0),
+                                child: Padding(
+                                  padding: const EdgeInsets.all(16.0),
+                                  child: Row(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      Container(
+                                        decoration: BoxDecoration(
+                                          shape: BoxShape.circle,
+                                          border: Border.all(
+                                            color: isPast
+                                                ? Colors.grey[400]!
+                                                : color,
+                                            width: 2,
+                                          ),
+                                        ),
+                                        child: CircleAvatar(
+                                          radius: 28,
+                                          backgroundImage: imageProvider,
+                                          child: imageProvider is AssetImage
+                                              ? Icon(Icons.person,
+                                                  color: isPast
+                                                      ? Colors.grey
+                                                      : color)
+                                              : null,
+                                        ),
+                                      ),
+                                      const SizedBox(width: 16),
+                                      Expanded(
+                                        child: Column(
+                                          crossAxisAlignment:
+                                              CrossAxisAlignment.start,
+                                          children: [
+                                            Row(
+                                              children: [
+                                                Container(
+                                                  padding: const EdgeInsets
+                                                      .symmetric(
+                                                      horizontal: 10,
+                                                      vertical: 4),
+                                                  decoration: BoxDecoration(
+                                                    color: isPast
+                                                        ? Colors.grey[400]
+                                                        : color,
+                                                    borderRadius:
+                                                        BorderRadius.circular(
+                                                            20),
+                                                  ),
+                                                  child: Row(
+                                                    mainAxisSize:
+                                                        MainAxisSize.min,
+                                                    children: [
+                                                      const Icon(
+                                                          Icons.access_time,
+                                                          color: Colors.white,
+                                                          size: 14),
+                                                      const SizedBox(width: 4),
+                                                      Text(
+                                                        formatBookingTime(
+                                                            booking
+                                                                .bookingstart),
+                                                        style: const TextStyle(
+                                                          color: Colors.white,
+                                                          fontWeight:
+                                                              FontWeight.bold,
+                                                          fontSize: 13,
+                                                        ),
+                                                      ),
+                                                    ],
+                                                  ),
+                                                ),
+                                                const SizedBox(width: 8),
+                                                if (booking.createdby
+                                                        ?.toLowerCase() !=
+                                                    'salon')
+                                                  Container(
+                                                    margin:
+                                                        const EdgeInsets.only(
+                                                            right: 6),
+                                                    padding: const EdgeInsets
+                                                        .symmetric(
+                                                        horizontal: 8,
+                                                        vertical: 4),
+                                                    decoration: BoxDecoration(
+                                                      color: Colors.blue[600],
+                                                      borderRadius:
+                                                          BorderRadius.circular(
+                                                              20),
+                                                    ),
+                                                    child: Row(
+                                                      mainAxisSize:
+                                                          MainAxisSize.min,
+                                                      children: const [
+                                                        Icon(
+                                                          Icons.language,
+                                                          color: Colors.white,
+                                                          size: 12,
+                                                        ),
+                                                      ],
+                                                    ),
+                                                  ),
+                                                Expanded(
+                                                  child: Text(
+                                                    booking.customername,
+                                                    style: TextStyle(
+                                                      color: isPast
+                                                          ? Colors.grey[700]
+                                                          : Colors.black87,
+                                                      fontWeight:
+                                                          FontWeight.bold,
+                                                      fontSize: 16,
+                                                    ),
+                                                    overflow:
+                                                        TextOverflow.ellipsis,
+                                                  ),
+                                                ),
+                                              ],
+                                            ),
+                                            const SizedBox(height: 10),
+                                            Row(
+                                              children: [
+                                                Icon(Icons.spa,
+                                                    color: isPast
+                                                        ? Colors.grey[500]
+                                                        : color
+                                                            .withOpacity(0.7),
+                                                    size: 16),
+                                                const SizedBox(width: 4),
+                                                Expanded(
+                                                  child: Text(
+                                                    booking.servicename,
+                                                    style: TextStyle(
+                                                      color: isPast
+                                                          ? Colors.grey[600]
+                                                          : Colors.black54,
+                                                      fontSize: 14,
+                                                    ),
+                                                  ),
+                                                ),
+                                              ],
+                                            ),
+                                            const SizedBox(height: 4),
+                                            Row(
+                                              children: [
+                                                Icon(Icons.person_outline,
+                                                    color: isPast
+                                                        ? Colors.grey[500]
+                                                        : color
+                                                            .withOpacity(0.7),
+                                                    size: 16),
+                                                const SizedBox(width: 4),
+                                                Text(
+                                                  'Staff: ${booking.staffname}',
+                                                  style: TextStyle(
+                                                    color: isPast
+                                                        ? Colors.grey[600]
+                                                        : Colors.black54,
+                                                    fontSize: 13,
+                                                  ),
+                                                ),
+                                              ],
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                      Icon(
+                                        Icons.arrow_forward_ios,
+                                        color:
+                                            isPast ? Colors.grey[400] : color,
+                                        size: 16,
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ),
+                            ),
+                          );
+                        }).toList(),
+                      ),
+                    ],
+                  );
+                },
+              ),
             );
           }
         },
@@ -193,19 +399,15 @@ class BookingHomeScreen extends StatelessWidget {
     return DateFormat('EEEE, d MMMM yyyy').format(dateTime);
   }
 
-  String _formatDateTime(DateTime dateTime) {
-    return DateFormat('HH:mm, EEEE, d MMMM').format(dateTime);
+  bool isBookingInPast(Booking booking) {
+    final date = DateTime.parse(booking.bookingdate);
+    final bookingDateTime = DateTime(
+      date.year,
+      date.month,
+      date.day,
+      booking.bookingtime.hour,
+      booking.bookingtime.minute,
+    );
+    return bookingDateTime.isBefore(DateTime.now());
   }
-
-bool isBookingInPast(Booking booking) {
-  final date = DateTime.parse(booking.bookingdate);
-  final bookingDateTime = DateTime(
-    date.year,
-    date.month,
-    date.day,
-    booking.bookingtime.hour,
-    booking.bookingtime.minute,
-  );
-  return bookingDateTime.isBefore(DateTime.now());
-}
 }

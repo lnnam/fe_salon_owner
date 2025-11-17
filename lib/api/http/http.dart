@@ -75,7 +75,10 @@ class MyHttp {
   Future<List<Booking>> ListBooking() async {
     try {
       final response = await fetchFromServer(AppConfig.api_url_booking_home);
-      // print('url test: ${response}');
+      print('========== RAW BOOKING DATA FROM SERVER ==========');
+      print(jsonEncode(response));
+      print('==================================================');
+
       List<dynamic> data = response;
       return data.map<Booking>((item) => Booking.fromJson(item)).toList();
     } catch (error) {
@@ -111,6 +114,46 @@ class MyHttp {
     }
   }
 
+  Future<dynamic> AddCustomer({
+    required String name,
+    required String email,
+    required String phone,
+    required String dob,
+  }) async {
+    try {
+      final User currentUser = await getCurrentUser();
+      final String token = currentUser.token;
+
+      final requestBody = <String, String>{
+        'fullname': name,
+        'email': email,
+        'phone': phone,
+        'dob': dob,
+      };
+
+      print('AddCustomer request body: $requestBody');
+
+      final response = await http.post(
+        Uri.parse(AppConfig.api_url_booking_customer_add),
+        headers: <String, String>{
+          'Authorization': 'Bearer $token',
+          'Content-Type': 'application/json; charset=UTF-8',
+        },
+        body: jsonEncode(requestBody),
+      );
+
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        return jsonDecode(response.body);
+      } else {
+        print('Error: ${response.statusCode}, Response: ${response.body}');
+        return null;
+      }
+    } catch (e) {
+      print('Error adding customer: $e');
+      return null;
+    }
+  }
+
   Future<List<Service>> ListServices() async {
     try {
       final response = await fetchFromServer(AppConfig.api_url_booking_service);
@@ -139,31 +182,42 @@ class MyHttp {
   ) async {
     //  print('url test: ${AppConfig.api_url_booking_add}');
     try {
+      // Get current user and token
+      final User currentUser = await getCurrentUser();
+      final String token = currentUser.token;
+
+      final requestBody = <String, String>{
+        'bookingkey': bookingKey.toString(),
+        'customerkey': customerKey,
+        'servicekey': serviceKey,
+        'staffkey': staffKey,
+        'date': date,
+        'datetime': schedule,
+        'note': note,
+        'customername': customerName,
+        'customeremail': '', // Add missing field
+        'customerphone': '', // Add missing field
+        'staffname': staffName,
+        'servicename': serviceName,
+        'userkey': '1',
+      };
+
+      print('SaveBooking request body: $requestBody');
+
       final response = await http.post(
         Uri.parse(AppConfig.api_url_booking_save),
         headers: <String, String>{
+          'Authorization': 'Bearer $token',
           'Content-Type': 'application/json; charset=UTF-8',
         },
-        body: jsonEncode(<String, String>{
-          'bookingkey': bookingKey.toString(),
-          'customerkey': customerKey,
-          'servicekey': serviceKey,
-          'staffkey': staffKey,
-          'date': date,
-          'datetime': schedule,
-          'note': note,
-          'customername': customerName,
-          'staffname': staffName,
-          'servicename': serviceName,
-          'userkey': '1',
-        }),
+        body: jsonEncode(requestBody),
       );
 
-      if (response.statusCode == 201) {
-        return User.fromJson(jsonDecode(response.body));
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        return jsonDecode(response.body);
       } else {
-        //return null;  // Booking failed
         print('Error: ${response.statusCode}, Response: ${response.body}');
+        return null;
       }
     } catch (e) {
       return e; // Return error for debugging
