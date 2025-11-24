@@ -34,6 +34,7 @@ class _SummaryPageState extends State<SummaryPage> {
   late String customerName;
   late String staffName;
   late String serviceName;
+  late String status;
   late int bookingkey;
   late TextEditingController noteController;
 
@@ -61,8 +62,8 @@ class _SummaryPageState extends State<SummaryPage> {
       print('widget');
 
       final booking = widget.booking!;
-     // print('Booking from widget: ${booking.toJson()}');
-     
+      // print('Booking from widget: ${booking.toJson()}');
+
       bookingkey = booking.pkey;
       customerKey = booking.customerkey;
       serviceKey = booking.servicekey;
@@ -72,6 +73,7 @@ class _SummaryPageState extends State<SummaryPage> {
       customerName = booking.customername;
       staffName = booking.staffname;
       serviceName = booking.servicename;
+      status = booking.status;
       note = booking.note;
       bookingProvider.setBookingKey(bookingkey); // ✅ Added here
       bookingProvider.setBookingFromModel(booking);
@@ -92,10 +94,25 @@ class _SummaryPageState extends State<SummaryPage> {
       staffName = bookingDetails['staffname'] ?? 'Unknown';
       serviceName = bookingDetails['servicename'] ?? 'Unknown';
       note = bookingDetails['note'] ?? '';
+      status =
+          bookingDetails['status'] ?? bookingDetails['bookingstatus'] ?? '';
       noteController = TextEditingController(text: note);
     }
 
     noteController = TextEditingController(text: note);
+  }
+
+  Color _statusColor(String status) {
+    final s = status.toLowerCase();
+    if (s.contains('pending') || s.contains('wait'))
+      return Colors.orange.shade700;
+    if (s.contains('confirm') ||
+        s.contains('booked') ||
+        s.contains('confirmed')) return Colors.green.shade600;
+    if (s.contains('cancel') || s.contains('void')) return Colors.red.shade600;
+    if (s.contains('done') || s.contains('completed'))
+      return Colors.blueGrey.shade600;
+    return Colors.grey.shade600;
   }
 
   Future<void> _deleteBooking(BuildContext context) async {
@@ -134,9 +151,9 @@ class _SummaryPageState extends State<SummaryPage> {
       });
 
       if (success) {
-        Navigator.pushAndRemoveUntil(
+        safePushAndRemoveUntil(
           context,
-          MaterialPageRoute(builder: (_) => const BookingHomeScreen()),
+          const BookingHomeScreen(),
           (route) => false,
         );
       } else {
@@ -164,16 +181,36 @@ class _SummaryPageState extends State<SummaryPage> {
         title: const Text('Summary Booking'),
         backgroundColor: Colors.blue,
         actions: [
+          if (status.isNotEmpty)
+            Padding(
+              padding:
+                  const EdgeInsets.symmetric(vertical: 8.0, horizontal: 8.0),
+              child: Container(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                decoration: BoxDecoration(
+                  color: _statusColor(status),
+                  borderRadius: BorderRadius.circular(20),
+                ),
+                child: Text(
+                  // use friendly label if booking model provided one
+                  widget.booking != null
+                      ? widget.booking!.displayStatus
+                      : status,
+                  style: const TextStyle(
+                      color: Colors.white, fontWeight: FontWeight.w700),
+                ),
+              ),
+            ),
           IconButton(
             icon: const Icon(Icons.cancel, color: Colors.white),
             tooltip: 'Cancel',
             onPressed: isLoading
                 ? null
                 : () {
-                    Navigator.pushAndRemoveUntil(
+                    safePushAndRemoveUntil(
                       context,
-                      MaterialPageRoute(
-                          builder: (_) => const BookingHomeScreen()),
+                      const BookingHomeScreen(),
                       (route) => false,
                     );
                   },
@@ -190,19 +227,35 @@ class _SummaryPageState extends State<SummaryPage> {
               value:
                   '${_formatDate(bookingDate)} at ${_formatTime(bookingTime)}',
               icon: Icons.schedule,
-              onTap: () => Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                      builder: (_) => const BookingCalendarPage())),
+              onTap: () => safePush(context, const BookingCalendarPage()),
             ),
+            const SizedBox(height: 8),
+            if (status.isNotEmpty)
+              Row(
+                children: [
+                  const SizedBox(width: 4),
+                  Container(
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                    decoration: BoxDecoration(
+                      color: _statusColor(status),
+                      borderRadius: BorderRadius.circular(20),
+                    ),
+                    child: Text(
+                      status,
+                      style: const TextStyle(
+                          color: Colors.white, fontWeight: FontWeight.w600),
+                    ),
+                  ),
+                ],
+              ),
             const SizedBox(height: 12),
             _buildInfoRow(
               context,
               label: 'Customer Name',
               value: customerName,
               icon: Icons.person,
-              onTap: () => Navigator.push(context,
-                  MaterialPageRoute(builder: (_) => const CustomerPage())),
+              onTap: () => safePush(context, const CustomerPage()),
             ),
             const SizedBox(height: 12),
             _buildInfoRow(
@@ -210,8 +263,7 @@ class _SummaryPageState extends State<SummaryPage> {
               label: 'Staff',
               value: staffName,
               icon: Icons.people,
-              onTap: () => Navigator.push(context,
-                  MaterialPageRoute(builder: (_) => const StaffPage())),
+              onTap: () => safePush(context, const StaffPage()),
             ),
             const SizedBox(height: 12),
             _buildInfoRow(
@@ -219,8 +271,7 @@ class _SummaryPageState extends State<SummaryPage> {
               label: 'Service',
               value: serviceName,
               icon: Icons.star,
-              onTap: () => Navigator.push(context,
-                  MaterialPageRoute(builder: (_) => const ServicePage())),
+              onTap: () => safePush(context, const ServicePage()),
             ),
             const SizedBox(height: 12),
             const Text(

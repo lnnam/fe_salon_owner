@@ -7,7 +7,6 @@ import 'package:salonapp/provider/booking.provider.dart';
 import 'calendar.dart'; // Import SchedulePage
 import 'summary.dart';
 
-
 class ServicePage extends StatelessWidget {
   const ServicePage({super.key});
 
@@ -35,7 +34,8 @@ class ServicePage extends StatelessWidget {
                 itemBuilder: (BuildContext context, int index) {
                   Service service = serviceList[index];
                   return Padding(
-                    padding: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 16.0),
+                    padding: const EdgeInsets.symmetric(
+                        vertical: 8.0, horizontal: 16.0),
                     child: Container(
                       decoration: BoxDecoration(
                         color: Colors.grey[200],
@@ -53,35 +53,32 @@ class ServicePage extends StatelessWidget {
                         contentPadding: EdgeInsets.zero,
                         title: Text(
                           service.name,
-                          style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                          style: const TextStyle(
+                              fontSize: 18, fontWeight: FontWeight.bold),
                         ),
                         subtitle: Text(
                           'Price: \$${service.price}',
-                          style: TextStyle(fontSize: 14, color: Colors.grey[600]),
+                          style:
+                              TextStyle(fontSize: 14, color: Colors.grey[600]),
                         ),
                         trailing: const Icon(Icons.arrow_forward_ios),
                         onTap: () {
                           // Handle tap on service
-                        
 
-                          final bookingProvider = Provider.of<BookingProvider>(context, listen: false);
-                          final isEditMode = bookingProvider.onbooking?.editMode ?? false;
+                          final bookingProvider = Provider.of<BookingProvider>(
+                              context,
+                              listen: false);
+                          final isEditMode =
+                              bookingProvider.onbooking?.editMode ?? false;
 
                           // Set staff
                           bookingProvider.setService(service.toJson());
 
                           if (isEditMode) {
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(builder: (context) => const SummaryPage()),
-                            );
+                            safePush(context, const SummaryPage());
                           } else {
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(builder: (context) => const BookingCalendarPage()),
-                            );
+                            safePush(context, const BookingCalendarPage());
                           }
-
                         },
                       ),
                     ),

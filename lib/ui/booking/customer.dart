@@ -195,11 +195,9 @@ class _CustomerPageState extends State<CustomerPage> {
                                     .setCustomerDetails(customerData);
 
                                 // Navigate to the summary page
-                                Navigator.push(
+                                safePush(
                                   context,
-                                  MaterialPageRoute(
-                                    builder: (context) => const SummaryPage(),
-                                  ),
+                                  const SummaryPage(),
                                 );
                               }
                             } else {
@@ -315,12 +313,9 @@ class _CustomerPageState extends State<CustomerPage> {
                       // Set the selected customer when a customer name is clicked
                       Provider.of<BookingProvider>(context, listen: false)
                           .setCustomerDetails(customer.toJson());
-                      Navigator.push(
+                      safePush(
                         context,
-                        MaterialPageRoute(
-                          builder: (context) =>
-                              const SummaryPage(), // Navigate to SchedulePage
-                        ),
+                        const SummaryPage(),
                       );
                       // Print the customer details to the console
                       // Navigate to the next page if needed

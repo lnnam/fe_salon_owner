@@ -75,10 +75,6 @@ class MyHttp {
   Future<List<Booking>> ListBooking() async {
     try {
       final response = await fetchFromServer(AppConfig.api_url_booking_home);
-      print('========== RAW BOOKING DATA FROM SERVER ==========');
-      print(jsonEncode(response));
-      print('==================================================');
-
       List<dynamic> data = response;
       return data.map<Booking>((item) => Booking.fromJson(item)).toList();
     } catch (error) {

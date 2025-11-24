@@ -18,6 +18,7 @@ class Booking {
   final String customerphoto;
   final String note;
   final String? createdby;
+  final String status;
 
   Booking({
     required this.pkey, // <-- Add this line
@@ -37,24 +38,22 @@ class Booking {
     required this.customerphoto,
     required this.note,
     this.createdby,
+    this.status = '',
   });
 
   factory Booking.fromJson(Map<String, dynamic> json) {
     DateTime bookingDateTime;
     String formattedBookingDate = '';
-    String formattedBookingTime = '';
 
     if (json['bookingstart'] != null && json['bookingstart'] != '') {
       bookingDateTime = DateTime.parse(json['bookingstart']);
       formattedBookingDate = DateFormat('yyyy-MM-dd').format(bookingDateTime);
-      formattedBookingTime = DateFormat('HH:mm').format(bookingDateTime);
     } else {
       bookingDateTime =
           json['dateactivated'] != null && json['dateactivated'] != ''
               ? DateTime.parse(json['dateactivated'])
               : DateTime.now();
       formattedBookingDate = DateFormat('yyyy-MM-dd').format(bookingDateTime);
-      formattedBookingTime = '';
     }
 
     DateTime createdDateTime =
@@ -87,7 +86,38 @@ class Booking {
           : 'Unknown',
       note: json['note'] ?? '',
       createdby: json['createdby'],
+      status: json['status'] ??
+          json['bookingstatus'] ??
+          json['statusbooking'] ??
+          (json['statuskey'] != null ? json['statuskey'].toString() : ''),
     );
+  }
+
+  /// Friendly display label for status values returned by backend.
+  /// Maps numeric codes and common keywords to human-readable labels.
+  String get displayStatus {
+    final s = status.trim().toLowerCase();
+    if (s.isEmpty) return 'Unknown';
+
+    // Numeric codes commonly used by some backends
+    if (s == '0' || s == '1' || s.contains('pending') || s.contains('wait')) {
+      return 'Pending';
+    }
+    if (s == '2' ||
+        s.contains('confirm') ||
+        s.contains('booked') ||
+        s.contains('confirmed')) {
+      return 'Confirmed';
+    }
+    if (s == '3' || s.contains('cancel') || s.contains('void')) {
+      return 'Cancelled';
+    }
+    if (s == '4' || s.contains('done') || s.contains('completed')) {
+      return 'Completed';
+    }
+
+    // Fallback: return original (but nicely cased)
+    return status;
   }
 }
 

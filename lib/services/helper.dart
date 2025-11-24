@@ -12,8 +12,6 @@ import 'package:salonapp/model/user.dart';
 
 import 'dart:io' show Platform;
 
-
-
 String? validateFeild(String? value) {
   if (value?.isEmpty ?? true) {
     return 'feildIsRequired'.tr();
@@ -159,28 +157,56 @@ showAlertDialog(BuildContext context, String title, String content) {
 }
 
 myPopup(context, txt) {
-   showDialog(
-                  context: context,
-                  builder: (ctxt) =>  AlertDialog(
-                    title: Text(txt),
-                  )
-              );
+  showDialog(
+      context: context,
+      builder: (ctxt) => AlertDialog(
+            title: Text(txt),
+          ));
 }
 
 pushReplacement(BuildContext context, Widget destination) {
-  Navigator.of(context)
-      .pushReplacement(MaterialPageRoute(builder: (context) => destination));
+  // Delegate to safe navigation to avoid performing route changes during layout
+  safePushReplacement(context, destination);
 }
 
 push(BuildContext context, Widget destination) {
-  Navigator.of(context)
-      .push(MaterialPageRoute(builder: (context) => destination));
+  // Delegate to safe navigation helper
+  safePush(context, destination);
 }
 
 pushAndRemoveUntil(BuildContext context, Widget destination, bool predict) {
-  Navigator.of(context).pushAndRemoveUntil(
-      MaterialPageRoute(builder: (context) => destination),
-      (Route<dynamic> route) => predict);
+  // Keep the original signature but delegate to the safe variant. The
+  // `predict` boolean is converted into a RoutePredicate that returns the
+  // same boolean for any route.
+  safePushAndRemoveUntil(
+    context,
+    destination,
+    (Route<dynamic> route) => predict,
+  );
+}
+
+/// Safe navigation helpers: schedule navigation for the next frame to avoid
+/// performing route changes while layout/hit testing is in progress.
+void safePush(BuildContext context, Widget destination) {
+  WidgetsBinding.instance.addPostFrameCallback((_) {
+    Navigator.of(context)
+        .push(MaterialPageRoute(builder: (context) => destination));
+  });
+}
+
+void safePushReplacement(BuildContext context, Widget destination) {
+  WidgetsBinding.instance.addPostFrameCallback((_) {
+    Navigator.of(context)
+        .pushReplacement(MaterialPageRoute(builder: (context) => destination));
+  });
+}
+
+void safePushAndRemoveUntil(
+    BuildContext context, Widget destination, RoutePredicate predicate) {
+  WidgetsBinding.instance.addPostFrameCallback((_) {
+    Navigator.of(context).pushAndRemoveUntil(
+        MaterialPageRoute(builder: (context) => destination), predicate);
+  });
 }
 
 String formatTimestamp(int timestamp) {
@@ -301,32 +327,31 @@ String audioMessageTime(Duration? audioDuration) {
   return '${twoDigitsHours(audioDuration?.inHours ?? 0)}$twoDigitMinutes:$twoDigitSeconds';
 }
 
- logout(BuildContext context) async {
-    SharedPreferences prefs = await SharedPreferences.getInstance();
-    await prefs.clear();
-   // Navigator.popUntil(context, ModalRoute.withName('/'));
-    Navigator.pushReplacementNamed(context, '/login');
-  }
-
+logout(BuildContext context) async {
+  SharedPreferences prefs = await SharedPreferences.getInstance();
+  await prefs.clear();
+  // Navigator.popUntil(context, ModalRoute.withName('/'));
+  Navigator.pushReplacementNamed(context, '/login');
+}
 
 Future<User> getCurrentUser() async {
-    final prefs = await SharedPreferences.getInstance();
-    final userData = prefs.getString('objuser') ?? '{}';
-    final userJson = json.decode(userData);
-    return User.fromJson(userJson);
-  }
+  final prefs = await SharedPreferences.getInstance();
+  final userData = prefs.getString('objuser') ?? '{}';
+  final userJson = json.decode(userData);
+  return User.fromJson(userJson);
+}
 
 ImageProvider? getImage(String base64String) {
-    try {
-      return MemoryImage(
-        base64Decode(
-          base64String.split(',').last,
-        ),
-      );
-    } catch (e) {
-      return null; // Return null if there's an error
-    }
+  try {
+    return MemoryImage(
+      base64Decode(
+        base64String.split(',').last,
+      ),
+    );
+  } catch (e) {
+    return null; // Return null if there's an error
   }
+}
 
 String formatBookingTime(dynamic bookingTime) {
   try {
@@ -334,7 +359,8 @@ String formatBookingTime(dynamic bookingTime) {
       return DateFormat('HH:mm').format(bookingTime);
     } else if (bookingTime is String && bookingTime.isNotEmpty) {
       try {
-        return DateFormat('HH:mm').format(DateFormat('HH:mm').parse(bookingTime));
+        return DateFormat('HH:mm')
+            .format(DateFormat('HH:mm').parse(bookingTime));
       } catch (_) {
         return DateFormat('HH:mm').format(DateTime.parse(bookingTime));
       }

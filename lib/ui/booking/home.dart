@@ -9,10 +9,28 @@ import 'package:salonapp/services/helper.dart';
 import 'summary.dart'; // Import Home
 import 'package:provider/provider.dart';
 import 'package:salonapp/provider/booking.provider.dart';
-import 'package:salonapp/services/helper.dart';
 
 class BookingHomeScreen extends StatelessWidget {
   const BookingHomeScreen({super.key});
+
+  Color _statusColor(String status, Color defaultColor) {
+    final s = status.toLowerCase();
+    if (s.contains('pending') || s.contains('wait')) {
+      return Colors.orange.shade700;
+    }
+    if (s.contains('confirm') ||
+        s.contains('booked') ||
+        s.contains('confirmed')) {
+      return Colors.green.shade600;
+    }
+    if (s.contains('cancel') || s.contains('void')) {
+      return Colors.red.shade600;
+    }
+    if (s.contains('done') || s.contains('completed')) {
+      return Colors.blueGrey.shade600;
+    }
+    return defaultColor;
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -148,12 +166,9 @@ class BookingHomeScreen extends StatelessWidget {
                               color: isPast ? Colors.grey[100] : Colors.white,
                               child: InkWell(
                                 onTap: () {
-                                  Navigator.push(
+                                  safePush(
                                     context,
-                                    MaterialPageRoute(
-                                      builder: (context) =>
-                                          SummaryPage(booking: booking),
-                                    ),
+                                    SummaryPage(booking: booking),
                                   );
                                 },
                                 borderRadius: BorderRadius.circular(16.0),
@@ -258,22 +273,62 @@ class BookingHomeScreen extends StatelessWidget {
                                                       ],
                                                     ),
                                                   ),
-                                                Expanded(
-                                                  child: Text(
-                                                    booking.customername,
-                                                    style: TextStyle(
-                                                      color: isPast
-                                                          ? Colors.grey[700]
-                                                          : Colors.black87,
-                                                      fontWeight:
-                                                          FontWeight.bold,
-                                                      fontSize: 16,
+                                                if (booking.status.isNotEmpty)
+                                                  Container(
+                                                    margin:
+                                                        const EdgeInsets.only(
+                                                            right: 6),
+                                                    padding: const EdgeInsets
+                                                        .symmetric(
+                                                        horizontal: 8,
+                                                        vertical: 4),
+                                                    decoration: BoxDecoration(
+                                                      color: _statusColor(
+                                                              booking.status,
+                                                              color)
+                                                          .withOpacity(0.95),
+                                                      borderRadius:
+                                                          BorderRadius.circular(
+                                                              20),
                                                     ),
-                                                    overflow:
-                                                        TextOverflow.ellipsis,
+                                                    child: Row(
+                                                      mainAxisSize:
+                                                          MainAxisSize.min,
+                                                      children: [
+                                                        const Icon(
+                                                          Icons.info_outline,
+                                                          color: Colors.white,
+                                                          size: 12,
+                                                        ),
+                                                        const SizedBox(
+                                                            width: 6),
+                                                        Text(
+                                                          booking.status,
+                                                          style:
+                                                              const TextStyle(
+                                                            color: Colors.white,
+                                                            fontSize: 12,
+                                                            fontWeight:
+                                                                FontWeight.w600,
+                                                          ),
+                                                        ),
+                                                      ],
+                                                    ),
                                                   ),
-                                                ),
                                               ],
+                                            ),
+                                            const SizedBox(height: 8),
+                                            // Customer name on its own row
+                                            Text(
+                                              booking.customername,
+                                              style: TextStyle(
+                                                color: isPast
+                                                    ? Colors.grey[700]
+                                                    : Colors.black87,
+                                                fontWeight: FontWeight.bold,
+                                                fontSize: 16,
+                                              ),
+                                              overflow: TextOverflow.ellipsis,
                                             ),
                                             const SizedBox(height: 10),
                                             Row(
@@ -346,10 +401,7 @@ class BookingHomeScreen extends StatelessWidget {
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: () {
-          Navigator.push(
-            context,
-            MaterialPageRoute(builder: (context) => const StaffPage()),
-          );
+          safePush(context, const StaffPage());
         },
         backgroundColor: color,
         child: const Icon(Icons.add, color: Colors.white),

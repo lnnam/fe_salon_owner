@@ -36,7 +36,8 @@ class StaffPage extends StatelessWidget {
                 itemBuilder: (BuildContext context, int index) {
                   Staff staff = staffList[index];
                   return Padding(
-                    padding: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 16.0),
+                    padding: const EdgeInsets.symmetric(
+                        vertical: 8.0, horizontal: 16.0),
                     child: Container(
                       decoration: BoxDecoration(
                         color: Colors.grey[200],
@@ -61,30 +62,29 @@ class StaffPage extends StatelessWidget {
                         ),
                         title: Text(
                           staff.fullname,
-                          style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                          style: const TextStyle(
+                              fontSize: 18, fontWeight: FontWeight.bold),
                         ),
                         subtitle: Text(
                           'Position: ${staff.position}',
-                          style: TextStyle(fontSize: 14, color: Colors.grey[600]),
+                          style:
+                              TextStyle(fontSize: 14, color: Colors.grey[600]),
                         ),
                         trailing: const Icon(Icons.arrow_forward_ios),
                         onTap: () {
-                          final bookingProvider = Provider.of<BookingProvider>(context, listen: false);
-                          final isEditMode = bookingProvider.onbooking?.editMode ?? false;
+                          final bookingProvider = Provider.of<BookingProvider>(
+                              context,
+                              listen: false);
+                          final isEditMode =
+                              bookingProvider.onbooking?.editMode ?? false;
 
                           // Set staff
                           bookingProvider.setStaff(staff.toJson());
 
                           if (isEditMode) {
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(builder: (context) => const SummaryPage()),
-                            );
+                            safePush(context, const SummaryPage());
                           } else {
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(builder: (context) => const ServicePage()),
-                            );
+                            safePush(context, const ServicePage());
                           }
                         },
                       ),

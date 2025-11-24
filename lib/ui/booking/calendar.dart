@@ -5,6 +5,7 @@ import 'package:booking_calendar/booking_calendar.dart';
 import 'package:salonapp/constants.dart';
 import 'customer.dart'; // Import SchedulePage
 import 'summary.dart';
+import 'package:salonapp/services/helper.dart';
 import 'package:salonapp/api/api_manager.dart';
 
 class BookingCalendarPage extends StatefulWidget {
@@ -63,15 +64,9 @@ class _BookingCalendarPageState extends State<BookingCalendarPage> {
     final isEditMode = bookingProvider.onbooking?.editMode ?? false;
 
     if (isEditMode) {
-      Navigator.push(
-        context,
-        MaterialPageRoute(builder: (context) => const SummaryPage()),
-      );
+      safePush(context, const SummaryPage());
     } else {
-      Navigator.push(
-        context,
-        MaterialPageRoute(builder: (context) => const CustomerPage()),
-      );
+      safePush(context, const CustomerPage());
     }
   }
 

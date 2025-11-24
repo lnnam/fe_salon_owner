@@ -21,17 +21,17 @@ Future<void> saveBooking(
   setLoading(true);
 
   print({
-  'bookingKey': bookingKey,
-  'customerKey': customerKey,
-  'serviceKey': serviceKey,
-  'staffKey': staffKey,
-  'bookingDate': bookingDate,
-  'bookingTime': bookingTime,
-  'note': note,
-  'customerName': customerName,
-  'staffName': staffName,
-  'serviceName': serviceName,
-});
+    'bookingKey': bookingKey,
+    'customerKey': customerKey,
+    'serviceKey': serviceKey,
+    'staffKey': staffKey,
+    'bookingDate': bookingDate,
+    'bookingTime': bookingTime,
+    'note': note,
+    'customerName': customerName,
+    'staffName': staffName,
+    'serviceName': serviceName,
+  });
 
   final result = await apiManager.SaveBooking(
     bookingKey,
@@ -60,11 +60,7 @@ Future<void> saveBooking(
               child: ElevatedButton(
                 onPressed: () {
                   Navigator.of(context).pop();
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                        builder: (context) => const BookingHomeScreen()),
-                  );
+                  safePush(context, const BookingHomeScreen());
                 },
                 child: const Text("OK"),
               ),
@@ -73,14 +69,13 @@ Future<void> saveBooking(
         );
       },
     );
-      setLoading(false);
-
+    setLoading(false);
   } else {
     showAlertDialog(
-        context,
-        'Error : '.tr(),
-        'Booking not saved. Contact support!'.tr(),
-      );
+      context,
+      'Error : '.tr(),
+      'Booking not saved. Contact support!'.tr(),
+    );
   }
 }
 
@@ -119,9 +114,9 @@ Future<void> deleteBookingAction(
     setLoading(false);
 
     if (success) {
-      Navigator.pushAndRemoveUntil(
+      safePushAndRemoveUntil(
         context,
-        MaterialPageRoute(builder: (_) => const BookingHomeScreen()),
+        const BookingHomeScreen(),
         (route) => false,
       );
     } else {
