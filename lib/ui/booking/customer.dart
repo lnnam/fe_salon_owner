@@ -34,12 +34,13 @@ class _CustomerPageState extends State<CustomerPage> {
   void _fetchCustomers() async {
     try {
       List<Customer> customers = await apiManager.ListCustomer();
+      if (!mounted) return;
       setState(() {
         _customerList = customers;
         _filteredCustomerList = customers;
       });
     } catch (error) {
-      print('Error fetching customers: $error');
+      // error fetching customers
     }
   }
 
@@ -164,8 +165,6 @@ class _CustomerPageState extends State<CustomerPage> {
                             });
 
                             if (result != null) {
-                              print('AddCustomer result: $result');
-
                               // Parse the result to ensure correct format
                               final customerData = {
                                 'customerkey': result['pkey'] ??
@@ -182,7 +181,7 @@ class _CustomerPageState extends State<CustomerPage> {
                                     '',
                               };
 
-                              print('Formatted customer data: $customerData');
+                              // formatted customer data prepared
 
                               // Close the dialog first
                               Navigator.of(dialogContext).pop();

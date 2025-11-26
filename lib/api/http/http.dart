@@ -247,6 +247,35 @@ class MyHttp {
     }
   }
 
+  /// Confirm booking as owner
+  Future<bool> confirmBookingOwner(int bookingKey) async {
+    try {
+      final User currentUser = await getCurrentUser();
+      final String token = currentUser.token;
+
+      final requestBody = {'bookingkey': bookingKey};
+
+      final response = await http.post(
+        Uri.parse(AppConfig.api_url_booking_confirm),
+        headers: <String, String>{
+          'Authorization': 'Bearer $token',
+          'Content-Type': 'application/json; charset=UTF-8',
+        },
+        body: jsonEncode(requestBody),
+      );
+
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        return true;
+      } else {
+        print('Confirm failed: ${response.statusCode}, ${response.body}');
+        return false;
+      }
+    } catch (e) {
+      print('Confirm booking error: $e');
+      return false;
+    }
+  }
+
 // MyHttp: returns list of simple maps (slot_time, available, available_staffs)
   Future<List<Map<String, dynamic>>> fetchAvailability({
     required DateTime date,

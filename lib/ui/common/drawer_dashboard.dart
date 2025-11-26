@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:salonapp/services/helper.dart';
 import 'package:salonapp/constants.dart';
 
-
 class AppDrawerDashboard extends StatelessWidget {
   const AppDrawerDashboard({super.key});
 
@@ -14,7 +13,7 @@ class AppDrawerDashboard extends StatelessWidget {
         children: <Widget>[
           const DrawerHeader(
             decoration: BoxDecoration(
-              color:  Color(COLOR_PRIMARY),
+              color: Color(COLOR_PRIMARY),
             ),
             child: Text(
               'Salon name ',
@@ -27,13 +26,13 @@ class AppDrawerDashboard extends StatelessWidget {
           ListTile(
             title: const Text('Profile'),
             onTap: () {
-              Navigator.pushReplacementNamed(context, '/profile');
+              safePushReplacementNamed(context, '/profile');
             },
           ),
           ListTile(
             title: const Text('Setting'),
             onTap: () {
-              Navigator.pushReplacementNamed(context, '/setting');
+              safePushReplacementNamed(context, '/setting');
             },
           ),
           ListTile(

@@ -20,18 +20,7 @@ Future<void> saveBooking(
 ) async {
   setLoading(true);
 
-  print({
-    'bookingKey': bookingKey,
-    'customerKey': customerKey,
-    'serviceKey': serviceKey,
-    'staffKey': staffKey,
-    'bookingDate': bookingDate,
-    'bookingTime': bookingTime,
-    'note': note,
-    'customerName': customerName,
-    'staffName': staffName,
-    'serviceName': serviceName,
-  });
+  // debug data omitted in production
 
   final result = await apiManager.SaveBooking(
     bookingKey,
@@ -48,26 +37,26 @@ Future<void> saveBooking(
 
   setLoading(false);
 
+  if (!context.mounted) return;
+
   if (result != null) {
-    showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          title: const Text("Success"),
-          content: const Text("Booking Saved Successfully"),
-          actions: [
-            Center(
-              child: ElevatedButton(
-                onPressed: () {
-                  Navigator.of(context).pop();
-                  safePush(context, const BookingHomeScreen());
-                },
-                child: const Text("OK"),
-              ),
+    safeShowDialog(
+      context,
+      (context) => AlertDialog(
+        title: const Text("Success"),
+        content: const Text("Booking Saved Successfully"),
+        actions: [
+          Center(
+            child: ElevatedButton(
+              onPressed: () {
+                Navigator.of(context).pop();
+                safePush(context, const BookingHomeScreen());
+              },
+              child: const Text("OK"),
             ),
-          ],
-        );
-      },
+          ),
+        ],
+      ),
     );
     setLoading(false);
   } else {
@@ -102,6 +91,7 @@ Future<void> deleteBookingAction(
       ],
     ),
   );
+  if (!context.mounted) return;
 
   if (confirm == true) {
     setLoading(true);
@@ -112,6 +102,7 @@ Future<void> deleteBookingAction(
     }
 
     setLoading(false);
+    if (!context.mounted) return;
 
     if (success) {
       safePushAndRemoveUntil(

@@ -24,7 +24,8 @@ class _LoginState extends State<Login> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text("Beauty Salon", style: TextStyle(color: Colors.white)),
+        title:
+            const Text("Beauty Salon", style: TextStyle(color: Colors.white)),
         backgroundColor: const Color(COLOR_PRIMARY),
         iconTheme: IconThemeData(
             color: isDarkMode(context) ? Colors.white : Colors.black),
@@ -171,16 +172,13 @@ class _LoginState extends State<Login> {
               ),
             ),
             Padding(
-              padding: const EdgeInsets.only(
-                  right: 40.0, left: 40.0, top: 40),
+              padding: const EdgeInsets.only(right: 40.0, left: 40.0, top: 40),
               child: ConstrainedBox(
-                constraints: const BoxConstraints(
-                    minWidth: double.infinity),
+                constraints: const BoxConstraints(minWidth: double.infinity),
                 child: ElevatedButton(
                   style: ElevatedButton.styleFrom(
                     backgroundColor: const Color(COLOR_PRIMARY),
-                    padding:
-                        const EdgeInsets.only(top: 12, bottom: 12),
+                    padding: const EdgeInsets.only(top: 12, bottom: 12),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(25.0),
                       side: const BorderSide(
@@ -193,9 +191,7 @@ class _LoginState extends State<Login> {
                     style: TextStyle(
                       fontSize: 20,
                       fontWeight: FontWeight.bold,
-                      color: isDarkMode(context)
-                          ? Colors.black
-                          : Colors.white,
+                      color: isDarkMode(context) ? Colors.black : Colors.white,
                     ),
                   ),
                   onPressed: () => _login(),
@@ -209,57 +205,54 @@ class _LoginState extends State<Login> {
   }
 
   void _login() async {
-  if (_key.currentState?.validate() ?? false) {
-    _key.currentState!.save();
+    if (_key.currentState?.validate() ?? false) {
+      _key.currentState!.save();
 
-    try {
-      dynamic result = await apiManager.salonLogin(
-        salonkey!.trim(), username!.trim(), password!.trim());
+      try {
+        dynamic result = await apiManager.salonLogin(
+            salonkey!.trim(), username!.trim(), password!.trim());
 
-      print('salonLogin result: $result');
+        print('salonLogin result: $result');
 
-      if (result != null && result is User) {
-         // Save token and user info
-        if (kIsWeb) {
-          // Store in cookies
-          //setCookie('objuser', json.encode(result.toJson()));
-           await setUserInfo(result);
+        if (result != null && result is User) {
+          // Save token and user info
+          if (kIsWeb) {
+            // Store in cookies
+            //setCookie('objuser', json.encode(result.toJson()));
+            await setUserInfo(result);
+          } else {
+            // Store in SharedPreferences
+
+            await setUserInfo(result);
+          }
+          MyAppState.currentUser = result;
+          safePushReplacementNamed(context, '/dashboard');
         } else {
-          // Store in SharedPreferences
-          
-          await setUserInfo(result);
+          showAlertDialog(context, 'Couldn\'t Authenticate'.tr(),
+              'Login failed, Please try again.'.tr());
         }
-        MyAppState.currentUser = result;
-        Navigator.pushReplacementNamed(context, '/dashboard');
-      } else {
-        showAlertDialog(
-          context,
-          'Couldn\'t Authenticate'.tr(),
-          'Login failed, Please try again.'.tr());
+      } catch (e) {
+        // Show dialog if server is not connected
+        showDialog(
+          context: context,
+          builder: (context) => AlertDialog(
+            title: const Text('Error'),
+            content: const Text('Unable to connect to the server'),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.of(context).pop(),
+                child: const Text('OK'),
+              ),
+            ],
+          ),
+        );
       }
-    } catch (e) {
-      // Show dialog if server is not connected
-      showDialog(
-        context: context,
-        builder: (context) => AlertDialog(
-          title: const Text('Error'),
-          content: const Text('Unable to connect to the server'),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.of(context).pop(),
-              child: const Text('OK'),
-            ),
-          ],
-        ),
-      );
+    } else {
+      setState(() {
+        _validate = AutovalidateMode.onUserInteraction;
+      });
     }
-  } else {
-    setState(() {
-      _validate = AutovalidateMode.onUserInteraction;
-    });
   }
-}
-
 
   // Function to set the cookie on the web platform
 /*   void setCookie(String name, String value) {

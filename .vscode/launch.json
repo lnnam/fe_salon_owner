@@ -4,15 +4,16 @@
     // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
     "version": "0.2.0",
     "configurations": [
+        
         {
-            "name": "Flutter (Chrome - Port 3000)",
+            "name": "Flutter (Chrome - Port 3001)",
             "request": "launch",
             "type": "dart",
             "flutterMode": "debug",
             "args": [
                 "-d",
                 "chrome",
-                "--web-port=3000"
+                "--web-port=3001"
             ]
         }
     ]

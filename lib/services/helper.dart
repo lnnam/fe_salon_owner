@@ -121,39 +121,53 @@ showAlertDialog(BuildContext context, String title, String content) {
       Navigator.pop(context);
     },
   );
-  if (Platform.isIOS) {
-    CupertinoAlertDialog alert = CupertinoAlertDialog(
-      title: Text(title),
-      content: Text(content),
-      actions: [
-        okButton,
-      ],
-    );
 
-    // show the dialog
-    showCupertinoDialog(
-      context: context,
-      builder: (BuildContext context) {
-        return alert;
-      },
-    );
-  } else {
-    AlertDialog alert = AlertDialog(
-      title: Text(title),
-      content: Text(content),
-      actions: [
-        okButton,
-      ],
-    );
+  // Schedule dialog presentation for next frame to avoid mutating the
+  // render tree during hit-testing or pointer processing.
+  WidgetsBinding.instance.addPostFrameCallback((_) {
+    if (Platform.isIOS) {
+      final CupertinoAlertDialog alert = CupertinoAlertDialog(
+        title: Text(title),
+        content: Text(content),
+        actions: [
+          okButton,
+        ],
+      );
+      showCupertinoDialog(
+        context: context,
+        builder: (BuildContext context) => alert,
+      );
+    } else {
+      final AlertDialog alert = AlertDialog(
+        title: Text(title),
+        content: Text(content),
+        actions: [
+          okButton,
+        ],
+      );
+      showDialog(
+        context: context,
+        builder: (BuildContext context) => alert,
+      );
+    }
+  });
+}
 
-    // show the dialog
-    showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        return alert;
-      },
-    );
-  }
+/// Present a dialog in the next frame to avoid modifying the widget tree
+/// while the framework is performing hit-testing/layout.
+void safeShowDialog(
+    BuildContext context, Widget Function(BuildContext) builder) {
+  WidgetsBinding.instance.addPostFrameCallback((_) {
+    showDialog(context: context, builder: builder);
+  });
+}
+
+/// Safe variant for Cupertino dialogs.
+void safeShowCupertinoDialog(
+    BuildContext context, Widget Function(BuildContext) builder) {
+  WidgetsBinding.instance.addPostFrameCallback((_) {
+    showCupertinoDialog(context: context, builder: builder);
+  });
 }
 
 myPopup(context, txt) {
@@ -206,6 +220,30 @@ void safePushAndRemoveUntil(
   WidgetsBinding.instance.addPostFrameCallback((_) {
     Navigator.of(context).pushAndRemoveUntil(
         MaterialPageRoute(builder: (context) => destination), predicate);
+  });
+}
+
+// Named-route safe navigation helpers
+void safePushNamed(BuildContext context, String routeName,
+    {Object? arguments}) {
+  WidgetsBinding.instance.addPostFrameCallback((_) {
+    Navigator.pushNamed(context, routeName, arguments: arguments);
+  });
+}
+
+void safePushReplacementNamed(BuildContext context, String routeName,
+    {Object? arguments}) {
+  WidgetsBinding.instance.addPostFrameCallback((_) {
+    Navigator.pushReplacementNamed(context, routeName, arguments: arguments);
+  });
+}
+
+void safePushNamedAndRemoveUntil(
+    BuildContext context, String routeName, RoutePredicate predicate,
+    {Object? arguments}) {
+  WidgetsBinding.instance.addPostFrameCallback((_) {
+    Navigator.pushNamedAndRemoveUntil(context, routeName, predicate,
+        arguments: arguments);
   });
 }
 
@@ -331,7 +369,8 @@ logout(BuildContext context) async {
   SharedPreferences prefs = await SharedPreferences.getInstance();
   await prefs.clear();
   // Navigator.popUntil(context, ModalRoute.withName('/'));
-  Navigator.pushReplacementNamed(context, '/login');
+  if (!context.mounted) return;
+  safePushReplacementNamed(context, '/login');
 }
 
 Future<User> getCurrentUser() async {
@@ -342,14 +381,27 @@ Future<User> getCurrentUser() async {
 }
 
 ImageProvider? getImage(String base64String) {
+  // Synchronous decoding can be expensive and cause layout/hittest
+  // races when performed during list builds. We avoid decoding here.
+  // If the image has already been decoded and cached, return it.
   try {
-    return MemoryImage(
-      base64Decode(
-        base64String.split(',').last,
-      ),
-    );
+    if (_imageCache.containsKey(base64String)) return _imageCache[base64String];
+  } catch (_) {}
+  return null;
+}
+
+final Map<String, MemoryImage> _imageCache = {};
+
+/// Decode a base64 image asynchronously and store it in an in-memory cache.
+Future<ImageProvider?> decodeBase64Image(String base64String) async {
+  try {
+    final bytes =
+        await Future(() => base64Decode(base64String.split(',').last));
+    final image = MemoryImage(bytes);
+    _imageCache[base64String] = image;
+    return image;
   } catch (e) {
-    return null; // Return null if there's an error
+    return null;
   }
 }
 

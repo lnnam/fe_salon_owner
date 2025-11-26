@@ -37,6 +37,7 @@ class _SummaryPageState extends State<SummaryPage> {
   late String status;
   late int bookingkey;
   late TextEditingController noteController;
+  ImageProvider? customerImage;
 
   @override
   void dispose() {
@@ -46,6 +47,7 @@ class _SummaryPageState extends State<SummaryPage> {
     super.dispose();
   }
 
+  @override
   void initState() {
     super.initState();
     final bookingProvider =
@@ -75,6 +77,15 @@ class _SummaryPageState extends State<SummaryPage> {
       serviceName = booking.servicename;
       status = booking.status;
       note = booking.note;
+      // Start async decode of customer image (if any) so UI isn't blocked
+      if (booking.customerphoto.isNotEmpty) {
+        decodeBase64Image(booking.customerphoto).then((img) {
+          if (!mounted) return;
+          setState(() {
+            customerImage = img;
+          });
+        });
+      }
       bookingProvider.setBookingKey(bookingkey); // ✅ Added here
       bookingProvider.setBookingFromModel(booking);
     } else {
@@ -115,6 +126,18 @@ class _SummaryPageState extends State<SummaryPage> {
     return Colors.grey.shade600;
   }
 
+  String _friendlyStatus(String status) {
+    final s = status.toLowerCase();
+    if (s.contains('pending') || s.contains('wait')) return 'Pending';
+    if (s.contains('confirm') ||
+        s.contains('book') ||
+        s.contains('booked') ||
+        s.contains('confirmed')) return 'Confirmed';
+    if (s.contains('cancel') || s.contains('void')) return 'Cancelled';
+    if (s.contains('done') || s.contains('completed')) return 'Completed';
+    return status;
+  }
+
   Future<void> _deleteBooking(BuildContext context) async {
     final confirm = await showDialog<bool>(
       context: context,
@@ -134,7 +157,10 @@ class _SummaryPageState extends State<SummaryPage> {
       ),
     );
 
+    if (!mounted) return;
+
     if (confirm == true) {
+      if (!mounted) return;
       setState(() {
         isLoading = true;
       });
@@ -150,6 +176,8 @@ class _SummaryPageState extends State<SummaryPage> {
         isLoading = false;
       });
 
+      if (!mounted) return;
+
       if (success) {
         safePushAndRemoveUntil(
           context,
@@ -157,9 +185,9 @@ class _SummaryPageState extends State<SummaryPage> {
           (route) => false,
         );
       } else {
-        showDialog(
-          context: context,
-          builder: (context) => AlertDialog(
+        safeShowDialog(
+          context,
+          (context) => AlertDialog(
             title: const Text('Error'),
             content: const Text('Failed to cancel booking. Please try again.'),
             actions: [
@@ -174,8 +202,74 @@ class _SummaryPageState extends State<SummaryPage> {
     }
   }
 
+  Future<void> _confirmBooking() async {
+    setState(() => isLoading = true);
+    try {
+      final success = await apiManager.confirmBookingOwner(bookingkey);
+      if (!mounted) return;
+      setState(() => isLoading = false);
+      if (success) {
+        // Update local status, the passed booking model (if any), and provider
+        setState(() {
+          status = 'Confirmed';
+        });
+        safeShowDialog(
+          context,
+          (context) => AlertDialog(
+            title: const Text('Success'),
+            content: const Text('Booking confirmed successfully.'),
+            actions: [
+              TextButton(
+                onPressed: () {
+                  Navigator.of(context).pop();
+                },
+                child: const Text('OK'),
+              ),
+            ],
+          ),
+        );
+      } else {
+        safeShowDialog(
+          context,
+          (context) => AlertDialog(
+            title: const Text('Error'),
+            content: const Text('Failed to confirm booking. Please try again.'),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.of(context).pop(),
+                child: const Text('OK'),
+              ),
+            ],
+          ),
+        );
+      }
+    } catch (e) {
+      if (!mounted) return;
+      setState(() => isLoading = false);
+      safeShowDialog(
+        context,
+        (context) => AlertDialog(
+          title: const Text('Error'),
+          content: Text('An error occurred: $e'),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: const Text('OK'),
+            ),
+          ],
+        ),
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
+    final s = status.toLowerCase();
+    final isPending = s.contains('pending') || s.contains('wait');
+    final isConfirmed = s.contains('confirm') ||
+        s.contains('confirmed') ||
+        s.contains('booked') ||
+        s.contains('book');
     return Scaffold(
       appBar: AppBar(
         title: const Text('Summary Booking'),
@@ -193,10 +287,13 @@ class _SummaryPageState extends State<SummaryPage> {
                   borderRadius: BorderRadius.circular(20),
                 ),
                 child: Text(
-                  // use friendly label if booking model provided one
-                  widget.booking != null
-                      ? widget.booking!.displayStatus
-                      : status,
+                  // Prefer local status (updated after confirm), fallback to
+                  // the model's friendly label when local status is empty.
+                  status.isNotEmpty
+                      ? _friendlyStatus(status)
+                      : (widget.booking != null
+                          ? widget.booking!.displayStatus
+                          : status),
                   style: const TextStyle(
                       color: Colors.white, fontWeight: FontWeight.w700),
                 ),
@@ -230,23 +327,54 @@ class _SummaryPageState extends State<SummaryPage> {
               onTap: () => safePush(context, const BookingCalendarPage()),
             ),
             const SizedBox(height: 8),
-            if (status.isNotEmpty)
+            // Under the Schedule section: show confirm button / status
+            // only when booking is present and NOT already confirmed.
+            if (status.isNotEmpty && !isConfirmed)
               Row(
                 children: [
                   const SizedBox(width: 4),
-                  Container(
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-                    decoration: BoxDecoration(
-                      color: _statusColor(status),
-                      borderRadius: BorderRadius.circular(20),
-                    ),
-                    child: Text(
-                      status,
-                      style: const TextStyle(
-                          color: Colors.white, fontWeight: FontWeight.w600),
-                    ),
-                  ),
+                  // Show confirm button inline only when status explicitly
+                  // indicates pending/wait. We already ensure the whole row
+                  // isn't rendered for confirmed bookings via the parent
+                  // condition above.
+                  isPending
+                      ? ElevatedButton(
+                          onPressed: isLoading ? null : () => _confirmBooking(),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.green.shade600,
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 12, vertical: 8),
+                            shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(20)),
+                          ),
+                          child: isLoading
+                              ? const SizedBox(
+                                  width: 16,
+                                  height: 16,
+                                  child: CircularProgressIndicator(
+                                    color: Colors.white,
+                                    strokeWidth: 2,
+                                  ),
+                                )
+                              : const Text('Confirm',
+                                  style: TextStyle(
+                                      color: Colors.white,
+                                      fontWeight: FontWeight.w600)),
+                        )
+                      : Container(
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 10, vertical: 6),
+                          decoration: BoxDecoration(
+                            color: _statusColor(status),
+                            borderRadius: BorderRadius.circular(20),
+                          ),
+                          child: Text(
+                            status,
+                            style: const TextStyle(
+                                color: Colors.white,
+                                fontWeight: FontWeight.w600),
+                          ),
+                        ),
                 ],
               ),
             const SizedBox(height: 12),

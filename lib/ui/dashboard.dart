@@ -11,10 +11,8 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:salonapp/constants.dart';
 import 'package:salonapp/ui/booking/home.dart';
 
-
 class Dashboard extends StatelessWidget {
   const Dashboard({super.key});
-
 
   @override
   Widget build(BuildContext context) {
@@ -22,9 +20,9 @@ class Dashboard extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Dashboard'),
-       // iconTheme: IconThemeData(color: Colors.white),
-        
-       // backgroundColor: color, // Set app bar color
+        // iconTheme: IconThemeData(color: Colors.white),
+
+        // backgroundColor: color, // Set app bar color
       ),
       drawer: const AppDrawerDashboard(),
       body: Column(
@@ -37,7 +35,8 @@ class Dashboard extends StatelessWidget {
               children: [
                 Text(
                   'Welcome, salon name ${MyAppState.currentUser!.salonname}!',
-                  style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                  style: const TextStyle(
+                      fontSize: 20, fontWeight: FontWeight.bold),
                 ),
                 const SizedBox(height: 8),
                 Text('User: ${MyAppState.currentUser!.username}'),
@@ -48,10 +47,10 @@ class Dashboard extends StatelessWidget {
             child: GridView.count(
               crossAxisCount: 2,
               children: [
-                _buildDashboardButton(context, 'Appointment', Icons.event,
-                    color, '/booking'),
-                _buildDashboardButton(context, 'Go Sale', Icons.shopping_cart,
-                    color, '/pos'),
+                _buildDashboardButton(
+                    context, 'Appointment', Icons.event, color, '/booking'),
+                _buildDashboardButton(
+                    context, 'Go Sale', Icons.shopping_cart, color, '/pos'),
                 _buildDashboardButton(context, 'Go Check-in',
                     Icons.check_circle, color, '/checkin'),
                 _buildDashboardButton(context, 'Go Check-out',
@@ -69,33 +68,26 @@ class Dashboard extends StatelessWidget {
             mainAxisAlignment: MainAxisAlignment.spaceAround,
             children: [
               IconButton(
-                onPressed: () {
-                 
-                },
+                onPressed: () {},
                 icon: const Icon(Icons.event, color: Colors.white),
               ),
               IconButton(
-                onPressed: () {
-                  
-                },
+                onPressed: () {},
                 icon: const Icon(Icons.shopping_cart, color: Colors.white),
               ),
               IconButton(
-                onPressed: () {
-                  
-                },
+                onPressed: () {},
                 icon: const Icon(Icons.check_circle, color: Colors.white),
               ),
               IconButton(
-                onPressed: () {
-                  
-                },
-                icon: const Icon(Icons.check_circle_outline, color: Colors.white),
+                onPressed: () {},
+                icon:
+                    const Icon(Icons.check_circle_outline, color: Colors.white),
               ),
             ],
           ),
         ),
-      ), 
+      ),
     );
   }
 
@@ -105,8 +97,8 @@ class Dashboard extends StatelessWidget {
       padding: const EdgeInsets.all(8.0),
       child: InkWell(
         onTap: () {
-         // Navigator.push( context, MaterialPageRoute(builder: (context) => screen));
-          Navigator.pushReplacementNamed(context, route);
+          // Navigator.push( context, MaterialPageRoute(builder: (context) => screen));
+          safePushReplacementNamed(context, route);
         },
         child: Card(
           elevation: 3,
@@ -130,8 +122,6 @@ class Dashboard extends StatelessWidget {
     );
   }
 }
-
-
 
 class CheckInScreen extends StatelessWidget {
   const CheckInScreen({super.key});
