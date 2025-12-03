@@ -72,8 +72,6 @@ class _BookingHomeScreenState extends State<BookingHomeScreen> {
   }
 
   Widget _buildBookingCard(Booking booking, Color color) {
-    final ImageProvider imageProvider =
-        const AssetImage('assets/default_avatar.png');
     final isPastLocal = isBookingInPast(booking);
 
     return Container(
@@ -110,21 +108,6 @@ class _BookingHomeScreenState extends State<BookingHomeScreen> {
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Container(
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    border: Border.all(
-                      color: isPastLocal ? Colors.grey[400]! : color,
-                      width: 2,
-                    ),
-                  ),
-                  child: CircleAvatar(
-                    radius: 28,
-                    backgroundImage: imageProvider,
-                    child: const Icon(Icons.person),
-                  ),
-                ),
-                const SizedBox(width: 16),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -301,24 +284,30 @@ class _BookingHomeScreenState extends State<BookingHomeScreen> {
 
           return Container(
             color: Colors.grey[50],
-            child: ListView.builder(
-              padding: const EdgeInsets.only(bottom: 16.0),
-              itemCount: sortedDates.length,
-              itemBuilder: (context, index) {
-                final date = sortedDates[index];
-                final bookings = groupedBookings[date]!;
-                return Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    _buildDateHeader(date, color),
-                    Column(
-                      children: bookings
-                          .map((booking) => _buildBookingCard(booking, color))
-                          .toList(),
+            child: CustomScrollView(
+              slivers: [
+                SliverPadding(
+                  padding: const EdgeInsets.only(bottom: 16.0),
+                  sliver: SliverList(
+                    delegate: SliverChildBuilderDelegate(
+                      (context, index) {
+                        final date = sortedDates[index];
+                        final bookings = groupedBookings[date]!;
+                        return Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            _buildDateHeader(date, color),
+                            ...bookings
+                                .map((booking) => _buildBookingCard(booking, color))
+                                .toList(),
+                          ],
+                        );
+                      },
+                      childCount: sortedDates.length,
                     ),
-                  ],
-                );
-              },
+                  ),
+                ),
+              ],
             ),
           );
         },

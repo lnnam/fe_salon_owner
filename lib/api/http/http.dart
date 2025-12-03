@@ -253,16 +253,11 @@ class MyHttp {
       final User currentUser = await getCurrentUser();
       final String token = currentUser.token;
 
-      final requestBody = {'bookingkey': bookingKey};
-
-      final response = await http.post(
-        Uri.parse(AppConfig.api_url_booking_confirm),
-        headers: <String, String>{
-          'Authorization': 'Bearer $token',
-          'Content-Type': 'application/json; charset=UTF-8',
-        },
-        body: jsonEncode(requestBody),
+      final Uri uri = Uri.parse(
+        '${AppConfig.api_url_booking_confirm}?bookingkey=$bookingKey&token=${Uri.encodeComponent(token)}',
       );
+
+      final response = await http.get(uri);
 
       if (response.statusCode == 200 || response.statusCode == 201) {
         return true;
