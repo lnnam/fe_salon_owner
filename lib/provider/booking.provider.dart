@@ -1,10 +1,53 @@
 import 'package:flutter/material.dart';
 import 'package:salonapp/model/booking.dart';
+import 'package:salonapp/api/api_manager.dart';
 import 'package:intl/intl.dart';
+import 'dart:async';
 
 class BookingProvider with ChangeNotifier {
   
   final OnBooking _onbooking = OnBooking();
+  late StreamController<List<Booking>> _bookingStreamController;
+  Timer? _refreshTimer;
+  static const int POLLING_INTERVAL = 5; // seconds
+
+  BookingProvider() {
+    _initializeBookingStream();
+  }
+
+  void _initializeBookingStream() {
+    _bookingStreamController = StreamController<List<Booking>>();
+    _startAutoRefresh();
+  }
+
+  void _startAutoRefresh() {
+    _refreshTimer = Timer.periodic(
+      Duration(seconds: POLLING_INTERVAL),
+      (_) async {
+        try {
+          final bookings = await apiManager.ListBooking();
+          if (!_bookingStreamController.isClosed) {
+            _bookingStreamController.add(bookings);
+          }
+        } catch (e) {
+          print('Error fetching bookings: $e');
+        }
+      },
+    );
+  }
+
+  void manualRefresh() async {
+    try {
+      final bookings = await apiManager.ListBooking();
+      if (!_bookingStreamController.isClosed) {
+        _bookingStreamController.add(bookings);
+      }
+    } catch (e) {
+      print('Error refreshing bookings: $e');
+    }
+  }
+
+  Stream<List<Booking>> get bookingStream => _bookingStreamController.stream.asBroadcastStream();
 
   OnBooking get onbooking => _onbooking;
 
@@ -111,5 +154,12 @@ void setCustomerDetails(Map<String, dynamic> customer) {
 
   notifyListeners();
 }
+
+  @override
+  void dispose() {
+    _refreshTimer?.cancel();
+    _bookingStreamController.close();
+    super.dispose();
+  }
 
 }
