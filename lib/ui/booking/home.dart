@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:salonapp/model/booking.dart';
-import 'package:salonapp/api/api_manager.dart';
 import 'package:salonapp/constants.dart';
 import 'package:intl/intl.dart';
 import 'package:salonapp/ui/common/drawer_booking.dart';
@@ -18,7 +17,6 @@ class BookingHomeScreen extends StatefulWidget {
 }
 
 class _BookingHomeScreenState extends State<BookingHomeScreen> {
-  late Future<List<Booking>> _bookingsFuture;
   @override
   void initState() {
     super.initState();
@@ -28,14 +26,11 @@ class _BookingHomeScreenState extends State<BookingHomeScreen> {
       final bookingProvider =
           Provider.of<BookingProvider>(context, listen: false);
       bookingProvider.resetBooking();
+      // Trigger initial load
+      bookingProvider.manualRefresh();
       // debug log
-      // print('editMode is now: ${bookingProvider.onbooking.editMode}');
+      print('[BookingHomeScreen] Initialized, manual refresh triggered');
     });
-
-    // Initialize the bookings future once to avoid recreating it on every
-    // build (which can cause FutureBuilder to re-subscribe repeatedly and
-    // trigger layout/state changes during scrolling).
-    _bookingsFuture = apiManager.ListBooking();
   }
 
   Widget _buildDateHeader(DateTime date, Color color) {
@@ -261,54 +256,73 @@ class _BookingHomeScreenState extends State<BookingHomeScreen> {
       appBar: AppBar(
         title: const Text('Appointment', style: TextStyle(color: Colors.white)),
         backgroundColor: color,
+        actions: [
+          Consumer<BookingProvider>(
+            builder: (context, bookingProvider, child) {
+              return IconButton(
+                icon: const Icon(Icons.refresh, color: Colors.white),
+                onPressed: () {
+                  print('[BookingHomeScreen] Manual refresh button tapped');
+                  bookingProvider.manualRefresh();
+                },
+              );
+            },
+          ),
+        ],
       ),
       drawer: const AppDrawerBooking(),
-      body: FutureBuilder<List<Booking>>(
-        future: _bookingsFuture,
-        builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            return const Center(child: CircularProgressIndicator());
-          }
+      body: Consumer<BookingProvider>(
+        builder: (context, bookingProvider, child) {
+          return StreamBuilder<List<Booking>>(
+            stream: bookingProvider.bookingStream,
+            builder: (context, snapshot) {
+              print('[BookingHomeScreen] StreamBuilder: connectionState=${snapshot.connectionState}, hasData=${snapshot.hasData}, dataLength=${snapshot.data?.length ?? 0}');
+              
+              if (snapshot.connectionState == ConnectionState.waiting && !snapshot.hasData) {
+                return const Center(child: CircularProgressIndicator());
+              }
 
-          if (snapshot.hasError) {
-            return Center(child: Text('Error: ${snapshot.error}'));
-          }
+              if (snapshot.hasError) {
+                return Center(child: Text('Error: ${snapshot.error}'));
+              }
 
-          if (!snapshot.hasData || snapshot.data!.isEmpty) {
-            return const Center(child: Text('No bookings available.'));
-          }
+              if (!snapshot.hasData || snapshot.data!.isEmpty) {
+                return const Center(child: Text('No bookings available.'));
+              }
 
-          final groupedBookings = _groupBookingsByDate(snapshot.data!);
-          final sortedDates = groupedBookings.keys.toList();
-          sortedDates.sort((a, b) => a.compareTo(b));
+              final groupedBookings = _groupBookingsByDate(snapshot.data!);
+              final sortedDates = groupedBookings.keys.toList();
+              sortedDates.sort((a, b) => a.compareTo(b));
 
-          return Container(
-            color: Colors.grey[50],
-            child: CustomScrollView(
-              slivers: [
-                SliverPadding(
-                  padding: const EdgeInsets.only(bottom: 16.0),
-                  sliver: SliverList(
-                    delegate: SliverChildBuilderDelegate(
-                      (context, index) {
-                        final date = sortedDates[index];
-                        final bookings = groupedBookings[date]!;
-                        return Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            _buildDateHeader(date, color),
-                            ...bookings
-                                .map((booking) => _buildBookingCard(booking, color))
-                                .toList(),
-                          ],
-                        );
-                      },
-                      childCount: sortedDates.length,
+              return Container(
+                color: Colors.grey[50],
+                child: CustomScrollView(
+                  slivers: [
+                    SliverPadding(
+                      padding: const EdgeInsets.only(bottom: 16.0),
+                      sliver: SliverList(
+                        delegate: SliverChildBuilderDelegate(
+                          (context, index) {
+                            final date = sortedDates[index];
+                            final bookings = groupedBookings[date]!;
+                            return Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                _buildDateHeader(date, color),
+                                ...bookings
+                                    .map((booking) => _buildBookingCard(booking, color))
+                                    .toList(),
+                              ],
+                            );
+                          },
+                          childCount: sortedDates.length,
+                        ),
+                      ),
                     ),
-                  ),
+                  ],
                 ),
-              ],
-            ),
+              );
+            },
           );
         },
       ),

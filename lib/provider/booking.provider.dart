@@ -8,8 +8,9 @@ class BookingProvider with ChangeNotifier {
   
   final OnBooking _onbooking = OnBooking();
   late StreamController<List<Booking>> _bookingStreamController;
+  late Stream<List<Booking>> _bookingStreamBroadcast;
   Timer? _refreshTimer;
-  static const int POLLING_INTERVAL = 5; // seconds
+  static const int POLLING_INTERVAL = 3; // seconds
 
   BookingProvider() {
     _initializeBookingStream();
@@ -17,37 +18,43 @@ class BookingProvider with ChangeNotifier {
 
   void _initializeBookingStream() {
     _bookingStreamController = StreamController<List<Booking>>();
+    _bookingStreamBroadcast = _bookingStreamController.stream.asBroadcastStream();
     _startAutoRefresh();
   }
 
   void _startAutoRefresh() {
+    // Load initial data immediately
+    _loadBookings();
+    
     _refreshTimer = Timer.periodic(
       Duration(seconds: POLLING_INTERVAL),
-      (_) async {
-        try {
-          final bookings = await apiManager.ListBooking();
-          if (!_bookingStreamController.isClosed) {
-            _bookingStreamController.add(bookings);
-          }
-        } catch (e) {
-          print('Error fetching bookings: $e');
-        }
+      (_) {
+        _loadBookings();
       },
     );
   }
 
-  void manualRefresh() async {
+  Future<void> _loadBookings() async {
     try {
+      print('[BookingProvider] Fetching bookings...');
       final bookings = await apiManager.ListBooking();
+      print('[BookingProvider] Received ${bookings.length} bookings');
+      for (int i = 0; i < bookings.length; i++) {
+        print('[BookingProvider] Booking $i: pkey=${bookings[i].pkey}, customer=${bookings[i].customername}, staff=${bookings[i].staffname}, service=${bookings[i].servicename}, status=${bookings[i].displayStatus}, time=${bookings[i].bookingstart}');
+      }
       if (!_bookingStreamController.isClosed) {
         _bookingStreamController.add(bookings);
       }
     } catch (e) {
-      print('Error refreshing bookings: $e');
+      print('[BookingProvider] Error fetching bookings: $e');
     }
   }
 
-  Stream<List<Booking>> get bookingStream => _bookingStreamController.stream.asBroadcastStream();
+  Future<void> manualRefresh() async {
+    await _loadBookings();
+  }
+
+  Stream<List<Booking>> get bookingStream => _bookingStreamBroadcast;
 
   OnBooking get onbooking => _onbooking;
 
