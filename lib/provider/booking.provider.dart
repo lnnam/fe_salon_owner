@@ -50,8 +50,20 @@ class BookingProvider with ChangeNotifier {
     }
   }
 
-  Future<void> manualRefresh() async {
-    await _loadBookings();
+  void manualRefresh() async {
+    try {
+      print('[BookingProvider] Manual refresh: Fetching bookings...');
+      final bookings = await apiManager.ListBooking();
+      print('[BookingProvider] Manual refresh: Received ${bookings.length} bookings');
+      for (int i = 0; i < bookings.length; i++) {
+        print('[BookingProvider] Booking $i: pkey=${bookings[i].pkey}, customer=${bookings[i].customername}, staff=${bookings[i].staffname}, service=${bookings[i].servicename}, status=${bookings[i].displayStatus}, time=${bookings[i].bookingstart}');
+      }
+      if (!_bookingStreamController.isClosed) {
+        _bookingStreamController.add(bookings);
+      }
+    } catch (e) {
+      print('[BookingProvider] Error refreshing bookings: $e');
+    }
   }
 
   Stream<List<Booking>> get bookingStream => _bookingStreamBroadcast;
