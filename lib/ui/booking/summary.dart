@@ -231,6 +231,14 @@ class _SummaryPageState extends State<SummaryPage> {
               TextButton(
                 onPressed: () {
                   Navigator.of(context).pop();
+                  // Navigate back to home list after confirmation
+                  if (mounted) {
+                    safePushAndRemoveUntil(
+                      context,
+                      const BookingHomeScreen(),
+                      (route) => false,
+                    );
+                  }
                 },
                 child: const Text('OK'),
               ),

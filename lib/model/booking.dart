@@ -45,14 +45,19 @@ class Booking {
     DateTime bookingDateTime;
     String formattedBookingDate = '';
 
+    // Use 'bookingstart' if available, otherwise use 'date' field
     if (json['bookingstart'] != null && json['bookingstart'] != '') {
       bookingDateTime = DateTime.parse(json['bookingstart']);
       formattedBookingDate = DateFormat('yyyy-MM-dd').format(bookingDateTime);
+    } else if (json['date'] != null && json['date'] != '') {
+      // Use the 'date' field from server
+      formattedBookingDate = json['date'];
+      bookingDateTime = DateTime.parse('${formattedBookingDate}T00:00:00.000Z');
+    } else if (json['dateactivated'] != null && json['dateactivated'] != '') {
+      bookingDateTime = DateTime.parse(json['dateactivated']);
+      formattedBookingDate = DateFormat('yyyy-MM-dd').format(bookingDateTime);
     } else {
-      bookingDateTime =
-          json['dateactivated'] != null && json['dateactivated'] != ''
-              ? DateTime.parse(json['dateactivated'])
-              : DateTime.now();
+      bookingDateTime = DateTime.now();
       formattedBookingDate = DateFormat('yyyy-MM-dd').format(bookingDateTime);
     }
 

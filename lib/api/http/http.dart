@@ -55,18 +55,19 @@ class MyHttp {
       'Content-Type': 'application/json',
     };
 
-    print('[HTTP] fetchFromServer: GET $apiEndpoint');
     // Making the HTTP GET request
     final http.Response response = await http.get(uri, headers: headers);
-
+print(response);
     // Handling response
     if (response.statusCode == 200) {
-      print('[HTTP] fetchFromServer: Success (200), Response length: ${response.body.length}');
+      print(
+          '[HTTP] fetchFromServer: Success (200), Response length: ${response.body.length}');
       // Request successful, parse and return response data
       return json.decode(response.body);
     } else {
       // Request failed, throw error
-      print('[HTTP] fetchFromServer: Failed with status ${response.statusCode}');
+      print(
+          '[HTTP] fetchFromServer: Failed with status ${response.statusCode}');
       if (response.statusCode == 401) {
         throw 'Your session has expired. Please log in again.';
       } else {
@@ -75,17 +76,33 @@ class MyHttp {
     }
   }
 
-  Future<List<Booking>> ListBooking() async {
+  Future<List<Booking>> ListBooking({String? opt}) async {
     try {
-      print('[HTTP] ListBooking: Fetching from ${AppConfig.api_url_booking_home}');
-      final response = await fetchFromServer(AppConfig.api_url_booking_home);
-      List<dynamic> data = response;
-      print('[HTTP] ListBooking: Raw response received, total items: ${data.length}');
-      final bookings = data.map<Booking>((item) => Booking.fromJson(item)).toList();
-      print('[HTTP] ListBooking: Successfully parsed ${bookings.length} bookings');
-      for (int i = 0; i < bookings.length; i++) {
-        print('[HTTP] ListBooking[$i]: pkey=${bookings[i].pkey}, customer=${bookings[i].customername}, staff=${bookings[i].staffname}, service=${bookings[i].servicename}, status=${bookings[i].displayStatus}');
+      String endpoint = AppConfig.api_url_booking_home;
+      if (opt != null && opt.isNotEmpty) {
+        endpoint = '$endpoint?opt=$opt';
       }
+      print('═════════════════════════════════════════');
+      print('[HTTP] ListBooking: Endpoint URL: $endpoint');
+      print('═════════════════════════════════════════');
+      final response = await fetchFromServer(endpoint);
+
+    
+
+      List<Booking> bookings = [];
+
+      // Handle response as Map (object with numeric keys) or List
+      if (response is Map) {
+        response.forEach((key, value) {
+          if (value is Map) {
+            bookings.add(Booking.fromJson(Map<String, dynamic>.from(value)));
+          }
+        });
+      } else if (response is List) {
+        bookings =
+            response.map<Booking>((item) => Booking.fromJson(item)).toList();
+      }
+
       return bookings;
     } catch (error) {
       print('[HTTP] ListBooking: ERROR - $error');
@@ -150,6 +167,13 @@ class MyHttp {
 
       if (response.statusCode == 200 || response.statusCode == 201) {
         return jsonDecode(response.body);
+      } else if (response.statusCode == 409) {
+        // Customer already exists - extract and return the customer data
+        print(
+            'Customer already exists: ${response.statusCode}, Response: ${response.body}');
+        final responseData = jsonDecode(response.body);
+        // Return the customer data from the response
+        return responseData['customer'] ?? responseData;
       } else {
         print('Error: ${response.statusCode}, Response: ${response.body}');
         return null;

@@ -236,11 +236,29 @@ class _CustomerPageState extends State<CustomerPage> {
                                                   listen: false)
                                               .setCustomerDetails(customerData);
 
-                                          // Navigate to the summary page
-                                          safePush(
-                                            context,
-                                            const SummaryPage(),
-                                          );
+                                          // Show success message
+                                          final message = result
+                                                      .containsKey('error') &&
+                                                  result['error'] ==
+                                                      'Customer already exists'
+                                              ? 'Customer already exists. Using existing customer.'
+                                              : 'Customer added successfully.';
+                                          showAlertDialog(
+                                              context, 'Success', message);
+
+                                          // Navigate to the summary page after user dismisses the alert
+                                          Future.delayed(
+                                              const Duration(milliseconds: 500),
+                                              () {
+                                            if (mounted) {
+                                              Navigator.of(context)
+                                                  .pop(); // Close the alert
+                                              safePush(
+                                                context,
+                                                const SummaryPage(),
+                                              );
+                                            }
+                                          });
                                         }
                                       } else {
                                         showAlertDialog(context, 'Error',
@@ -250,6 +268,7 @@ class _CustomerPageState extends State<CustomerPage> {
                                       setState(() {
                                         isLoading = false;
                                       });
+                                      print('Error details: $e');
                                       showAlertDialog(context, 'Error',
                                           'An error occurred: $e');
                                     }
