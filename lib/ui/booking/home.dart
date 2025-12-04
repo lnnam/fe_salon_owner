@@ -16,21 +16,50 @@ class BookingHomeScreen extends StatefulWidget {
   _BookingHomeScreenState createState() => _BookingHomeScreenState();
 }
 
-class _BookingHomeScreenState extends State<BookingHomeScreen> {
+class _BookingHomeScreenState extends State<BookingHomeScreen>
+    with WidgetsBindingObserver {
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     // Set editMode to false when home page loads. Use post-frame to avoid
     // calling provider during widget construction.
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final bookingProvider =
           Provider.of<BookingProvider>(context, listen: false);
       bookingProvider.resetBooking();
-      // Trigger initial load
-      bookingProvider.manualRefresh();
+      // Start auto-refresh polling only on this page
+      bookingProvider.startAutoRefresh();
       // debug log
-      print('[BookingHomeScreen] Initialized, manual refresh triggered');
+      print('[BookingHomeScreen] Initialized, auto-refresh started');
     });
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    final bookingProvider =
+        Provider.of<BookingProvider>(context, listen: false);
+    if (state == AppLifecycleState.paused ||
+        state == AppLifecycleState.detached) {
+      // App is paused or detached, pause polling
+      bookingProvider.pauseAutoRefresh();
+      print('[BookingHomeScreen] App lifecycle: $state, auto-refresh paused');
+    } else if (state == AppLifecycleState.resumed) {
+      // App is resumed, resume polling
+      bookingProvider.resumeAutoRefresh();
+      print('[BookingHomeScreen] App lifecycle: resumed, auto-refresh resumed');
+    }
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    // Stop auto-refresh when leaving this page
+    final bookingProvider =
+        Provider.of<BookingProvider>(context, listen: false);
+    bookingProvider.stopAutoRefresh();
+    print('[BookingHomeScreen] Disposed, auto-refresh stopped');
+    super.dispose();
   }
 
   Widget _buildDateHeader(DateTime date, Color color) {
@@ -276,9 +305,11 @@ class _BookingHomeScreenState extends State<BookingHomeScreen> {
           return StreamBuilder<List<Booking>>(
             stream: bookingProvider.bookingStream,
             builder: (context, snapshot) {
-              print('[BookingHomeScreen] StreamBuilder: connectionState=${snapshot.connectionState}, hasData=${snapshot.hasData}, dataLength=${snapshot.data?.length ?? 0}');
-              
-              if (snapshot.connectionState == ConnectionState.waiting && !snapshot.hasData) {
+              print(
+                  '[BookingHomeScreen] StreamBuilder: connectionState=${snapshot.connectionState}, hasData=${snapshot.hasData}, dataLength=${snapshot.data?.length ?? 0}');
+
+              if (snapshot.connectionState == ConnectionState.waiting &&
+                  !snapshot.hasData) {
                 return const Center(child: CircularProgressIndicator());
               }
 
@@ -310,7 +341,8 @@ class _BookingHomeScreenState extends State<BookingHomeScreen> {
                               children: [
                                 _buildDateHeader(date, color),
                                 ...bookings
-                                    .map((booking) => _buildBookingCard(booking, color))
+                                    .map((booking) =>
+                                        _buildBookingCard(booking, color))
                                     .toList(),
                               ],
                             );

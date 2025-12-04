@@ -7,8 +7,35 @@ import 'package:salonapp/provider/booking.provider.dart';
 import 'calendar.dart'; // Import SchedulePage
 import 'summary.dart';
 
-class ServicePage extends StatelessWidget {
+class ServicePage extends StatefulWidget {
   const ServicePage({super.key});
+
+  @override
+  ServicePageState createState() => ServicePageState();
+}
+
+class ServicePageState extends State<ServicePage> {
+  @override
+  void initState() {
+    super.initState();
+    // Pause booking auto-refresh when opening this page
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final bookingProvider =
+          Provider.of<BookingProvider>(context, listen: false);
+      bookingProvider.pauseAutoRefresh();
+      print('[ServicePage] Opened, auto-refresh paused');
+    });
+  }
+
+  @override
+  void dispose() {
+    // Resume booking auto-refresh when closing this page
+    final bookingProvider =
+        Provider.of<BookingProvider>(context, listen: false);
+    bookingProvider.resumeAutoRefresh();
+    print('[ServicePage] Closed, auto-refresh resumed');
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -68,8 +95,7 @@ class ServicePage extends StatelessWidget {
                           final bookingProvider = Provider.of<BookingProvider>(
                               context,
                               listen: false);
-                          final isEditMode =
-                              bookingProvider.onbooking?.editMode ?? false;
+                          final isEditMode = bookingProvider.onbooking.editMode;
 
                           // Set staff
                           bookingProvider.setService(service.toJson());

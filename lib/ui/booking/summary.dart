@@ -44,14 +44,23 @@ class _SummaryPageState extends State<SummaryPage> {
     Provider.of<BookingProvider>(context, listen: false)
         .setNote(noteController.text);
     noteController.dispose();
+    // Resume booking auto-refresh when closing this page
+    final bookingProvider =
+        Provider.of<BookingProvider>(context, listen: false);
+    bookingProvider.resumeAutoRefresh();
+    print('[SummaryPage] Closed, auto-refresh resumed');
     super.dispose();
   }
 
   @override
   void initState() {
     super.initState();
+    // Pause booking auto-refresh when opening this page
     final bookingProvider =
         Provider.of<BookingProvider>(context, listen: false);
+    bookingProvider.pauseAutoRefresh();
+    print('[SummaryPage] Opened, auto-refresh paused');
+
     //print('bookingDetails: ${bookingProvider.bookingDetails}');
 
     // ✅ Set edit mode to true

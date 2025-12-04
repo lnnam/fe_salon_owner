@@ -23,11 +23,27 @@ class _BookingCalendarPageState extends State<BookingCalendarPage> {
   @override
   void initState() {
     super.initState();
+    // Pause booking auto-refresh when opening this page
+    final bookingProvider =
+        Provider.of<BookingProvider>(context, listen: false);
+    bookingProvider.pauseAutoRefresh();
+    print('[BookingCalendarPage] Opened, auto-refresh paused');
+
     mockBookingService = BookingService(
         serviceName: 'Mock Service',
         serviceDuration: 15,
         bookingEnd: DateTime(now.year, now.month, now.day, 18, 0),
         bookingStart: DateTime(now.year, now.month, now.day, 9, 0));
+  }
+
+  @override
+  void dispose() {
+    // Resume booking auto-refresh when closing this page
+    final bookingProvider =
+        Provider.of<BookingProvider>(context, listen: false);
+    bookingProvider.resumeAutoRefresh();
+    print('[BookingCalendarPage] Closed, auto-refresh resumed');
+    super.dispose();
   }
 
   Stream<dynamic>? getBookingStreamMock(

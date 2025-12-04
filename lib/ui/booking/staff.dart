@@ -9,8 +9,35 @@ import 'package:salonapp/provider/booking.provider.dart';
 import 'service.dart';
 import 'summary.dart';
 
-class StaffPage extends StatelessWidget {
+class StaffPage extends StatefulWidget {
   const StaffPage({super.key});
+
+  @override
+  StaffPageState createState() => StaffPageState();
+}
+
+class StaffPageState extends State<StaffPage> {
+  @override
+  void initState() {
+    super.initState();
+    // Pause booking auto-refresh when opening this page
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final bookingProvider =
+          Provider.of<BookingProvider>(context, listen: false);
+      bookingProvider.pauseAutoRefresh();
+      print('[StaffPage] Opened, auto-refresh paused');
+    });
+  }
+
+  @override
+  void dispose() {
+    // Resume booking auto-refresh when closing this page
+    final bookingProvider =
+        Provider.of<BookingProvider>(context, listen: false);
+    bookingProvider.resumeAutoRefresh();
+    print('[StaffPage] Closed, auto-refresh resumed');
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -75,8 +102,7 @@ class StaffPage extends StatelessWidget {
                           final bookingProvider = Provider.of<BookingProvider>(
                               context,
                               listen: false);
-                          final isEditMode =
-                              bookingProvider.onbooking?.editMode ?? false;
+                          final isEditMode = bookingProvider.onbooking.editMode;
 
                           // Set staff
                           bookingProvider.setStaff(staff.toJson());
