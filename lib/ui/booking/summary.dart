@@ -304,84 +304,68 @@ class _SummaryPageState extends State<SummaryPage> {
             color: Colors.grey[100],
             padding:
                 const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
-            child: Row(
+            child: Column(
               children: [
-                if (customerImage != null)
-                  ClipRRect(
-                    borderRadius: BorderRadius.circular(25),
-                    child: Image(
-                      image: customerImage!,
-                      width: 50,
-                      height: 50,
-                      fit: BoxFit.cover,
-                    ),
-                  )
-                else
-                  CircleAvatar(
-                    radius: 25,
-                    backgroundColor: Colors.blue[300],
-                    child:
-                        const Icon(Icons.person, color: Colors.white, size: 24),
-                  ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        customerName,
-                        style: const TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.black87,
+                Row(
+                  children: [
+                    if (customerImage != null)
+                      ClipRRect(
+                        borderRadius: BorderRadius.circular(25),
+                        child: Image(
+                          image: customerImage!,
+                          width: 50,
+                          height: 50,
+                          fit: BoxFit.cover,
                         ),
+                      )
+                    else
+                      CircleAvatar(
+                        radius: 25,
+                        backgroundColor: Colors.blue[300],
+                        child:
+                            const Icon(Icons.person, color: Colors.white, size: 24),
                       ),
-                      if (customerPhone.isNotEmpty && customerPhone != 'N/A')
-                        Text(
-                          customerPhone,
-                          style: const TextStyle(
-                            fontSize: 12,
-                            color: Colors.grey,
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            customerName,
+                            style: const TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.black87,
+                            ),
                           ),
-                        ),
-                      if (customerEmail.isNotEmpty && customerEmail != 'N/A')
-                        Text(
-                          customerEmail,
-                          style: const TextStyle(
-                            fontSize: 12,
-                            color: Colors.grey,
-                          ),
-                        ),
-                    ],
-                  ),
+                          if (customerPhone.isNotEmpty && customerPhone != 'N/A')
+                            Text(
+                              customerPhone,
+                              style: const TextStyle(
+                                fontSize: 12,
+                                color: Colors.grey,
+                              ),
+                            ),
+                          if (customerEmail.isNotEmpty && customerEmail != 'N/A')
+                            Text(
+                              customerEmail,
+                              style: const TextStyle(
+                                fontSize: 12,
+                                color: Colors.grey,
+                              ),
+                            ),
+                        ],
+                      ),
+                    ),
+                  ],
                 ),
-              ],
-            ),
-          ),
-          Expanded(
-            child: Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: ListView(
-                children: [
-                  _buildInfoRow(
-                    context,
-                    label: 'Schedule',
-                    value:
-                        '${_formatDate(bookingDate)} at ${_formatTime(bookingTime)}',
-                    icon: Icons.schedule,
-                    onTap: () => safePush(context, const BookingCalendarPage()),
-                  ),
-                  const SizedBox(height: 8),
-                  // Under the Schedule section: show confirm button / status
-                  // only when booking is present and NOT already confirmed.
-                  if (status.isNotEmpty && !isConfirmed)
-                    Row(
+                // Confirm button below customer info
+                if (status.isNotEmpty && !isConfirmed)
+                  Padding(
+                    padding: const EdgeInsets.only(top: 12.0),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        const SizedBox(width: 4),
-                        // Show confirm button inline only when status explicitly
-                        // indicates pending/wait. We already ensure the whole row
-                        // isn't rendered for confirmed bookings via the parent
-                        // condition above.
                         isPending
                             ? ElevatedButton(
                                 onPressed:
@@ -389,7 +373,7 @@ class _SummaryPageState extends State<SummaryPage> {
                                 style: ElevatedButton.styleFrom(
                                   backgroundColor: Colors.green.shade600,
                                   padding: const EdgeInsets.symmetric(
-                                      horizontal: 12, vertical: 8),
+                                      horizontal: 24, vertical: 10),
                                   shape: RoundedRectangleBorder(
                                       borderRadius: BorderRadius.circular(20)),
                                 ),
@@ -409,7 +393,7 @@ class _SummaryPageState extends State<SummaryPage> {
                               )
                             : Container(
                                 padding: const EdgeInsets.symmetric(
-                                    horizontal: 10, vertical: 6),
+                                    horizontal: 12, vertical: 8),
                                 decoration: BoxDecoration(
                                   color: _statusColor(status),
                                   borderRadius: BorderRadius.circular(20),
@@ -423,6 +407,24 @@ class _SummaryPageState extends State<SummaryPage> {
                               ),
                       ],
                     ),
+                  ),
+              ],
+            ),
+          ),
+          Expanded(
+            child: Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: ListView(
+                children: [
+                  // Schedule row
+                  _buildInfoRow(
+                    context,
+                    label: 'Schedule',
+                    value:
+                        '${_formatDate(bookingDate)} at ${_formatTime(bookingTime)}',
+                    icon: Icons.schedule,
+                    onTap: () => safePush(context, const BookingCalendarPage()),
+                  ),
                   const SizedBox(height: 12),
                   _buildInfoRow(
                     context,

@@ -346,7 +346,7 @@ class _BookingHomeScreenState extends State<BookingHomeScreen>
                           const SizedBox(width: 4),
                           Expanded(
                             child: Text(
-                              'Created on: ${_formatSchedule(booking.datetimebooking)}',
+                              'Created on: ${_formatSchedule(booking.created_datetime)}',
                               style: TextStyle(
                                   color: isPastLocal
                                       ? Colors.grey[600]
