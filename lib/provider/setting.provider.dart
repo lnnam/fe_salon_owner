@@ -35,7 +35,7 @@ class SettingProvider with ChangeNotifier {
     _appSettings = settings;
     salonName = settings['salon_name'] as String?;
     sms = settings['sms'] as String?;
-    email = settings['salon_email'] as String?;
+    email = settings['email'] as String?;
     print('[SettingProvider] Updated settings - salonName: $salonName, sms: $sms, email: $email');
     
     // Save to SharedPreferences

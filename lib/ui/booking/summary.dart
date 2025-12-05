@@ -627,13 +627,10 @@ class _SummaryPageState extends State<SummaryPage> {
         return;
       }
 
-      final Uri smsUri = Uri(
-        scheme: 'sms',
-        path: phoneNumber,
-        queryParameters: {
-          'body': smsMessage + '\n\n' + salonName,
-        },
-      );
+      final String body = '$smsMessage\n\n$salonName';
+      // Use proper SMS URI format: sms:phonenumber?body=message
+      // Note: Must use Uri.parse instead of Uri constructor to properly encode the body
+      final Uri smsUri = Uri.parse('sms:$phoneNumber?body=${Uri.encodeComponent(body)}');
 
       if (await canLaunchUrl(smsUri)) {
         await launchUrl(smsUri);
@@ -671,11 +668,32 @@ class _SummaryPageState extends State<SummaryPage> {
   }
 
   Future<void> _sendEmail(String email) async {
-    final Uri emailUri = Uri(
-      scheme: 'mailto',
-      path: email,
-    );
     try {
+      // Get email message from SettingProvider
+      final settingProvider = Provider.of<SettingProvider>(context, listen: false);
+      var emailMessage = settingProvider.email ?? '';
+      var salonName = settingProvider.salonName ?? '';
+      
+      // Replace placeholders with actual booking details
+      // Extract time from bookingTime (format: "HH:mm, dd/MM/yyyy")
+      final timeParts = bookingTime.split(', ');
+      final time = timeParts.isNotEmpty ? timeParts[0] : '';
+      final date = timeParts.length > 1 ? timeParts[1] : '';
+      
+      // Replace HH:MM on DD/MM/YYYY with actual values
+      emailMessage = emailMessage.replaceAll('HH:MM on DD/MM/YYYY', '$time on $date');
+      print('[SummaryPage] Email - Recipient: $email, Message: $emailMessage');
+
+      if (emailMessage.isEmpty) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Email message not configured')),
+        );
+        return;
+      }
+
+      final String body = '$emailMessage\n\n$salonName';
+      final Uri emailUri = Uri.parse('mailto:$email?body=${Uri.encodeComponent(body)}');
+      
       if (await canLaunchUrl(emailUri)) {
         await launchUrl(emailUri);
       } else {
@@ -684,6 +702,7 @@ class _SummaryPageState extends State<SummaryPage> {
         );
       }
     } catch (e) {
+      print('[SummaryPage] Error in _sendEmail: $e');
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Error opening email: $e')),
       );
