@@ -5,6 +5,7 @@ import 'package:salonapp/services/helper.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:salonapp/model/booking.dart';
 import 'package:salonapp/provider/booking.provider.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import 'home.dart';
 import 'calendar.dart'; // ⬅️ Replace with actual path
@@ -32,6 +33,8 @@ class _SummaryPageState extends State<SummaryPage> {
   late String bookingDate;
   late String bookingTime;
   late String customerName;
+  late String customerPhone;
+  late String customerEmail;
   late String staffName;
   late String serviceName;
   late String status;
@@ -61,6 +64,64 @@ class _SummaryPageState extends State<SummaryPage> {
     bookingProvider.pauseAutoRefresh();
     print('[SummaryPage] Opened, auto-refresh paused');
 
+    // Log the booking object passed from home page
+    print('═════════════════════════════════════════════════════════════');
+    print('[SummaryPage] Data Passed to Summary Page - INIT');
+    print('═════════════════════════════════════════════════════════════');
+
+    if (widget.booking != null) {
+      final booking = widget.booking!;
+      print('[SummaryPage] ✅ Booking Object Received from Widget Parameter');
+      print('');
+      print('BOOKING DETAILS:');
+      print('  └─ Booking Key (pkey): ${booking.pkey}');
+      print('  └─ Customer Key: ${booking.customerkey}');
+      print('  └─ Customer Name: ${booking.customername}');
+      print(
+          '  └─ Customer Phone: "${booking.customerphone}" (length: ${booking.customerphone.length})');
+      print(
+          '  └─ Customer Email: "${booking.customeremail}" (length: ${booking.customeremail.length})');
+      print('  └─ Customer Type: ${booking.customertype}');
+      print('  └─ Staff Key: ${booking.staffkey}');
+      print('  └─ Staff Name: ${booking.staffname}');
+      print('  └─ Service Key: ${booking.servicekey}');
+      print('  └─ Service Name: ${booking.servicename}');
+      print('');
+      print('DATE & TIME:');
+      print('  └─ Booking Date: ${booking.bookingdate}');
+      print('  └─ Booking Time: ${booking.bookingtime}');
+      print('  └─ Booking Start: ${booking.bookingstart}');
+      print('  └─ DateTime Booking: ${booking.datetimebooking}');
+      print('');
+      print('STATUS & NOTES:');
+      print('  └─ Status: ${booking.status}');
+      print('  └─ Status Display: ${booking.displayStatus}');
+      print('  └─ Note: ${booking.note.isNotEmpty ? booking.note : '(empty)'}');
+      print('');
+      print('METADATA:');
+      print('  └─ Created By: ${booking.createdby ?? 'Unknown'}');
+      print('  └─ Created DateTime: ${booking.created_datetime}');
+      print('  └─ Num Booked: ${booking.numbooked}');
+      print(
+          '  └─ Customer Photo: ${booking.customerphoto.isNotEmpty ? 'Yes (${booking.customerphoto.length} bytes)' : 'No'}');
+      print('');
+
+      // Print as JSON-style format
+      print('WIDGET.BOOKING AS JSON FORMAT:');
+      print(_bookingToJsonString(booking));
+      print('═════════════════════════════════════════════════════════════');
+    } else {
+      print('[SummaryPage] ⚠️ No booking object passed');
+      print('Checking BookingProvider for data...');
+      final bookingDetails = bookingProvider.bookingDetails;
+      print('');
+      print('PROVIDER BOOKING DETAILS:');
+      bookingDetails.forEach((key, value) {
+        print('  └─ $key: $value');
+      });
+      print('═════════════════════════════════════════════════════════════');
+    }
+
     //print('bookingDetails: ${bookingProvider.bookingDetails}');
 
     // ✅ Set edit mode to true
@@ -70,11 +131,7 @@ class _SummaryPageState extends State<SummaryPage> {
       Provider.of<BookingProvider>(context, listen: false).setEditMode(true);
     });
     if (widget.booking != null) {
-      print('widget');
-
       final booking = widget.booking!;
-      // print('Booking from widget: ${booking.toJson()}');
-
       bookingkey = booking.pkey;
       customerKey = booking.customerkey;
       serviceKey = booking.servicekey;
@@ -82,6 +139,11 @@ class _SummaryPageState extends State<SummaryPage> {
       bookingDate = booking.bookingdate;
       bookingTime = DateFormat('HH:mm, dd/MM/yyyy').format(booking.bookingtime);
       customerName = booking.customername;
+      customerPhone =
+          booking.customerphone.isNotEmpty ? booking.customerphone : 'N/A';
+      customerEmail =
+          booking.customeremail.isNotEmpty ? booking.customeremail : 'N/A';
+
       staffName = booking.staffname;
       serviceName = booking.servicename;
       status = booking.status;
@@ -111,6 +173,8 @@ class _SummaryPageState extends State<SummaryPage> {
       bookingDate = bookingDetails['date'] ?? '';
       bookingTime = bookingDetails['formattedschedule'] ?? '';
       customerName = bookingDetails['customername'] ?? 'Unknown';
+      customerPhone = bookingDetails['customerphone'] ?? 'N/A';
+      customerEmail = bookingDetails['customeremail'] ?? 'N/A';
       staffName = bookingDetails['staffname'] ?? 'Unknown';
       serviceName = bookingDetails['servicename'] ?? 'Unknown';
       note = bookingDetails['note'] ?? '';
@@ -145,70 +209,6 @@ class _SummaryPageState extends State<SummaryPage> {
     if (s.contains('cancel') || s.contains('void')) return 'Cancelled';
     if (s.contains('done') || s.contains('completed')) return 'Completed';
     return status;
-  }
-
-  Future<void> _deleteBooking(BuildContext context) async {
-    final confirm = await showDialog<bool>(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Cancel Booking'),
-        content: const Text('Are you sure you want to cancel this booking?'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(false),
-            child: const Text('No'),
-          ),
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(true),
-            child: const Text('Yes', style: TextStyle(color: Colors.red)),
-          ),
-        ],
-      ),
-    );
-
-    if (!mounted) return;
-
-    if (confirm == true) {
-      if (!mounted) return;
-      setState(() {
-        isLoading = true;
-      });
-
-      bool success = true;
-      // Only call API if this is an old booking (already saved)
-      if (widget.booking != null) {
-        // Use the booking's primary key or ID as required by your API
-        success = await apiManager.deleteBooking(widget.booking!.pkey);
-      }
-
-      setState(() {
-        isLoading = false;
-      });
-
-      if (!mounted) return;
-
-      if (success) {
-        safePushAndRemoveUntil(
-          context,
-          const BookingHomeScreen(),
-          (route) => false,
-        );
-      } else {
-        safeShowDialog(
-          context,
-          (context) => AlertDialog(
-            title: const Text('Error'),
-            content: const Text('Failed to cancel booking. Please try again.'),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.of(context).pop(),
-                child: const Text('OK'),
-              ),
-            ],
-          ),
-        );
-      }
-    }
   }
 
   Future<void> _confirmBooking() async {
@@ -316,6 +316,30 @@ class _SummaryPageState extends State<SummaryPage> {
                 ),
               ),
             ),
+          // SMS Button
+          IconButton(
+            icon: const Icon(Icons.sms, color: Colors.white),
+            tooltip: 'SMS',
+            onPressed: customerPhone.isNotEmpty && customerPhone != 'N/A'
+                ? () => _openSMS(customerPhone)
+                : null,
+          ),
+          // Call Button
+          IconButton(
+            icon: const Icon(Icons.phone, color: Colors.white),
+            tooltip: 'Call',
+            onPressed: customerPhone.isNotEmpty && customerPhone != 'N/A'
+                ? () => _makeCall(customerPhone)
+                : null,
+          ),
+          // Email Button
+          IconButton(
+            icon: const Icon(Icons.email, color: Colors.white),
+            tooltip: 'Email',
+            onPressed: customerEmail.isNotEmpty && customerEmail != 'N/A'
+                ? () => _sendEmail(customerEmail)
+                : null,
+          ),
           IconButton(
             icon: const Icon(Icons.cancel, color: Colors.white),
             tooltip: 'Cancel',
@@ -331,183 +355,250 @@ class _SummaryPageState extends State<SummaryPage> {
           ),
         ],
       ),
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: ListView(
-          children: [
-            _buildInfoRow(
-              context,
-              label: 'Schedule',
-              value:
-                  '${_formatDate(bookingDate)} at ${_formatTime(bookingTime)}',
-              icon: Icons.schedule,
-              onTap: () => safePush(context, const BookingCalendarPage()),
-            ),
-            const SizedBox(height: 8),
-            // Under the Schedule section: show confirm button / status
-            // only when booking is present and NOT already confirmed.
-            if (status.isNotEmpty && !isConfirmed)
-              Row(
-                children: [
-                  const SizedBox(width: 4),
-                  // Show confirm button inline only when status explicitly
-                  // indicates pending/wait. We already ensure the whole row
-                  // isn't rendered for confirmed bookings via the parent
-                  // condition above.
-                  isPending
-                      ? ElevatedButton(
-                          onPressed: isLoading ? null : () => _confirmBooking(),
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: Colors.green.shade600,
-                            padding: const EdgeInsets.symmetric(
-                                horizontal: 12, vertical: 8),
-                            shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(20)),
-                          ),
-                          child: isLoading
-                              ? const SizedBox(
-                                  width: 16,
-                                  height: 16,
-                                  child: CircularProgressIndicator(
-                                    color: Colors.white,
-                                    strokeWidth: 2,
-                                  ),
-                                )
-                              : const Text('Confirm',
-                                  style: TextStyle(
-                                      color: Colors.white,
-                                      fontWeight: FontWeight.w600)),
-                        )
-                      : Container(
-                          padding: const EdgeInsets.symmetric(
-                              horizontal: 10, vertical: 6),
-                          decoration: BoxDecoration(
-                            color: _statusColor(status),
-                            borderRadius: BorderRadius.circular(20),
-                          ),
-                          child: Text(
-                            status,
-                            style: const TextStyle(
-                                color: Colors.white,
-                                fontWeight: FontWeight.w600),
-                          ),
-                        ),
-                ],
-              ),
-            const SizedBox(height: 12),
-            _buildInfoRow(
-              context,
-              label: 'Customer Name',
-              value: customerName,
-              icon: Icons.person,
-              onTap: () => safePush(context, const CustomerPage()),
-            ),
-            const SizedBox(height: 12),
-            _buildInfoRow(
-              context,
-              label: 'Staff',
-              value: staffName,
-              icon: Icons.people,
-              onTap: () => safePush(context, const StaffPage()),
-            ),
-            const SizedBox(height: 12),
-            _buildInfoRow(
-              context,
-              label: 'Service',
-              value: serviceName,
-              icon: Icons.star,
-              onTap: () => safePush(context, const ServicePage()),
-            ),
-            const SizedBox(height: 12),
-            const Text(
-              'Note:',
-              style: TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.black),
-            ),
-            const SizedBox(height: 8),
-            TextField(
-              controller: noteController,
-              decoration: const InputDecoration(
-                hintText: 'Enter any notes here...',
-                border: OutlineInputBorder(),
-                contentPadding:
-                    EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-                focusedBorder: OutlineInputBorder(
-                  borderSide: BorderSide(color: Colors.blue, width: 2),
-                ),
-                enabledBorder: OutlineInputBorder(
-                  borderSide: BorderSide(color: Colors.grey, width: 1),
-                ),
-              ),
-              maxLines: 3,
-              onChanged: (value) {
-                note = value;
-                Provider.of<BookingProvider>(context, listen: false)
-                    .setNote(value);
-              },
-            ),
-            const SizedBox(height: 16),
-            Column(
+      body: Column(
+        children: [
+          // Customer Information Sub-Navigation Bar
+          Container(
+            color: Colors.grey[100],
+            padding:
+                const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
+            child: Row(
               children: [
-                ElevatedButton(
-                  onPressed: isLoading
-                      ? null
-                      : () => saveBooking(
-                            context,
-                            bookingkey,
-                            (bool val) => setState(
-                                () => isLoading = val), // <-- Accepts a bool
-                            customerKey,
-                            serviceKey,
-                            staffKey,
-                            bookingDate,
-                            bookingTime,
-                            note,
-                            customerName,
-                            staffName,
-                            serviceName,
-                          ),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.blue,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
+                if (customerImage != null)
+                  ClipRRect(
+                    borderRadius: BorderRadius.circular(25),
+                    child: Image(
+                      image: customerImage!,
+                      width: 50,
+                      height: 50,
+                      fit: BoxFit.cover,
                     ),
-                    padding: const EdgeInsets.symmetric(
-                        horizontal: 32, vertical: 14),
+                  )
+                else
+                  CircleAvatar(
+                    radius: 25,
+                    backgroundColor: Colors.blue[300],
+                    child:
+                        const Icon(Icons.person, color: Colors.white, size: 24),
                   ),
-                  child: isLoading
-                      ? const CircularProgressIndicator(color: Colors.white)
-                      : const Text(
-                          'Save Booking',
-                          style: TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.bold,
-                              color: Colors.white),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        customerName,
+                        style: const TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.black87,
                         ),
-                ),
-                const SizedBox(height: 12),
-                if (widget.booking != null)
-                  TextButton(
-                    onPressed: isLoading
-                        ? null
-                        : () => deleteBookingAction(
-                              context,
-                              isLoading,
-                              (val) => setState(() => isLoading = val),
-                              widget.booking,
-                            ),
-                    child: const Text(
-                      'Delete',
-                      style: TextStyle(
-                          color: Colors.red, fontWeight: FontWeight.w600),
-                    ),
+                      ),
+                      if (customerPhone.isNotEmpty && customerPhone != 'N/A')
+                        Text(
+                          customerPhone,
+                          style: const TextStyle(
+                            fontSize: 12,
+                            color: Colors.grey,
+                          ),
+                        ),
+                      if (customerEmail.isNotEmpty && customerEmail != 'N/A')
+                        Text(
+                          customerEmail,
+                          style: const TextStyle(
+                            fontSize: 12,
+                            color: Colors.grey,
+                          ),
+                        ),
+                    ],
                   ),
+                ),
               ],
             ),
-          ],
-        ),
+          ),
+          Expanded(
+            child: Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: ListView(
+                children: [
+                  _buildInfoRow(
+                    context,
+                    label: 'Schedule',
+                    value:
+                        '${_formatDate(bookingDate)} at ${_formatTime(bookingTime)}',
+                    icon: Icons.schedule,
+                    onTap: () => safePush(context, const BookingCalendarPage()),
+                  ),
+                  const SizedBox(height: 8),
+                  // Under the Schedule section: show confirm button / status
+                  // only when booking is present and NOT already confirmed.
+                  if (status.isNotEmpty && !isConfirmed)
+                    Row(
+                      children: [
+                        const SizedBox(width: 4),
+                        // Show confirm button inline only when status explicitly
+                        // indicates pending/wait. We already ensure the whole row
+                        // isn't rendered for confirmed bookings via the parent
+                        // condition above.
+                        isPending
+                            ? ElevatedButton(
+                                onPressed:
+                                    isLoading ? null : () => _confirmBooking(),
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: Colors.green.shade600,
+                                  padding: const EdgeInsets.symmetric(
+                                      horizontal: 12, vertical: 8),
+                                  shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(20)),
+                                ),
+                                child: isLoading
+                                    ? const SizedBox(
+                                        width: 16,
+                                        height: 16,
+                                        child: CircularProgressIndicator(
+                                          color: Colors.white,
+                                          strokeWidth: 2,
+                                        ),
+                                      )
+                                    : const Text('Confirm',
+                                        style: TextStyle(
+                                            color: Colors.white,
+                                            fontWeight: FontWeight.w600)),
+                              )
+                            : Container(
+                                padding: const EdgeInsets.symmetric(
+                                    horizontal: 10, vertical: 6),
+                                decoration: BoxDecoration(
+                                  color: _statusColor(status),
+                                  borderRadius: BorderRadius.circular(20),
+                                ),
+                                child: Text(
+                                  status,
+                                  style: const TextStyle(
+                                      color: Colors.white,
+                                      fontWeight: FontWeight.w600),
+                                ),
+                              ),
+                      ],
+                    ),
+                  const SizedBox(height: 12),
+                  _buildInfoRow(
+                    context,
+                    label: 'Customer Name',
+                    value: customerName,
+                    icon: Icons.person,
+                    onTap: () => safePush(context, const CustomerPage()),
+                  ),
+                  const SizedBox(height: 12),
+                  _buildInfoRow(
+                    context,
+                    label: 'Staff',
+                    value: staffName,
+                    icon: Icons.people,
+                    onTap: () => safePush(context, const StaffPage()),
+                  ),
+                  const SizedBox(height: 12),
+                  _buildInfoRow(
+                    context,
+                    label: 'Service',
+                    value: serviceName,
+                    icon: Icons.star,
+                    onTap: () => safePush(context, const ServicePage()),
+                  ),
+                  const SizedBox(height: 12),
+                  const Text(
+                    'Note:',
+                    style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.black),
+                  ),
+                  const SizedBox(height: 8),
+                  TextField(
+                    controller: noteController,
+                    decoration: const InputDecoration(
+                      hintText: 'Enter any notes here...',
+                      border: OutlineInputBorder(),
+                      contentPadding:
+                          EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                      focusedBorder: OutlineInputBorder(
+                        borderSide: BorderSide(color: Colors.blue, width: 2),
+                      ),
+                      enabledBorder: OutlineInputBorder(
+                        borderSide: BorderSide(color: Colors.grey, width: 1),
+                      ),
+                    ),
+                    maxLines: 3,
+                    onChanged: (value) {
+                      note = value;
+                      Provider.of<BookingProvider>(context, listen: false)
+                          .setNote(value);
+                    },
+                  ),
+                  const SizedBox(height: 16),
+                  Column(
+                    children: [
+                      ElevatedButton(
+                        onPressed: isLoading
+                            ? null
+                            : () => saveBooking(
+                                  context,
+                                  bookingkey,
+                                  (bool val) => setState(() =>
+                                      isLoading = val), // <-- Accepts a bool
+                                  customerKey,
+                                  serviceKey,
+                                  staffKey,
+                                  bookingDate,
+                                  bookingTime,
+                                  note,
+                                  customerName,
+                                  staffName,
+                                  serviceName,
+                                ),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.blue,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 32, vertical: 14),
+                        ),
+                        child: isLoading
+                            ? const CircularProgressIndicator(
+                                color: Colors.white)
+                            : const Text(
+                                'Save Booking',
+                                style: TextStyle(
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.bold,
+                                    color: Colors.white),
+                              ),
+                      ),
+                      const SizedBox(height: 12),
+                      if (widget.booking != null)
+                        TextButton(
+                          onPressed: isLoading
+                              ? null
+                              : () => deleteBookingAction(
+                                    context,
+                                    isLoading,
+                                    (val) => setState(() => isLoading = val),
+                                    widget.booking,
+                                  ),
+                          child: const Text(
+                            'Delete',
+                            style: TextStyle(
+                                color: Colors.red, fontWeight: FontWeight.w600),
+                          ),
+                        ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -567,5 +658,105 @@ class _SummaryPageState extends State<SummaryPage> {
     } catch (e) {
       return time;
     }
+  }
+
+  Future<void> _openSMS(String phoneNumber) async {
+    try {
+      print(
+          '[SummaryPage] SMS button tapped, fetching message from backend...');
+      // Fetch SMS message from backend
+      final smsMessage = await apiManager.getSMSMessage();
+      print('[SummaryPage] SMS message received: "$smsMessage"');
+
+      final Uri smsUri = Uri(
+        scheme: 'sms',
+        path: phoneNumber,
+        queryParameters: {
+          'body': smsMessage,
+        },
+      );
+
+      print('[SummaryPage] Opening SMS app with phone: $phoneNumber');
+      if (await canLaunchUrl(smsUri)) {
+        await launchUrl(smsUri);
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Could not open SMS app')),
+        );
+      }
+    } catch (e) {
+      print('[SummaryPage] Error in _openSMS: $e');
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error opening SMS: $e')),
+      );
+    }
+  }
+
+  Future<void> _makeCall(String phoneNumber) async {
+    final Uri callUri = Uri(
+      scheme: 'tel',
+      path: phoneNumber,
+    );
+    try {
+      if (await canLaunchUrl(callUri)) {
+        await launchUrl(callUri);
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Could not open phone app')),
+        );
+      }
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error opening phone: $e')),
+      );
+    }
+  }
+
+  Future<void> _sendEmail(String email) async {
+    final Uri emailUri = Uri(
+      scheme: 'mailto',
+      path: email,
+    );
+    try {
+      if (await canLaunchUrl(emailUri)) {
+        await launchUrl(emailUri);
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Could not open email app')),
+        );
+      }
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error opening email: $e')),
+      );
+    }
+  }
+
+  String _bookingToJsonString(Booking booking) {
+    return '''
+{
+  "pkey": ${booking.pkey},
+  "customerkey": "${booking.customerkey}",
+  "customername": "${booking.customername}",
+  "customerphone": "${booking.customerphone}",
+  "customeremail": "${booking.customeremail}",
+  "customertype": "${booking.customertype}",
+  "customerphoto": "${booking.customerphoto.isNotEmpty ? '[BASE64_IMAGE_${booking.customerphoto.length}_BYTES]' : 'empty'}",
+  "staffkey": "${booking.staffkey}",
+  "staffname": "${booking.staffname}",
+  "servicekey": "${booking.servicekey}",
+  "servicename": "${booking.servicename}",
+  "numbooked": "${booking.numbooked}",
+  "bookingdate": "${booking.bookingdate}",
+  "bookingtime": "${booking.bookingtime}",
+  "bookingstart": "${booking.bookingstart}",
+  "datetimebooking": "${booking.datetimebooking}",
+  "status": "${booking.status}",
+  "displayStatus": "${booking.displayStatus}",
+  "note": "${booking.note.isNotEmpty ? booking.note : '(empty)'}",
+  "createdby": "${booking.createdby ?? 'Unknown'}",
+  "created_datetime": "${booking.created_datetime}"
+}
+    ''';
   }
 }

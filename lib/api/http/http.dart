@@ -57,7 +57,7 @@ class MyHttp {
 
     // Making the HTTP GET request
     final http.Response response = await http.get(uri, headers: headers);
-print(response);
+    print(response);
     // Handling response
     if (response.statusCode == 200) {
       print(
@@ -82,12 +82,8 @@ print(response);
       if (opt != null && opt.isNotEmpty) {
         endpoint = '$endpoint?opt=$opt';
       }
-      print('═════════════════════════════════════════');
-      print('[HTTP] ListBooking: Endpoint URL: $endpoint');
-      print('═════════════════════════════════════════');
-      final response = await fetchFromServer(endpoint);
 
-    
+      final response = await fetchFromServer(endpoint);
 
       List<Booking> bookings = [];
 
@@ -99,6 +95,7 @@ print(response);
           }
         });
       } else if (response is List) {
+        response.asMap().forEach((index, item) {});
         bookings =
             response.map<Booking>((item) => Booking.fromJson(item)).toList();
       }
@@ -358,6 +355,50 @@ print(response);
     } catch (e) {
       print('Error fetching availability: $e');
       return [];
+    }
+  }
+
+  Future<String> getSalonSetting() async {
+    try {
+      final response = await fetchFromServer(AppConfig.api_url_booking_setting);
+
+      // Extract salon_name from response
+      if (response is Map && response['salon_name'] != null) {
+        return response['salon_name'];
+      }
+
+      // Fallback to 'Salon' if no name found
+      return 'Salon';
+    } catch (e) {
+      print('[HTTP] getSalonSetting: ERROR - $e');
+      // Return fallback value on error
+      return 'Salon';
+    }
+  }
+
+  Future<String> getSMSMessage() async {
+    try {
+      final response = await fetchFromServer(AppConfig.api_url_booking_setting);
+
+      // Extract sms message and salon_name from response
+      if (response is Map) {
+        String smsMessage = response['sms'] ?? 'Hello I am from USA Nail';
+        String salonName = response['salon_name'] ?? 'USA Nail';
+        final finalMessage = '$smsMessage\nThank you\n$salonName';
+        print('[HTTP] getSMSMessage: Successfully fetched from backend');
+        print('[HTTP] getSMSMessage: SMS = "$smsMessage"');
+        print('[HTTP] getSMSMessage: Salon = "$salonName"');
+        print('[HTTP] getSMSMessage: Final Message = "$finalMessage"');
+        return finalMessage;
+      }
+
+      // Fallback to default message if no response
+      print('[HTTP] getSMSMessage: No data in response, using fallback');
+      return 'Hello I am from USA Nail\nThank you\nUSA Nail';
+    } catch (e) {
+      print('[HTTP] getSMSMessage: ERROR - $e');
+      // Return fallback value on error
+      return 'Hello I am from USA Nail\nThank you\nUSA Nail';
     }
   }
 }

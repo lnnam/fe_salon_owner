@@ -4,6 +4,8 @@ class Booking {
   final int pkey; // <-- Add this line as int
   final String customerkey;
   final String customername;
+  final String customerphone;
+  final String customeremail;
   final DateTime datetimebooking;
   final String staffkey;
   final String staffname;
@@ -24,6 +26,8 @@ class Booking {
     required this.pkey, // <-- Add this line
     required this.customerkey,
     required this.customername,
+    required this.customerphone,
+    required this.customeremail,
     required this.datetimebooking,
     required this.staffkey,
     required this.staffname,
@@ -45,6 +49,7 @@ class Booking {
     DateTime bookingDateTime;
     String formattedBookingDate = '';
 
+   
     // Use 'bookingstart' if available, otherwise use 'date' field
     if (json['bookingstart'] != null && json['bookingstart'] != '') {
       bookingDateTime = DateTime.parse(json['bookingstart']);
@@ -66,6 +71,10 @@ class Booking {
             ? DateTime.parse(json['dateactivated'])
             : DateTime.now();
 
+    final String parsedPhone = json['customerphone']?.toString() ?? '';
+    final String parsedEmail = json['customeremail']?.toString() ?? '';
+
+
     return Booking(
       pkey: json['pkey'] is int
           ? json['pkey']
@@ -73,6 +82,8 @@ class Booking {
               0, // <-- Parse as int
       customername: json['customername'] ?? 'Unknown',
       customerkey: json['customerkey']?.toString() ?? 'Unknown',
+      customerphone: parsedPhone,
+      customeremail: parsedEmail,
       staffkey: json['staffkey']?.toString() ?? 'Unknown',
       datetimebooking: bookingDateTime,
       staffname: json['staffname'] ?? 'N/A',

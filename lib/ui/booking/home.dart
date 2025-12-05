@@ -166,7 +166,21 @@ class _BookingHomeScreenState extends State<BookingHomeScreen>
         ),
         color: isPastLocal ? Colors.grey[100] : Colors.white,
         child: InkWell(
-          onTap: () => safePush(context, SummaryPage(booking: booking)),
+          onTap: () {
+            // Log booking selection
+            print(
+                '═════════════════════════════════════════════════════════════');
+            print('[BookingHomeScreen] Booking Tapped - Navigating to Summary');
+            print('  - Booking Key: ${booking.pkey}');
+            print('  - Customer: ${booking.customername}');
+            print('  - Service: ${booking.servicename}');
+            print('  - Staff: ${booking.staffname}');
+            print('  - Status: ${booking.status}');
+            print('  - Booking Time: ${booking.bookingstart}');
+            print(
+                '═════════════════════════════════════════════════════════════');
+            safePush(context, SummaryPage(booking: booking));
+          },
           borderRadius: BorderRadius.circular(16.0),
           child: Padding(
             padding: const EdgeInsets.all(16.0),
@@ -262,25 +276,9 @@ class _BookingHomeScreenState extends State<BookingHomeScreen>
                               overflow: TextOverflow.ellipsis,
                             ),
                           ),
-                          Icon(Icons.schedule,
-                              color: isPastLocal
-                                  ? Colors.grey[500]
-                                  : color.withOpacity(0.7),
-                              size: 12),
-                          const SizedBox(width: 4),
-                          Expanded(
-                            child: Text(
-                              'Created on: ${_formatSchedule(booking.datetimebooking)}',
-                              style: TextStyle(
-                                  color: isPastLocal
-                                      ? Colors.grey[600]
-                                      : Colors.black54,
-                                  fontSize: 12),
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                          ),
                         ],
                       ),
+                      const SizedBox(height: 4),
                       Row(
                         children: [
                           Icon(Icons.spa,
@@ -335,6 +333,28 @@ class _BookingHomeScreenState extends State<BookingHomeScreen>
                               ),
                             ),
                           ],
+                        ],
+                      ),
+                      const SizedBox(height: 4),
+                      Row(
+                        children: [
+                          Icon(Icons.schedule,
+                              color: isPastLocal
+                                  ? Colors.grey[500]
+                                  : color.withOpacity(0.7),
+                              size: 12),
+                          const SizedBox(width: 4),
+                          Expanded(
+                            child: Text(
+                              'Created on: ${_formatSchedule(booking.datetimebooking)}',
+                              style: TextStyle(
+                                  color: isPastLocal
+                                      ? Colors.grey[600]
+                                      : Colors.black54,
+                                  fontSize: 12),
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
                         ],
                       ),
                     ],
@@ -404,8 +424,6 @@ class _BookingHomeScreenState extends State<BookingHomeScreen>
           return StreamBuilder<List<Booking>>(
             stream: bookingProvider.bookingStream,
             builder: (context, snapshot) {
-              print(
-                  '[BookingHomeScreen] StreamBuilder: connectionState=${snapshot.connectionState}, hasData=${snapshot.hasData}, dataLength=${snapshot.data?.length ?? 0}');
 
               if (snapshot.connectionState == ConnectionState.waiting &&
                   !snapshot.hasData) {

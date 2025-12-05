@@ -13,4 +13,5 @@ class AppConfig {
   static const api_url_booking_getavailability =
       '$api_url/api/booking/getavailability';
   static const api_url_booking_confirm = '$api_url/api/booking/owner/confirm';
+  static const api_url_booking_setting = '$api_url/api/booking/setting';
 }

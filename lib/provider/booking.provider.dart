@@ -10,10 +10,26 @@ class BookingProvider with ChangeNotifier {
   late Stream<List<Booking>> _bookingStreamBroadcast;
   Timer? _refreshTimer;
   bool _isVisible = false; // Track if the page is currently visible
-  static const int POLLING_INTERVAL = 3; // seconds
+  static const int POLLING_INTERVAL = 10; // seconds
+  String _salonName = 'Salon'; // Store salon name from backend
 
   BookingProvider() {
     _initializeBookingStream();
+    _loadSalonName(); // Load salon name on initialization
+  }
+
+  // Getter for salon name
+  String get salonName => _salonName;
+
+  // Method to load salon name from backend
+  Future<void> _loadSalonName() async {
+    try {
+      _salonName = await apiManager.getSalonSetting();
+      notifyListeners();
+    } catch (e) {
+      print('[BookingProvider] Error loading salon name: $e');
+      _salonName = 'Salon'; // Use fallback
+    }
   }
 
   void _initializeBookingStream() {
@@ -41,21 +57,18 @@ class BookingProvider with ChangeNotifier {
         }
       },
     );
-    print('[BookingProvider] Auto-refresh started');
   }
 
   void stopAutoRefresh() {
     _refreshTimer?.cancel();
     _refreshTimer = null;
     _isVisible = false;
-    print('[BookingProvider] Auto-refresh stopped (timer cancelled)');
   }
 
   void pauseAutoRefresh() {
     _refreshTimer?.cancel();
     _refreshTimer = null;
     _isVisible = false;
-    print('[BookingProvider] Auto-refresh paused');
   }
 
   void resumeAutoRefresh() {
@@ -72,40 +85,25 @@ class BookingProvider with ChangeNotifier {
         },
       );
     }
-    print('[BookingProvider] Auto-refresh resumed');
   }
 
   Future<void> _loadBookings() async {
     try {
-      print('[BookingProvider] Fetching bookings (auto-refresh)...');
-      print('[BookingProvider] Calling ListBooking with option: null');
       final bookings = await apiManager.ListBooking();
       for (int i = 0; i < bookings.length; i++) {}
       if (!_bookingStreamController.isClosed) {
         _bookingStreamController.add(bookings);
       }
-    } catch (e) {
-      print('[BookingProvider] Error fetching bookings: $e');
-    }
+    } catch (e) {}
   }
 
   void manualRefresh() async {
     try {
-      print('[BookingProvider] Manual refresh: Fetching bookings...');
-      print('[BookingProvider] Calling ListBooking with option: null');
       final bookings = await apiManager.ListBooking();
-      print(
-          '[BookingProvider] Manual refresh: Received ${bookings.length} bookings');
-      for (int i = 0; i < bookings.length; i++) {
-        print(
-            '[BookingProvider] Booking $i: pkey=${bookings[i].pkey}, customer=${bookings[i].customername}, staff=${bookings[i].staffname}, service=${bookings[i].servicename}, status=${bookings[i].displayStatus}, time=${bookings[i].bookingstart}');
-      }
       if (!_bookingStreamController.isClosed) {
         _bookingStreamController.add(bookings);
       }
-    } catch (e) {
-      print('[BookingProvider] Error refreshing bookings: $e');
-    }
+    } catch (e) {}
   }
 
   Stream<List<Booking>> get bookingStream => _bookingStreamBroadcast;
@@ -114,35 +112,21 @@ class BookingProvider with ChangeNotifier {
 
   Future<void> loadBookingsWithDate(String date) async {
     try {
-      print('[BookingProvider] Loading bookings for date: $date');
-      print('[BookingProvider] Calling ListBooking with option: $date');
       final bookings = await apiManager.ListBooking(opt: date);
-      print(
-          '[BookingProvider] Received ${bookings.length} bookings for date: $date');
-      for (int i = 0; i < bookings.length; i++) {
-        print(
-            ' $i: pkey=${bookings[i].pkey}, customer=${bookings[i].customername}, staff=${bookings[i].staffname}, service=${bookings[i].servicename}, status=${bookings[i].displayStatus}, time=${bookings[i].bookingstart}');
-      }
       if (!_bookingStreamController.isClosed) {
         _bookingStreamController.add(bookings);
       }
-    } catch (e) {
-      print('[BookingProvider] Error loading bookings for date: $e');
-    }
+    } catch (e) {}
   }
 
   Future<void> loadBookingsWithOption(String option) async {
     try {
-      print('[BookingProvider] Loading bookings with option: $option');
-      print('[BookingProvider] Calling ListBooking with option: $option');
       final bookings = await apiManager.ListBooking(opt: option);
-    
+
       if (!_bookingStreamController.isClosed) {
         _bookingStreamController.add(bookings);
       }
-    } catch (e) {
-      print('[BookingProvider] Error loading bookings with option: $e');
-    }
+    } catch (e) {}
   }
 
   void resetBooking() {
@@ -154,7 +138,6 @@ class BookingProvider with ChangeNotifier {
       ..schedule = {}
       ..editMode = false;
 
-    print('BookingProvider reset: booking cleared');
     notifyListeners();
   }
 
@@ -165,13 +148,11 @@ class BookingProvider with ChangeNotifier {
 
   void setBookingKey(int pkey) {
     _onbooking.bookingkey = pkey;
-    print('bookingkey: ${_onbooking.bookingkey}');
     notifyListeners();
   }
 
   void setNote(String note) {
     _onbooking.note = note;
-    print('note: ${_onbooking.note}');
     notifyListeners();
   }
 
@@ -183,13 +164,11 @@ class BookingProvider with ChangeNotifier {
 
   void setService(Map<String, dynamic> service) {
     _onbooking.service = service;
-    print('service: ${_onbooking.service}');
     notifyListeners();
   }
 
   void setSchedule(Map<String, dynamic> schedule) {
     _onbooking.schedule = schedule;
-    print('schedule: ${_onbooking.schedule}');
     notifyListeners();
   }
 
@@ -212,9 +191,7 @@ class BookingProvider with ChangeNotifier {
             DateTime.parse(_onbooking.schedule?['bookingStart']);
         formattedSchedule = DateFormat('HH:mm, dd/MM/yyyy').format(dateTime);
         ScheduleDate = DateFormat('yyyy-MM-dd').format(dateTime);
-      } catch (e) {
-        print('Error parsing schedule date: $e');
-      }
+      } catch (e) {}
     }
     return {
       'bookingkey': _onbooking.bookingkey,
@@ -223,6 +200,8 @@ class BookingProvider with ChangeNotifier {
       'formattedschedule': formattedSchedule,
       'customername': _onbooking.customer?['fullname'],
       'customerkey': _onbooking.customer?['customerkey'].toString(),
+      'customerphone': _onbooking.customer?['customerphone'] ?? 'N/A',
+      'customeremail': _onbooking.customer?['customeremail'] ?? 'N/A',
       'staffname': _onbooking.staff?['fullname'].toString(),
       'staffkey': _onbooking.staff?['staffkey'].toString(),
       'servicename': _onbooking.service?['name'].toString(),
@@ -235,6 +214,8 @@ class BookingProvider with ChangeNotifier {
     _onbooking.customer = {
       'customerkey': booking.customerkey,
       'fullname': booking.customername,
+      'customerphone': booking.customerphone,
+      'customeremail': booking.customeremail,
     };
     _onbooking.staff = {
       'staffkey': booking.staffkey,
