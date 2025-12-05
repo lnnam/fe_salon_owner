@@ -358,24 +358,6 @@ class MyHttp {
     }
   }
 
-  Future<String> getSalonSetting() async {
-    try {
-      final response = await fetchFromServer(AppConfig.api_url_booking_setting);
-
-      // Extract salon_name from response
-      if (response is Map && response['salon_name'] != null) {
-        return response['salon_name'];
-      }
-
-      // Fallback to 'Salon' if no name found
-      return 'Salon';
-    } catch (e) {
-      print('[HTTP] getSalonSetting: ERROR - $e');
-      // Return fallback value on error
-      return 'Salon';
-    }
-  }
-
   Future<String> getSMSMessage() async {
     try {
       final response = await fetchFromServer(AppConfig.api_url_booking_setting);
@@ -399,6 +381,47 @@ class MyHttp {
       print('[HTTP] getSMSMessage: ERROR - $e');
       // Return fallback value on error
       return 'Hello I am from USA Nail\nThank you\nUSA Nail';
+    }
+  }
+
+  /// Fetch app settings from the booking/setting endpoint
+  Future<Map<String, dynamic>?> fetchAppSettings(String? token) async {
+    try {
+      print('[HTTP] fetchAppSettings: Starting with token: $token');
+      final response = await http.get(
+        Uri.parse(AppConfig.api_url_booking_setting),
+        headers: <String, String>{
+          'Content-Type': 'application/json; charset=UTF-8',
+          if (token != null) 'Authorization': 'Bearer $token',
+        },
+      );
+
+      print('[HTTP] fetchAppSettings: Response status: ${response.statusCode}');
+      print('[HTTP] fetchAppSettings: Response body: ${response.body}');
+
+      if (response.statusCode == 200) {
+        final responseData = jsonDecode(response.body) as Map<String, dynamic>;
+        print('[HTTP] fetchAppSettings: Decoded response: $responseData');
+        
+        // Extract settings array
+        if (responseData.containsKey('settings') && responseData['settings'] is List) {
+          final settingsList = responseData['settings'] as List;
+          if (settingsList.isNotEmpty) {
+            final settings = settingsList[0] as Map<String, dynamic>;
+            print('[HTTP] fetchAppSettings: Successfully extracted settings: $settings');
+            return settings;
+          }
+        }
+        
+        print('[HTTP] fetchAppSettings: Invalid response structure');
+        return null;
+      } else {
+        print('[HTTP] fetchAppSettings: Failed with status ${response.statusCode}');
+        return null;
+      }
+    } catch (e) {
+      print('[HTTP] fetchAppSettings: ERROR - $e');
+      return null;
     }
   }
 }

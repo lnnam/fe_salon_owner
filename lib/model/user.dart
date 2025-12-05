@@ -93,6 +93,11 @@ class User with ChangeNotifier {
       'appIdentifier': appIdentifier
     };
   }
+
+  @override
+  String toString() {
+    return 'User{username: $username, email: $email, salonname: $salonname, active: $active}';
+  }
 }
 
 class UserSettings {

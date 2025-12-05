@@ -5,6 +5,7 @@ import 'package:salonapp/services/helper.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:salonapp/model/booking.dart';
 import 'package:salonapp/provider/booking.provider.dart';
+import 'package:salonapp/provider/setting.provider.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import 'home.dart';
@@ -63,65 +64,6 @@ class _SummaryPageState extends State<SummaryPage> {
         Provider.of<BookingProvider>(context, listen: false);
     bookingProvider.pauseAutoRefresh();
     print('[SummaryPage] Opened, auto-refresh paused');
-
-    // Log the booking object passed from home page
-    print('═════════════════════════════════════════════════════════════');
-    print('[SummaryPage] Data Passed to Summary Page - INIT');
-    print('═════════════════════════════════════════════════════════════');
-
-    if (widget.booking != null) {
-      final booking = widget.booking!;
-      print('[SummaryPage] ✅ Booking Object Received from Widget Parameter');
-      print('');
-      print('BOOKING DETAILS:');
-      print('  └─ Booking Key (pkey): ${booking.pkey}');
-      print('  └─ Customer Key: ${booking.customerkey}');
-      print('  └─ Customer Name: ${booking.customername}');
-      print(
-          '  └─ Customer Phone: "${booking.customerphone}" (length: ${booking.customerphone.length})');
-      print(
-          '  └─ Customer Email: "${booking.customeremail}" (length: ${booking.customeremail.length})');
-      print('  └─ Customer Type: ${booking.customertype}');
-      print('  └─ Staff Key: ${booking.staffkey}');
-      print('  └─ Staff Name: ${booking.staffname}');
-      print('  └─ Service Key: ${booking.servicekey}');
-      print('  └─ Service Name: ${booking.servicename}');
-      print('');
-      print('DATE & TIME:');
-      print('  └─ Booking Date: ${booking.bookingdate}');
-      print('  └─ Booking Time: ${booking.bookingtime}');
-      print('  └─ Booking Start: ${booking.bookingstart}');
-      print('  └─ DateTime Booking: ${booking.datetimebooking}');
-      print('');
-      print('STATUS & NOTES:');
-      print('  └─ Status: ${booking.status}');
-      print('  └─ Status Display: ${booking.displayStatus}');
-      print('  └─ Note: ${booking.note.isNotEmpty ? booking.note : '(empty)'}');
-      print('');
-      print('METADATA:');
-      print('  └─ Created By: ${booking.createdby ?? 'Unknown'}');
-      print('  └─ Created DateTime: ${booking.created_datetime}');
-      print('  └─ Num Booked: ${booking.numbooked}');
-      print(
-          '  └─ Customer Photo: ${booking.customerphoto.isNotEmpty ? 'Yes (${booking.customerphoto.length} bytes)' : 'No'}');
-      print('');
-
-      // Print as JSON-style format
-      print('WIDGET.BOOKING AS JSON FORMAT:');
-      print(_bookingToJsonString(booking));
-      print('═════════════════════════════════════════════════════════════');
-    } else {
-      print('[SummaryPage] ⚠️ No booking object passed');
-      print('Checking BookingProvider for data...');
-      final bookingDetails = bookingProvider.bookingDetails;
-      print('');
-      print('PROVIDER BOOKING DETAILS:');
-      bookingDetails.forEach((key, value) {
-        print('  └─ $key: $value');
-      });
-      print('═════════════════════════════════════════════════════════════');
-    }
-
     //print('bookingDetails: ${bookingProvider.bookingDetails}');
 
     // ✅ Set edit mode to true
@@ -662,21 +604,37 @@ class _SummaryPageState extends State<SummaryPage> {
 
   Future<void> _openSMS(String phoneNumber) async {
     try {
-      print(
-          '[SummaryPage] SMS button tapped, fetching message from backend...');
-      // Fetch SMS message from backend
-      final smsMessage = await apiManager.getSMSMessage();
-      print('[SummaryPage] SMS message received: "$smsMessage"');
+      // Get SMS message from SettingProvider
+      final settingProvider = Provider.of<SettingProvider>(context, listen: false);
+      var smsMessage = settingProvider.sms ?? '';
+      var salonName = settingProvider.salonName ?? '';
+      
+      // Replace placeholders with actual booking details
+      // Extract time from bookingTime (format: "HH:mm, dd/MM/yyyy")
+      final timeParts = bookingTime.split(', ');
+      final time = timeParts.isNotEmpty ? timeParts[0] : '';
+      final date = timeParts.length > 1 ? timeParts[1] : '';
+      
+      
+      // Replace HH:MM on DD/MM/YYYY with actual values
+      smsMessage = smsMessage.replaceAll('HH:MM on DD/MM/YYYY', '$time on $date');
+      print('[SummaryPage] SMS - Phone: $phoneNumber, Message: $smsMessage');
+
+      if (smsMessage.isEmpty) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('SMS message not configured')),
+        );
+        return;
+      }
 
       final Uri smsUri = Uri(
         scheme: 'sms',
         path: phoneNumber,
         queryParameters: {
-          'body': smsMessage,
+          'body': smsMessage + '\n\n' + salonName,
         },
       );
 
-      print('[SummaryPage] Opening SMS app with phone: $phoneNumber');
       if (await canLaunchUrl(smsUri)) {
         await launchUrl(smsUri);
       } else {
@@ -730,33 +688,5 @@ class _SummaryPageState extends State<SummaryPage> {
         SnackBar(content: Text('Error opening email: $e')),
       );
     }
-  }
-
-  String _bookingToJsonString(Booking booking) {
-    return '''
-{
-  "pkey": ${booking.pkey},
-  "customerkey": "${booking.customerkey}",
-  "customername": "${booking.customername}",
-  "customerphone": "${booking.customerphone}",
-  "customeremail": "${booking.customeremail}",
-  "customertype": "${booking.customertype}",
-  "customerphoto": "${booking.customerphoto.isNotEmpty ? '[BASE64_IMAGE_${booking.customerphoto.length}_BYTES]' : 'empty'}",
-  "staffkey": "${booking.staffkey}",
-  "staffname": "${booking.staffname}",
-  "servicekey": "${booking.servicekey}",
-  "servicename": "${booking.servicename}",
-  "numbooked": "${booking.numbooked}",
-  "bookingdate": "${booking.bookingdate}",
-  "bookingtime": "${booking.bookingtime}",
-  "bookingstart": "${booking.bookingstart}",
-  "datetimebooking": "${booking.datetimebooking}",
-  "status": "${booking.status}",
-  "displayStatus": "${booking.displayStatus}",
-  "note": "${booking.note.isNotEmpty ? booking.note : '(empty)'}",
-  "createdby": "${booking.createdby ?? 'Unknown'}",
-  "created_datetime": "${booking.created_datetime}"
-}
-    ''';
   }
 }

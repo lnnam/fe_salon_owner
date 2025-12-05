@@ -12,6 +12,7 @@ class BookingProvider with ChangeNotifier {
   bool _isVisible = false; // Track if the page is currently visible
   static const int POLLING_INTERVAL = 10; // seconds
   String _salonName = 'Salon'; // Store salon name from backend
+  Map<String, dynamic>? _appSettings;
 
   BookingProvider() {
     _initializeBookingStream();
@@ -22,14 +23,8 @@ class BookingProvider with ChangeNotifier {
   String get salonName => _salonName;
 
   // Method to load salon name from backend
-  Future<void> _loadSalonName() async {
-    try {
-      _salonName = await apiManager.getSalonSetting();
-      notifyListeners();
-    } catch (e) {
-      print('[BookingProvider] Error loading salon name: $e');
-      _salonName = 'Salon'; // Use fallback
-    }
+  void _loadSalonName() {
+    // Placeholder for loading salon name logic
   }
 
   void _initializeBookingStream() {
@@ -229,6 +224,15 @@ class BookingProvider with ChangeNotifier {
       'bookingStart': '${booking.bookingtime}',
     };
 
+    notifyListeners();
+  }
+
+  // Getter for app settings
+  Map<String, dynamic>? get appSettings => _appSettings;
+
+  // Method to update app settings
+  void updateAppSettings(Map<String, dynamic> settings) {
+    _appSettings = settings;
     notifyListeners();
   }
 

@@ -8,6 +8,8 @@ import 'package:salonapp/model/user.dart';
 import 'package:salonapp/main.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
+import 'package:provider/provider.dart';
+import 'package:salonapp/provider/setting.provider.dart';
 
 class Login extends StatefulWidget {
   const Login({super.key});
@@ -17,7 +19,6 @@ class Login extends StatefulWidget {
 
 class _LoginState extends State<Login> {
   final GlobalKey<FormState> _key = GlobalKey();
-  AutovalidateMode _validate = AutovalidateMode.disabled;
   String? salonkey, username, password;
 
   @override
@@ -212,7 +213,7 @@ class _LoginState extends State<Login> {
         dynamic result = await apiManager.salonLogin(
             salonkey!.trim(), username!.trim(), password!.trim());
 
-        print('salonLogin result: $result');
+        print('salonLogin result: ${result.toString()}');
 
         if (result != null && result is User) {
           // Save token and user info
@@ -226,6 +227,19 @@ class _LoginState extends State<Login> {
             await setUserInfo(result);
           }
           MyAppState.currentUser = result;
+
+          // Fetch app settings after successful login
+          print('[Login] Starting to fetch app settings...');
+          final settings = await apiManager.fetchAppSettings(result.token);
+          print('[Login] Fetched App Settings: $settings');
+          if (settings != null) {
+            final settingProvider = Provider.of<SettingProvider>(context, listen: false);
+            settingProvider.updateAppSettings(settings);
+            print('[Login] Updated SettingProvider with: salonName=${settingProvider.salonName}, sms=${settingProvider.sms}, email=${settingProvider.email}');
+          } else {
+            print('[Login] Failed to fetch app settings');
+          }
+
           safePushReplacementNamed(context, '/dashboard');
         } else {
           showAlertDialog(context, 'Couldn\'t Authenticate'.tr(),
@@ -246,12 +260,9 @@ class _LoginState extends State<Login> {
             ],
           ),
         );
+        print('Error during login: $e');
       }
-    } else {
-      setState(() {
-        _validate = AutovalidateMode.onUserInteraction;
-      });
-    }
+    } 
   }
 
   // Function to set the cookie on the web platform

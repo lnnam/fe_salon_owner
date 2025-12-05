@@ -14,7 +14,7 @@ import 'package:salonapp/ui/booking/home.dart';
 import 'package:flutter/rendering.dart';
 import 'package:salonapp/provider/booking.provider.dart';
 import 'package:provider/provider.dart';
-
+import 'package:salonapp/provider/setting.provider.dart';
 
  void main() async {
     debugPaintBaselinesEnabled = true; // Enable debug paint
@@ -32,10 +32,14 @@ import 'package:provider/provider.dart';
         fallbackLocale: const Locale('en'),
         useFallbackTranslations: true,
         useOnlyLangCode: true,
-        child: ChangeNotifierProvider(
-        create: (context) => BookingProvider(),
-        child: const MyApp(),
-      ),),
+        child: MultiProvider(
+          providers: [
+            ChangeNotifierProvider(create: (context) => BookingProvider()),
+            ChangeNotifierProvider(create: (context) => SettingProvider()),
+          ],
+          child: const MyApp(),
+        ),
+    ),
   );
 } 
 
