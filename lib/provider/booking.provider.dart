@@ -9,8 +9,13 @@ class BookingProvider with ChangeNotifier {
   late StreamController<List<Booking>> _bookingStreamController;
   late Stream<List<Booking>> _bookingStreamBroadcast;
   Timer? _refreshTimer;
+  Timer? _debounceTimer;
   bool _isVisible = false; // Track if the page is currently visible
+  bool _suppressEmissions =
+      false; // Prevent stream updates during UI-sensitive periods
   static const int POLLING_INTERVAL = 10; // seconds
+  static const int DEBOUNCE_MS =
+      1000; // Increased debounce to prevent rapid updates
   String _salonName = 'Salon'; // Store salon name from backend
   Map<String, dynamic>? _appSettings;
 
@@ -64,17 +69,20 @@ class BookingProvider with ChangeNotifier {
     _refreshTimer?.cancel();
     _refreshTimer = null;
     _isVisible = false;
+    _suppressEmissions = true;
+    _debounceTimer?.cancel();
   }
 
   void resumeAutoRefresh() {
     _isVisible = true;
+    _suppressEmissions = false;
     // Restart the timer
     if (_refreshTimer == null) {
       _loadBookings();
       _refreshTimer = Timer.periodic(
         Duration(seconds: POLLING_INTERVAL),
         (_) {
-          if (_isVisible) {
+          if (_isVisible && !_suppressEmissions) {
             _loadBookings();
           }
         },
@@ -86,17 +94,32 @@ class BookingProvider with ChangeNotifier {
     try {
       final bookings = await apiManager.ListBooking();
       for (int i = 0; i < bookings.length; i++) {}
-      if (!_bookingStreamController.isClosed) {
-        _bookingStreamController.add(bookings);
-      }
+
+      // Debounce the stream update to prevent rapid consecutive updates
+      _debounceTimer?.cancel();
+      _debounceTimer = Timer(const Duration(milliseconds: DEBOUNCE_MS), () {
+        if (!_bookingStreamController.isClosed && !_suppressEmissions) {
+          // Schedule the update for the next frame to avoid interrupting current frame
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            if (!_bookingStreamController.isClosed && !_suppressEmissions) {
+              _bookingStreamController.add(bookings);
+            }
+          });
+        }
+      });
     } catch (e) {}
   }
 
   void manualRefresh() async {
     try {
       final bookings = await apiManager.ListBooking();
-      if (!_bookingStreamController.isClosed) {
-        _bookingStreamController.add(bookings);
+      if (!_bookingStreamController.isClosed && !_suppressEmissions) {
+        // Schedule update for next frame
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (!_bookingStreamController.isClosed && !_suppressEmissions) {
+            _bookingStreamController.add(bookings);
+          }
+        });
       }
     } catch (e) {}
   }
@@ -108,8 +131,13 @@ class BookingProvider with ChangeNotifier {
   Future<void> loadBookingsWithDate(String date) async {
     try {
       final bookings = await apiManager.ListBooking(opt: date);
-      if (!_bookingStreamController.isClosed) {
-        _bookingStreamController.add(bookings);
+      if (!_bookingStreamController.isClosed && !_suppressEmissions) {
+        // Schedule update for next frame
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (!_bookingStreamController.isClosed && !_suppressEmissions) {
+            _bookingStreamController.add(bookings);
+          }
+        });
       }
     } catch (e) {}
   }
@@ -118,8 +146,13 @@ class BookingProvider with ChangeNotifier {
     try {
       final bookings = await apiManager.ListBooking(opt: option);
 
-      if (!_bookingStreamController.isClosed) {
-        _bookingStreamController.add(bookings);
+      if (!_bookingStreamController.isClosed && !_suppressEmissions) {
+        // Schedule update for next frame
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (!_bookingStreamController.isClosed && !_suppressEmissions) {
+            _bookingStreamController.add(bookings);
+          }
+        });
       }
     } catch (e) {}
   }
@@ -239,6 +272,7 @@ class BookingProvider with ChangeNotifier {
   @override
   void dispose() {
     _refreshTimer?.cancel();
+    _debounceTimer?.cancel();
     _bookingStreamController.close();
     super.dispose();
   }

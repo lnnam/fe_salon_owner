@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/widgets.dart'
+    show ScrollNotification, ScrollStartNotification, ScrollEndNotification;
 import 'package:salonapp/model/booking.dart';
 import 'package:salonapp/constants.dart';
 import 'package:intl/intl.dart';
@@ -25,6 +27,7 @@ class _BookingHomeScreenState extends State<BookingHomeScreen>
   int _logCount = 0;
   int _pendingCount = 0;
   bool _isLogView = false;
+  bool _isScrolling = false;
 
   @override
   void initState() {
@@ -410,6 +413,19 @@ class _BookingHomeScreenState extends State<BookingHomeScreen>
               return IconButton(
                 icon: const Icon(Icons.refresh, color: Colors.white),
                 onPressed: () {
+                  if (_isScrolling) {
+                    WidgetsBinding.instance.addPostFrameCallback((_) {
+                      if (!mounted) return;
+                      ScaffoldMessenger.of(context).hideCurrentSnackBar();
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                          duration: Duration(milliseconds: 800),
+                          content: Text('Please wait for scrolling to finish'),
+                        ),
+                      );
+                    });
+                    return;
+                  }
                   print('[BookingHomeScreen] Manual refresh button tapped');
                   bookingProvider.manualRefresh();
                 },
@@ -424,7 +440,6 @@ class _BookingHomeScreenState extends State<BookingHomeScreen>
           return StreamBuilder<List<Booking>>(
             stream: bookingProvider.bookingStream,
             builder: (context, snapshot) {
-
               if (snapshot.connectionState == ConnectionState.waiting &&
                   !snapshot.hasData) {
                 return const Center(child: CircularProgressIndicator());
@@ -442,21 +457,39 @@ class _BookingHomeScreenState extends State<BookingHomeScreen>
               if (_isLogView) {
                 return Container(
                   color: Colors.grey[50],
-                  child: CustomScrollView(
-                    slivers: [
-                      SliverPadding(
-                        padding: const EdgeInsets.only(bottom: 16.0),
-                        sliver: SliverList(
-                          delegate: SliverChildBuilderDelegate(
-                            (context, index) {
-                              final booking = snapshot.data![index];
-                              return _buildBookingCard(booking, color);
-                            },
-                            childCount: snapshot.data!.length,
+                  child: NotificationListener<ScrollNotification>(
+                    onNotification: (notification) {
+                      final bp =
+                          Provider.of<BookingProvider>(context, listen: false);
+                      if (notification is ScrollStartNotification &&
+                          !_isScrolling) {
+                        _isScrolling = true;
+                        bp.pauseAutoRefresh();
+                      } else if (notification is ScrollEndNotification &&
+                          _isScrolling) {
+                        _isScrolling = false;
+                        Future.delayed(const Duration(milliseconds: 300), () {
+                          if (mounted && !_isScrolling) bp.resumeAutoRefresh();
+                        });
+                      }
+                      return false;
+                    },
+                    child: CustomScrollView(
+                      slivers: [
+                        SliverPadding(
+                          padding: const EdgeInsets.only(bottom: 16.0),
+                          sliver: SliverList(
+                            delegate: SliverChildBuilderDelegate(
+                              (context, index) {
+                                final booking = snapshot.data![index];
+                                return _buildBookingCard(booking, color);
+                              },
+                              childCount: snapshot.data!.length,
+                            ),
                           ),
                         ),
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
                 );
               }
@@ -468,31 +501,49 @@ class _BookingHomeScreenState extends State<BookingHomeScreen>
 
               return Container(
                 color: Colors.grey[50],
-                child: CustomScrollView(
-                  slivers: [
-                    SliverPadding(
-                      padding: const EdgeInsets.only(bottom: 16.0),
-                      sliver: SliverList(
-                        delegate: SliverChildBuilderDelegate(
-                          (context, index) {
-                            final date = sortedDates[index];
-                            final bookings = groupedBookings[date]!;
-                            return Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                _buildDateHeader(date, color),
-                                ...bookings
-                                    .map((booking) =>
-                                        _buildBookingCard(booking, color))
-                                    .toList(),
-                              ],
-                            );
-                          },
-                          childCount: sortedDates.length,
+                child: NotificationListener<ScrollNotification>(
+                  onNotification: (notification) {
+                    final bp =
+                        Provider.of<BookingProvider>(context, listen: false);
+                    if (notification is ScrollStartNotification &&
+                        !_isScrolling) {
+                      _isScrolling = true;
+                      bp.pauseAutoRefresh();
+                    } else if (notification is ScrollEndNotification &&
+                        _isScrolling) {
+                      _isScrolling = false;
+                      Future.delayed(const Duration(milliseconds: 300), () {
+                        if (mounted && !_isScrolling) bp.resumeAutoRefresh();
+                      });
+                    }
+                    return false;
+                  },
+                  child: CustomScrollView(
+                    slivers: [
+                      SliverPadding(
+                        padding: const EdgeInsets.only(bottom: 16.0),
+                        sliver: SliverList(
+                          delegate: SliverChildBuilderDelegate(
+                            (context, index) {
+                              final date = sortedDates[index];
+                              final bookings = groupedBookings[date]!;
+                              return Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  _buildDateHeader(date, color),
+                                  ...bookings
+                                      .map((booking) =>
+                                          _buildBookingCard(booking, color))
+                                      .toList(),
+                                ],
+                              );
+                            },
+                            childCount: sortedDates.length,
+                          ),
                         ),
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
               );
             },
