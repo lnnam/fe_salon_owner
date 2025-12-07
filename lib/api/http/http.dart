@@ -471,8 +471,50 @@ class MyHttp {
         return null;
       }
     } catch (e) {
-      print('[HTTP] fetchAppSettings: ERROR - $e');
+        print('[HTTP] fetchAppSettings: ERROR - $e');
       return null;
+    }
+  }
+
+  /// Save booking settings to the backend
+  /// POST to /api/booking/setting/update with booking settings data
+  Future<bool> saveBookingSetting(Map<String, dynamic> settingsData) async {
+    try {
+      final User currentUser = await getCurrentUser();
+      final String token = currentUser.token;
+      
+      final Uri uri = Uri.parse(AppConfig.api_url_booking_setting_update);
+      
+      final Map<String, String> headers = {
+        'Authorization': 'Bearer $token',
+        'Content-Type': 'application/json',
+      };
+
+      print('[HTTP] saveBookingSetting: POST to $uri');
+      print('[HTTP] saveBookingSetting: Data: $settingsData');
+
+      final response = await http.post(
+        uri,
+        headers: headers,
+        body: jsonEncode(settingsData),
+      ).timeout(
+        const Duration(seconds: 30),
+        onTimeout: () => throw TimeoutException('Request timed out after 30 seconds'),
+      );
+
+      print('[HTTP] saveBookingSetting: Response status: ${response.statusCode}');
+      print('[HTTP] saveBookingSetting: Response body: ${response.body}');
+
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        print('[HTTP] saveBookingSetting: Success');
+        return true;
+      } else {
+        print('[HTTP] saveBookingSetting: Failed with status ${response.statusCode}');
+        return false;
+      }
+    } catch (e) {
+      print('[HTTP] saveBookingSetting: ERROR - $e');
+      return false;
     }
   }
 }

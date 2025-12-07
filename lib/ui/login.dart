@@ -237,16 +237,15 @@ class _LoginState extends State<Login> {
             settingProvider.updateAppSettings(settings);
             
             // Map the booking settings from the API response
-            // Note: Database stores boolean values as strings 'true'/'false', pass them as-is
-            // numStaffAutoBooking kept as int (from database), provider will convert for storage
+            // Use database field names for consistency
              final bookingSettingsData = {
-              'settingkey': settings['pkey'] ?? '',
-              'numStaffAutoBooking': settings['num_staff_for_autobooking'] ?? 4,
-              'onOff': settings['onoff'] ?? 'true',  // Pass raw string value
-              'openSunday': settings['sundayoff'] ?? 'false',  // Pass raw string value
-              'aiConfirm': settings['autoconfirm'] ?? 'false',  // Pass raw string value
-              'daysOff': settings['listoffday'] ?? '',
-              'hoursOff': settings['listhouroff'] ?? '',
+              'pkey': settings['pkey'] ?? '',
+              'num_staff_for_autobooking': settings['num_staff_for_autobooking'] ?? 4,
+              'onoff': settings['onoff'] ?? 'true',
+              'sundayoff': settings['sundayoff'] ?? 'false',
+              'autoconfirm': settings['autoconfirm'] ?? 'false',
+              'listoffday': settings['listoffday'] ?? '',
+              'listhouroff': settings['listhouroff'] ?? '',
             };
             settingProvider.updateBookingSettings(bookingSettingsData); 
             

@@ -59,29 +59,29 @@ class _SettingPageState extends State<SettingPage> {
   void _applySettings(Map<String, dynamic> settings) {
     setState(() {
       // Load numeric value - ensure it's converted to string for TextField
-      if (settings['numStaffAutoBooking'] != null) {
-        final value = settings['numStaffAutoBooking'];
+      if (settings['num_staff_for_autobooking'] != null) {
+        final value = settings['num_staff_for_autobooking'];
         _numStaffController.text = value.toString();
       }
       
       // Load boolean values - database stores as strings 'true'/'false'
-      _autoBooking = _parseBooleanString(settings['onOff']);
-      _openSunday = _parseBooleanString(settings['openSunday']);
-      _aiConfirm = _parseBooleanString(settings['aiConfirm']);
+      _autoBooking = _parseBooleanString(settings['onoff']);
+      _openSunday = _parseBooleanString(settings['sundayoff']);
+      _aiConfirm = _parseBooleanString(settings['autoconfirm']);
       
-      print('[SettingPage] Parsed booleans - onOff: ${settings['onOff']} -> $_autoBooking, openSunday: ${settings['openSunday']} -> $_openSunday, aiConfirm: ${settings['aiConfirm']} -> $_aiConfirm');
+      print('[SettingPage] Parsed booleans - onoff: ${settings['onoff']} -> $_autoBooking, sundayoff: ${settings['sundayoff']} -> $_openSunday, autoconfirm: ${settings['autoconfirm']} -> $_aiConfirm');
       
       // Load hours off - ensure it's a string
-      if (settings['hoursOff'] != null) {
-        final hoursValue = settings['hoursOff'];
+      if (settings['listhouroff'] != null) {
+        final hoursValue = settings['listhouroff'];
         _hoursOffController.text = hoursValue.toString();
       }
       
       // Load days off
-      if (settings['daysOff'] != null && settings['daysOff'].toString().isNotEmpty) {
+      if (settings['listoffday'] != null && settings['listoffday'].toString().isNotEmpty) {
         _selectedDaysOff.clear();
         final dateFormat = RegExp(r'(\d{4})-(\d{2})-(\d{2})');
-        final matches = dateFormat.allMatches(settings['daysOff'].toString());
+        final matches = dateFormat.allMatches(settings['listoffday'].toString());
         for (var match in matches) {
           final year = int.parse(match.group(1)!);
           final month = int.parse(match.group(2)!);
@@ -177,13 +177,8 @@ class _SettingPageState extends State<SettingPage> {
       // Get the pkey value - it should be preserved from the initial load
       String pkeyValue = '';
       if (settingProvider.bookingSettings != null) {
-        // Check if pkey is in the nested setting object
-        if (settingProvider.bookingSettings!['setting'] is Map) {
-          pkeyValue = settingProvider.bookingSettings!['setting']['pkey'] ?? '';
-        } else {
-          // Or check if it's at the top level (from first save)
-          pkeyValue = settingProvider.bookingSettings!['settingkey'] ?? '';
-        }
+        // pkey is stored with key 'pkey'
+        pkeyValue = settingProvider.bookingSettings!['pkey']?.toString() ?? '';
       }
       
       // Validate num staff input
@@ -204,49 +199,47 @@ class _SettingPageState extends State<SettingPage> {
       // Get hours off string
       final hoursOff = _hoursOffController.text;
 
-      // Build settings object for API - match database field names (numStaff is int)
+      // Build settings object for API - ALL fields as strings to match backend format
       final settingsData = {
-        'setting': {
-          'pkey': pkeyValue,
-          'num_staff_for_autobooking': numStaff,  // Keep as int for API
-          'onoff': _autoBooking ? 'true' : 'false',
-          'sundayoff': _openSunday ? 'true' : 'false',
-          'autoconfirm': _aiConfirm ? 'true' : 'false',
-          'listoffday': daysOffString,
-          'listhouroff': hoursOff,
-        }
+        'pkey': pkeyValue,
+        'num_staff_for_autobooking': numStaff.toString(),  // Convert to string for API
+        'onoff': _autoBooking ? 'true' : 'false',
+        'sundayoff': _openSunday ? 'true' : 'false',
+        'autoconfirm': _aiConfirm ? 'true' : 'false',
+        'listoffday': daysOffString,
+        'listhouroff': hoursOff,
       };
 
-      print('[SettingPage] Saving settings: $settingsData');
+      print('[SettingPage] Settings Data to save: $settingsData');
 
-      // Update provider (local storage) - store with original int type for consistency with provider
-      // (provider will handle conversion to string in updateBookingSettings)
+      // Update provider (local storage) - use database field names for consistency
       final bookingSettingsToStore = {
-        'settingkey': pkeyValue,
-        'numStaffAutoBooking': numStaff,  // Keep as int - provider will convert to string when saving
-        'onOff': _autoBooking ? 'true' : 'false',
-        'openSunday': _openSunday ? 'true' : 'false',
-        'aiConfirm': _aiConfirm ? 'true' : 'false',
-        'daysOff': daysOffString,
-        'hoursOff': hoursOff,
+        'pkey': pkeyValue,
+        'num_staff_for_autobooking': numStaff,  // Keep as int - provider will convert to string when saving
+        'onoff': _autoBooking ? 'true' : 'false',
+        'sundayoff': _openSunday ? 'true' : 'false',
+        'autoconfirm': _aiConfirm ? 'true' : 'false',
+        'listoffday': daysOffString,
+        'listhouroff': hoursOff,
       };
       settingProvider.updateBookingSettings(bookingSettingsToStore);
 
-      // TODO: Call API to save settings to backend
-      // Uncomment when API is ready:
-      // final result = await apiManager.SaveBookingSetting(settingsData);
-      // if (result) {
-      //   showAlertDialog(context, 'Success', 'Settings saved successfully');
-      // } else {
-      //   showAlertDialog(context, 'Error', 'Failed to save settings');
-      // }
-
-      // Show the exact data object being posted
-      showAlertDialog(
-        context,
-        'Success - Data Sent',
-        bookingSettingsToStore.toString(),
-      );
+      // Call API to save settings to backend
+      print('[SettingPage] Calling API to save settings...');
+      final result = await apiManager.saveBookingSetting(settingsData);
+      if (result) {
+        showAlertDialog(
+          context,
+          'Success',
+          'Settings saved successfully',
+        );
+      } else {
+        showAlertDialog(
+          context,
+          'Error',
+          'Failed to save settings to backend',
+        );
+      }
     } catch (e, stackTrace) {
       print('[SettingPage] Error saving settings: $e');
       print('[SettingPage] Stack trace: $stackTrace');

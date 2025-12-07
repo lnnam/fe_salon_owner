@@ -49,12 +49,12 @@ class SettingProvider with ChangeNotifier {
 
   // Method to update booking settings
   void updateBookingSettings(Map<String, dynamic> settings) {
-    // Ensure numStaffAutoBooking is safe for string conversion
+    // Ensure num_staff_for_autobooking is safe for string conversion
     final sanitized = Map<String, dynamic>.from(settings);
-    if (sanitized.containsKey('numStaffAutoBooking')) {
-      final value = sanitized['numStaffAutoBooking'];
+    if (sanitized.containsKey('num_staff_for_autobooking')) {
+      final value = sanitized['num_staff_for_autobooking'];
       // Safe conversion: if null, use '0', otherwise convert to string
-      sanitized['numStaffAutoBooking'] = value == null ? '0' : value.toString();
+      sanitized['num_staff_for_autobooking'] = value == null ? '0' : value.toString();
     }
     
     _bookingSettings = sanitized;
@@ -85,12 +85,12 @@ class SettingProvider with ChangeNotifier {
       // Ensure all values are properly typed for JSON encoding
       final sanitizedSettings = Map<String, dynamic>.from(settings);
       
-      // Explicitly convert numStaffAutoBooking to string if present
-      if (sanitizedSettings.containsKey('numStaffAutoBooking')) {
-        final value = sanitizedSettings['numStaffAutoBooking'];
+      // Explicitly convert num_staff_for_autobooking to string if present
+      if (sanitizedSettings.containsKey('num_staff_for_autobooking')) {
+        final value = sanitizedSettings['num_staff_for_autobooking'];
         // Convert any type to string safely
-        sanitizedSettings['numStaffAutoBooking'] = value == null ? '0' : value.toString();
-        print('[SettingProvider] Converting numStaffAutoBooking: $value -> ${sanitizedSettings['numStaffAutoBooking']}');
+        sanitizedSettings['num_staff_for_autobooking'] = value == null ? '0' : value.toString();
+        print('[SettingProvider] Converting num_staff_for_autobooking: $value -> ${sanitizedSettings['num_staff_for_autobooking']}');
       }
       
       final jsonString = jsonEncode(sanitizedSettings);
