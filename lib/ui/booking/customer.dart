@@ -4,6 +4,7 @@ import 'package:salonapp/api/api_manager.dart';
 import 'package:salonapp/model/customer.dart';
 import 'package:salonapp/provider/booking.provider.dart';
 import 'package:salonapp/services/helper.dart';
+import 'package:salonapp/config/app_config.dart';
 import 'Summary.dart';
 
 class CustomerPage extends StatefulWidget {
@@ -45,14 +46,27 @@ class _CustomerPageState extends State<CustomerPage> {
 
   void _fetchCustomers() async {
     try {
+      // Log the API URL for customer list
+      print('[API] Customer List URL: ' + AppConfig.api_url_booking_customer);
       List<Customer> customers = await apiManager.ListCustomer();
+     
       if (!mounted) return;
       setState(() {
         _customerList = customers;
         _filteredCustomerList = customers;
       });
     } catch (error) {
-      // error fetching customers
+      print('[CustomerPage] Error loading customers: $error');
+      if (mounted) {
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Cannot connect to server. Please check your network or try again later.'),
+              backgroundColor: Colors.red,
+            ),
+          );
+        });
+      }
     }
   }
 
@@ -61,7 +75,8 @@ class _CustomerPageState extends State<CustomerPage> {
     setState(() {
       _filteredCustomerList = _customerList.where((customer) {
         return customer.fullname.toLowerCase().contains(query) ||
-            customer.email.toLowerCase().contains(query);
+            customer.email.toLowerCase().contains(query) ||
+            customer.phone.toLowerCase().contains(query);
       }).toList();
     });
   }
@@ -69,7 +84,7 @@ class _CustomerPageState extends State<CustomerPage> {
   void _showAddCustomerDialog(BuildContext context) {
     final nameController = TextEditingController();
     final emailController = TextEditingController();
-    final phoneController = TextEditingController();
+    final phoneController = TextEditingController(text: _searchController.text);
     final dobController = TextEditingController();
     bool isLoading = false;
 

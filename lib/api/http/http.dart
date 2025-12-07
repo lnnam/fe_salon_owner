@@ -1,5 +1,6 @@
 import 'package:http/http.dart' as http;
 import 'dart:convert';
+import 'dart:async';
 import 'package:salonapp/config/app_config.dart';
 import 'package:salonapp/model/user.dart';
 import 'package:salonapp/model/booking.dart';
@@ -8,7 +9,24 @@ import 'package:salonapp/model/service.dart';
 import 'package:salonapp/model/customer.dart';
 import 'package:salonapp/services/helper.dart';
 
+/// Custom exception for server/network errors
+class ServerException implements Exception {
+  final String message;
+  final dynamic originalError;
+
+  ServerException({required this.message, this.originalError});
+
+  @override
+  String toString() => message;
+}
+
 class MyHttp {
+    Future<dynamic> saveBooking(Map<String, dynamic> bookingData) async {
+      final String url = AppConfig.api_url_booking_save;
+      print('[API] Booking Save URL: ' + url);
+      // ...existing code for making the request...
+      // You can implement the actual request logic here or add this print to your existing save method.
+    }
   /// @param username user salonkey
   /// @param password user username
   /// @param password user password
@@ -43,36 +61,69 @@ class MyHttp {
   }
 
   Future<dynamic> fetchFromServer(String apiEndpoint) async {
-    // Constructing options for HTTP request
-    final Uri uri = Uri.parse(apiEndpoint);
+    try {
+      // Constructing options for HTTP request
+      final Uri uri = Uri.parse(apiEndpoint);
 
-    final User currentUser = await getCurrentUser();
+      final User currentUser = await getCurrentUser();
 
-    final String token = currentUser.token;
+      final String token = currentUser.token;
 
-    final Map<String, String> headers = {
-      'Authorization': 'Bearer $token',
-      'Content-Type': 'application/json',
-    };
+      final Map<String, String> headers = {
+        'Authorization': 'Bearer $token',
+        'Content-Type': 'application/json',
+      };
 
-    // Making the HTTP GET request
-    final http.Response response = await http.get(uri, headers: headers);
-    print(response);
-    // Handling response
-    if (response.statusCode == 200) {
-      print(
-          '[HTTP] fetchFromServer: Success (200), Response length: ${response.body.length}');
-      // Request successful, parse and return response data
-      return json.decode(response.body);
-    } else {
-      // Request failed, throw error
-      print(
-          '[HTTP] fetchFromServer: Failed with status ${response.statusCode}');
-      if (response.statusCode == 401) {
-        throw 'Your session has expired. Please log in again.';
+      print('[HTTP] Making GET request to: $apiEndpoint');
+      
+      // Making the HTTP GET request with timeout
+      final http.Response response = await http.get(uri, headers: headers).timeout(
+        const Duration(seconds: 30),
+        onTimeout: () => throw TimeoutException('Request timed out after 30 seconds'),
+      );
+      
+      print('[HTTP] Response status: ${response.statusCode}');
+      
+      // Handling response
+      if (response.statusCode == 200) {
+        print(
+            '[HTTP] fetchFromServer: Success (200), Response length: ${response.body.length}');
+        // Request successful, parse and return response data
+        return json.decode(response.body);
+      } else if (response.statusCode == 401) {
+        throw ServerException(
+          message: 'Your session has expired. Please log in again.',
+          originalError: response.statusCode,
+        );
       } else {
-        throw 'Request failed with status: ${response.statusCode}';
+        // Request failed, throw error
+        print(
+            '[HTTP] fetchFromServer: Failed with status ${response.statusCode}');
+        throw ServerException(
+          message: 'Server error (${response.statusCode}). Please try again later.',
+          originalError: response.statusCode,
+        );
       }
+    } on ServerException {
+      rethrow; // Re-throw our custom exception as-is
+    } catch (e) {
+      print('[HTTP] Error in fetchFromServer: $e');
+      String userMessage = 'An unexpected error occurred. Please try again later.';
+      
+      if (e.toString().contains('Connection refused')) {
+        userMessage = 'Cannot connect to server. Please check your network connection.';
+      } else if (e.toString().contains('timed out') || e is TimeoutException) {
+        userMessage = 'Request timeout. Please check your network and try again.';
+      } else if (e.toString().contains('Connection refused') || 
+                 e.toString().contains('Failed to connect') ||
+                 e.toString().contains('Network unreachable')) {
+        userMessage = 'Cannot connect to server. Please check your network connection.';
+      }
+      
+      throw ServerException(
+        message: userMessage,
+        originalError: e,
+      );
     }
   }
 

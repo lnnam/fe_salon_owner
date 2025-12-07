@@ -3,6 +3,7 @@ import 'package:flutter/widgets.dart'
     show ScrollNotification, ScrollStartNotification, ScrollEndNotification;
 import 'package:salonapp/model/booking.dart';
 import 'package:salonapp/constants.dart';
+import 'package:salonapp/config/app_config.dart';
 import 'package:intl/intl.dart';
 import 'package:salonapp/ui/common/drawer_booking.dart';
 import 'package:salonapp/ui/booking/staff.dart';
@@ -50,6 +51,8 @@ class _BookingHomeScreenState extends State<BookingHomeScreen>
 
   Future<void> _loadInitialCounts(BookingProvider bookingProvider) async {
     try {
+      // Log the API URL for booking list
+      print('[API] Booking List URL: ' + AppConfig.api_url_booking_home);
       // Load today bookings count
       final today = DateTime.now();
       final formattedDate = DateFormat('yyyy-MM-dd').format(today);
@@ -76,6 +79,16 @@ class _BookingHomeScreenState extends State<BookingHomeScreen>
           '[BookingHomeScreen] Counts loaded - Today: $_todayCount, Week: $_weekCount, Log: $_logCount, Pending: $_pendingCount');
     } catch (e) {
       print('[BookingHomeScreen] Error loading counts: $e');
+      if (mounted) {
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Cannot connect to server. Please check your network or try again later.'),
+              backgroundColor: Colors.red,
+            ),
+          );
+        });
+      }
     }
   }
 
@@ -89,9 +102,16 @@ class _BookingHomeScreenState extends State<BookingHomeScreen>
       bookingProvider.pauseAutoRefresh();
       print('[BookingHomeScreen] App lifecycle: $state, auto-refresh paused');
     } else if (state == AppLifecycleState.resumed) {
-      // App is resumed, resume polling
-      bookingProvider.resumeAutoRefresh();
-      print('[BookingHomeScreen] App lifecycle: resumed, auto-refresh resumed');
+      // App is resumed, only resume if BookingHomeScreen is currently visible
+      // Check if there's a route on top of this one
+      if (Navigator.of(context).canPop()) {
+        // There's another page on top, don't resume auto-refresh
+        print('[BookingHomeScreen] App lifecycle: resumed, but page is not in focus, auto-refresh NOT resumed');
+      } else {
+        // BookingHomeScreen is the active page, resume polling
+        bookingProvider.resumeAutoRefresh();
+        print('[BookingHomeScreen] App lifecycle: resumed, auto-refresh resumed');
+      }
     }
   }
 

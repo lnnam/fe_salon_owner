@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:salonapp/constants.dart';
 import 'package:salonapp/services/helper.dart';
+import 'package:salonapp/ui/booking/setting.dart';
 
 class AppDrawerBooking extends StatelessWidget {
   const AppDrawerBooking({super.key});
@@ -39,6 +40,15 @@ class AppDrawerBooking extends StatelessWidget {
             title: const Text('Go Checkout'),
             onTap: () {
               safePushReplacementNamed(context, '/setting');
+            },
+          ),
+          ListTile(
+            title: const Text('Setting'),
+            onTap: () {
+              safePush(
+                context,
+                const SettingPage(),
+              );
             },
           ),
         ],

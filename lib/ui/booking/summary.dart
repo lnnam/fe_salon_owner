@@ -99,8 +99,6 @@ class _SummaryPageState extends State<SummaryPage> {
           });
         });
       }
-      bookingProvider.setBookingKey(bookingkey); // ✅ Added here
-      bookingProvider.setBookingFromModel(booking);
     } else {
       print('bookingProvider');
 
@@ -126,6 +124,16 @@ class _SummaryPageState extends State<SummaryPage> {
     }
 
     noteController = TextEditingController(text: note);
+    
+    // Set booking key and details after frame is built to avoid setState during build
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      final bookingProvider = Provider.of<BookingProvider>(context, listen: false);
+      bookingProvider.setBookingKey(bookingkey);
+      if (widget.booking != null) {
+        bookingProvider.setBookingFromModel(widget.booking!);
+      }
+    });
   }
 
   Color _statusColor(String status) {
@@ -608,6 +616,10 @@ class _SummaryPageState extends State<SummaryPage> {
     try {
       // Get SMS message from SettingProvider
       final settingProvider = Provider.of<SettingProvider>(context, listen: false);
+      
+      // Wait for settings to be initialized if not already done
+      await settingProvider.waitForInitialization();
+      
       var smsMessage = settingProvider.sms ?? '';
       var salonName = settingProvider.salonName ?? '';
       
@@ -673,6 +685,10 @@ class _SummaryPageState extends State<SummaryPage> {
     try {
       // Get email message from SettingProvider
       final settingProvider = Provider.of<SettingProvider>(context, listen: false);
+      
+      // Wait for settings to be initialized if not already done
+      await settingProvider.waitForInitialization();
+      
       var emailMessage = settingProvider.email ?? '';
       var salonName = settingProvider.salonName ?? '';
       

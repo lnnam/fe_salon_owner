@@ -5,10 +5,13 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:salonapp/constants.dart';
 import 'package:progress_dialog_null_safe/progress_dialog_null_safe.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:salonapp/model/user.dart';
+import 'package:provider/provider.dart';
+import 'package:salonapp/provider/setting.provider.dart';
 
 import 'dart:io' show Platform;
 
@@ -125,7 +128,7 @@ showAlertDialog(BuildContext context, String title, String content) {
   // Schedule dialog presentation for next frame to avoid mutating the
   // render tree during hit-testing or pointer processing.
   WidgetsBinding.instance.addPostFrameCallback((_) {
-    if (Platform.isIOS) {
+    if (!kIsWeb && Platform.isIOS) {
       final CupertinoAlertDialog alert = CupertinoAlertDialog(
         title: Text(title),
         content: Text(content),
@@ -367,8 +370,35 @@ String audioMessageTime(Duration? audioDuration) {
 
 logout(BuildContext context) async {
   SharedPreferences prefs = await SharedPreferences.getInstance();
-  await prefs.clear();
-  // Navigator.popUntil(context, ModalRoute.withName('/'));
+  
+  // Clear ONLY authentication-related data from SharedPreferences
+  await prefs.remove('token');
+  await prefs.remove('objuser');
+  
+  // Keep app preferences (but clear user-specific settings)
+  // Clear: app settings, booking settings (these are user-specific)
+  // Keep: language, theme (these are user preferences)
+  await prefs.remove('appSettings');
+  await prefs.remove('bookingSettings');
+  
+  print('[logout] Cleared auth & user-specific data:');
+  print('  - token');
+  print('  - objuser');
+  print('  - appSettings');
+  print('  - bookingSettings');
+  print('[logout] Preserved user preferences: language, theme, etc');
+  
+  // Reset provider state if context is still mounted
+  if (context.mounted) {
+    try {
+      final settingProvider = Provider.of<SettingProvider>(context, listen: false);
+      settingProvider.resetSettings();
+      print('[logout] Reset SettingProvider state');
+    } catch (e) {
+      print('[logout] Could not reset provider: $e');
+    }
+  }
+  
   if (!context.mounted) return;
   safePushReplacementNamed(context, '/login');
 }

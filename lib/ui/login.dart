@@ -235,7 +235,23 @@ class _LoginState extends State<Login> {
           if (settings != null) {
             final settingProvider = Provider.of<SettingProvider>(context, listen: false);
             settingProvider.updateAppSettings(settings);
+            
+            // Map the booking settings from the API response
+            // Note: Database stores boolean values as strings 'true'/'false', pass them as-is
+            // numStaffAutoBooking kept as int (from database), provider will convert for storage
+             final bookingSettingsData = {
+              'settingkey': settings['pkey'] ?? '',
+              'numStaffAutoBooking': settings['num_staff_for_autobooking'] ?? 4,
+              'onOff': settings['onoff'] ?? 'true',  // Pass raw string value
+              'openSunday': settings['sundayoff'] ?? 'false',  // Pass raw string value
+              'aiConfirm': settings['autoconfirm'] ?? 'false',  // Pass raw string value
+              'daysOff': settings['listoffday'] ?? '',
+              'hoursOff': settings['listhouroff'] ?? '',
+            };
+            settingProvider.updateBookingSettings(bookingSettingsData); 
+            
             print('[Login] Updated SettingProvider with: salonName=${settingProvider.salonName}, sms=${settingProvider.sms}, email=${settingProvider.email}');
+            print('[Login] Updated Booking Settings: $bookingSettingsData');
           } else {
             print('[Login] Failed to fetch app settings');
           }
