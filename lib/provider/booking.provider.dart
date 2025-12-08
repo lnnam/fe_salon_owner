@@ -102,6 +102,8 @@ class BookingProvider with ChangeNotifier {
     print('[BookingProvider] Current view option set to: $_currentViewOption');
   }
 
+  String? get currentViewOption => _currentViewOption;
+
   void resetBooking() {
     _onbooking
       ..bookingkey = 0

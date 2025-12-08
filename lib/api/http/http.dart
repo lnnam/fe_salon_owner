@@ -75,7 +75,6 @@ class MyHttp {
         'Content-Type': 'application/json',
       };
 
-      print('[HTTP] Making GET request to: $apiEndpoint');
 
       // Making the HTTP GET request with timeout (20s for faster feedback)
       final http.Response response =
@@ -85,12 +84,9 @@ class MyHttp {
                     'Request timed out after 20 seconds. Server may be slow or unreachable.'),
               );
 
-      print('[HTTP] Response status: ${response.statusCode}');
 
       // Handling response
       if (response.statusCode == 200) {
-        print(
-            '[HTTP] fetchFromServer: Success (200), Response length: ${response.body.length}');
         // Request successful, parse and return response data
         return json.decode(response.body);
       } else if (response.statusCode == 401) {
@@ -163,7 +159,6 @@ class MyHttp {
             response.map<Booking>((item) => Booking.fromJson(item)).toList();
       }
 
-      print('[API] Parsed ${bookings.length} bookings');
       return bookings;
     } catch (error) {
       print('[HTTP] ListBooking: ERROR - $error');
