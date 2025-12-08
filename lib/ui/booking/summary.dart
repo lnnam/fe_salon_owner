@@ -48,22 +48,14 @@ class _SummaryPageState extends State<SummaryPage> {
     Provider.of<BookingProvider>(context, listen: false)
         .setNote(noteController.text);
     noteController.dispose();
-    // Resume booking auto-refresh when closing this page
-    final bookingProvider =
-        Provider.of<BookingProvider>(context, listen: false);
-    bookingProvider.resumeAutoRefresh();
-    print('[SummaryPage] Closed, auto-refresh resumed');
+    print('[SummaryPage] Closed');
     super.dispose();
   }
 
   @override
   void initState() {
     super.initState();
-    // Pause booking auto-refresh when opening this page
-    final bookingProvider =
-        Provider.of<BookingProvider>(context, listen: false);
-    bookingProvider.pauseAutoRefresh();
-    print('[SummaryPage] Opened, auto-refresh paused');
+    // Auto-refresh is disabled, no pause/resume needed
     //print('bookingDetails: ${bookingProvider.bookingDetails}');
 
     // ✅ Set edit mode to true
@@ -124,11 +116,12 @@ class _SummaryPageState extends State<SummaryPage> {
     }
 
     noteController = TextEditingController(text: note);
-    
+
     // Set booking key and details after frame is built to avoid setState during build
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
-      final bookingProvider = Provider.of<BookingProvider>(context, listen: false);
+      final bookingProvider =
+          Provider.of<BookingProvider>(context, listen: false);
       bookingProvider.setBookingKey(bookingkey);
       if (widget.booking != null) {
         bookingProvider.setBookingFromModel(widget.booking!);
@@ -175,22 +168,105 @@ class _SummaryPageState extends State<SummaryPage> {
         safeShowDialog(
           context,
           (context) => AlertDialog(
-            title: const Text('Success'),
-            content: const Text('Booking confirmed successfully.'),
+            shape:
+                RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+            backgroundColor: Colors.white,
+            title: Container(
+              decoration: BoxDecoration(
+                color: Colors.green.shade50,
+                borderRadius: BorderRadius.circular(12),
+              ),
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                children: [
+                  Icon(
+                    Icons.check_circle,
+                    color: Colors.green.shade600,
+                    size: 48,
+                  ),
+                  const SizedBox(height: 12),
+                  const Text(
+                    'Booking Confirmed',
+                    style: TextStyle(
+                      fontSize: 20,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.green,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            content: Padding(
+              padding: const EdgeInsets.symmetric(vertical: 16),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const Text(
+                    'Your booking has been confirmed successfully.',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      fontSize: 16,
+                      color: Colors.black87,
+                      height: 1.5,
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  Container(
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: Colors.blue.shade50,
+                      borderRadius: BorderRadius.circular(8),
+                      border: Border.all(color: Colors.blue.shade200),
+                    ),
+                    child: const Row(
+                      children: [
+                        Icon(Icons.info, color: Colors.blue, size: 20),
+                        SizedBox(width: 12),
+                        Expanded(
+                          child: Text(
+                            'You will be redirected to pending list.',
+                            style: TextStyle(
+                              fontSize: 14,
+                              color: Colors.blue,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
             actions: [
-              TextButton(
-                onPressed: () {
-                  Navigator.of(context).pop();
-                  // Navigate back to home list after confirmation
-                  if (mounted) {
-                    safePushAndRemoveUntil(
-                      context,
-                      const BookingHomeScreen(),
-                      (route) => false,
-                    );
-                  }
-                },
-                child: const Text('OK'),
+              Center(
+                child: ElevatedButton.icon(
+                  onPressed: () {
+                    Navigator.of(context).pop();
+                    // Navigate back to home list after confirmation
+                    if (mounted) {
+                      // Reload pending list when returning to home
+                      final bookingProvider =
+                          Provider.of<BookingProvider>(context, listen: false);
+                      bookingProvider.loadBookingsWithOption('pending');
+                      safePushAndRemoveUntil(
+                        context,
+                        const BookingHomeScreen(initialView: 'pending'),
+                        (route) => false,
+                      );
+                    }
+                  },
+                  icon: const Icon(Icons.check),
+                  label: const Text('Done'),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.green.shade600,
+                    foregroundColor: Colors.white,
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 32, vertical: 12),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                  ),
+                ),
               ),
             ],
           ),
@@ -199,12 +275,91 @@ class _SummaryPageState extends State<SummaryPage> {
         safeShowDialog(
           context,
           (context) => AlertDialog(
-            title: const Text('Error'),
-            content: const Text('Failed to confirm booking. Please try again.'),
+            shape:
+                RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+            backgroundColor: Colors.white,
+            title: Container(
+              decoration: BoxDecoration(
+                color: Colors.red.shade50,
+                borderRadius: BorderRadius.circular(12),
+              ),
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                children: [
+                  Icon(
+                    Icons.error_outline,
+                    color: Colors.red.shade600,
+                    size: 48,
+                  ),
+                  const SizedBox(height: 12),
+                  const Text(
+                    'Confirmation Failed',
+                    style: TextStyle(
+                      fontSize: 20,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.red,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            content: Padding(
+              padding: const EdgeInsets.symmetric(vertical: 16),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const Text(
+                    'Failed to confirm booking. Please try again.',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      fontSize: 16,
+                      color: Colors.black87,
+                      height: 1.5,
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  Container(
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: Colors.orange.shade50,
+                      borderRadius: BorderRadius.circular(8),
+                      border: Border.all(color: Colors.orange.shade200),
+                    ),
+                    child: const Row(
+                      children: [
+                        Icon(Icons.warning, color: Colors.orange, size: 20),
+                        SizedBox(width: 12),
+                        Expanded(
+                          child: Text(
+                            'Check your connection and try again.',
+                            style: TextStyle(
+                              fontSize: 14,
+                              color: Colors.orange,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
             actions: [
-              TextButton(
-                onPressed: () => Navigator.of(context).pop(),
-                child: const Text('OK'),
+              Center(
+                child: ElevatedButton.icon(
+                  onPressed: () => Navigator.of(context).pop(),
+                  icon: const Icon(Icons.close),
+                  label: const Text('OK'),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.red.shade600,
+                    foregroundColor: Colors.white,
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 32, vertical: 12),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                  ),
+                ),
               ),
             ],
           ),
@@ -330,8 +485,8 @@ class _SummaryPageState extends State<SummaryPage> {
                       CircleAvatar(
                         radius: 25,
                         backgroundColor: Colors.blue[300],
-                        child:
-                            const Icon(Icons.person, color: Colors.white, size: 24),
+                        child: const Icon(Icons.person,
+                            color: Colors.white, size: 24),
                       ),
                     const SizedBox(width: 12),
                     Expanded(
@@ -346,7 +501,8 @@ class _SummaryPageState extends State<SummaryPage> {
                               color: Colors.black87,
                             ),
                           ),
-                          if (customerPhone.isNotEmpty && customerPhone != 'N/A')
+                          if (customerPhone.isNotEmpty &&
+                              customerPhone != 'N/A')
                             Text(
                               customerPhone,
                               style: const TextStyle(
@@ -354,7 +510,8 @@ class _SummaryPageState extends State<SummaryPage> {
                                 color: Colors.grey,
                               ),
                             ),
-                          if (customerEmail.isNotEmpty && customerEmail != 'N/A')
+                          if (customerEmail.isNotEmpty &&
+                              customerEmail != 'N/A')
                             Text(
                               customerEmail,
                               style: const TextStyle(
@@ -615,23 +772,24 @@ class _SummaryPageState extends State<SummaryPage> {
   Future<void> _openSMS(String phoneNumber) async {
     try {
       // Get SMS message from SettingProvider
-      final settingProvider = Provider.of<SettingProvider>(context, listen: false);
-      
+      final settingProvider =
+          Provider.of<SettingProvider>(context, listen: false);
+
       // Wait for settings to be initialized if not already done
       await settingProvider.waitForInitialization();
-      
+
       var smsMessage = settingProvider.sms ?? '';
       var salonName = settingProvider.salonName ?? '';
-      
+
       // Replace placeholders with actual booking details
       // Extract time from bookingTime (format: "HH:mm, dd/MM/yyyy")
       final timeParts = bookingTime.split(', ');
       final time = timeParts.isNotEmpty ? timeParts[0] : '';
       final date = timeParts.length > 1 ? timeParts[1] : '';
-      
-      
+
       // Replace HH:MM on DD/MM/YYYY with actual values
-      smsMessage = smsMessage.replaceAll('HH:MM on DD/MM/YYYY', '$time on $date');
+      smsMessage =
+          smsMessage.replaceAll('HH:MM on DD/MM/YYYY', '$time on $date');
       print('[SummaryPage] SMS - Phone: $phoneNumber, Message: $smsMessage');
 
       if (smsMessage.isEmpty) {
@@ -644,7 +802,8 @@ class _SummaryPageState extends State<SummaryPage> {
       final String body = '$smsMessage\n\n$salonName';
       // Use proper SMS URI format: sms:phonenumber?body=message
       // Note: Must use Uri.parse instead of Uri constructor to properly encode the body
-      final Uri smsUri = Uri.parse('sms:$phoneNumber?body=${Uri.encodeComponent(body)}');
+      final Uri smsUri =
+          Uri.parse('sms:$phoneNumber?body=${Uri.encodeComponent(body)}');
 
       if (await canLaunchUrl(smsUri)) {
         await launchUrl(smsUri);
@@ -684,22 +843,24 @@ class _SummaryPageState extends State<SummaryPage> {
   Future<void> _sendEmail(String email) async {
     try {
       // Get email message from SettingProvider
-      final settingProvider = Provider.of<SettingProvider>(context, listen: false);
-      
+      final settingProvider =
+          Provider.of<SettingProvider>(context, listen: false);
+
       // Wait for settings to be initialized if not already done
       await settingProvider.waitForInitialization();
-      
+
       var emailMessage = settingProvider.email ?? '';
       var salonName = settingProvider.salonName ?? '';
-      
+
       // Replace placeholders with actual booking details
       // Extract time from bookingTime (format: "HH:mm, dd/MM/yyyy")
       final timeParts = bookingTime.split(', ');
       final time = timeParts.isNotEmpty ? timeParts[0] : '';
       final date = timeParts.length > 1 ? timeParts[1] : '';
-      
+
       // Replace HH:MM on DD/MM/YYYY with actual values
-      emailMessage = emailMessage.replaceAll('HH:MM on DD/MM/YYYY', '$time on $date');
+      emailMessage =
+          emailMessage.replaceAll('HH:MM on DD/MM/YYYY', '$time on $date');
       print('[SummaryPage] Email - Recipient: $email, Message: $emailMessage');
 
       if (emailMessage.isEmpty) {
@@ -710,8 +871,9 @@ class _SummaryPageState extends State<SummaryPage> {
       }
 
       final String body = '$emailMessage\n\n$salonName';
-      final Uri emailUri = Uri.parse('mailto:$email?body=${Uri.encodeComponent(body)}');
-      
+      final Uri emailUri =
+          Uri.parse('mailto:$email?body=${Uri.encodeComponent(body)}');
+
       if (await canLaunchUrl(emailUri)) {
         await launchUrl(emailUri);
       } else {

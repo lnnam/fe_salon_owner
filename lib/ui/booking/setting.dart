@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:salonapp/services/helper.dart';
 import 'package:salonapp/constants.dart';
 import 'package:provider/provider.dart';
-import 'package:salonapp/provider/booking.provider.dart';
 import 'package:salonapp/provider/setting.provider.dart';
 import 'package:salonapp/api/api_manager.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -28,14 +27,8 @@ class _SettingPageState extends State<SettingPage> {
     super.initState();
     _numStaffController = TextEditingController(text: '4');
     _hoursOffController = TextEditingController(text: '18,19,20,');
-    
-    // Pause booking auto-refresh when opening this page
+
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      final bookingProvider =
-          Provider.of<BookingProvider>(context, listen: false);
-      bookingProvider.pauseAutoRefresh();
-      print('[SettingPage] Opened, auto-refresh paused');
-      
       // Load booking settings from provider
       _loadSettingsFromProvider();
     });
@@ -44,7 +37,7 @@ class _SettingPageState extends State<SettingPage> {
   void _loadSettingsFromProvider() {
     final settingProvider =
         Provider.of<SettingProvider>(context, listen: false);
-    
+
     if (settingProvider.bookingSettings != null) {
       final settings = settingProvider.bookingSettings!;
       print('[SettingPage] Loading settings from provider: $settings');
@@ -63,25 +56,28 @@ class _SettingPageState extends State<SettingPage> {
         final value = settings['num_staff_for_autobooking'];
         _numStaffController.text = value.toString();
       }
-      
+
       // Load boolean values - database stores as strings 'true'/'false'
       _autoBooking = _parseBooleanString(settings['onoff']);
       _openSunday = _parseBooleanString(settings['sundayoff']);
       _aiConfirm = _parseBooleanString(settings['autoconfirm']);
-      
-      print('[SettingPage] Parsed booleans - onoff: ${settings['onoff']} -> $_autoBooking, sundayoff: ${settings['sundayoff']} -> $_openSunday, autoconfirm: ${settings['autoconfirm']} -> $_aiConfirm');
-      
+
+      print(
+          '[SettingPage] Parsed booleans - onoff: ${settings['onoff']} -> $_autoBooking, sundayoff: ${settings['sundayoff']} -> $_openSunday, autoconfirm: ${settings['autoconfirm']} -> $_aiConfirm');
+
       // Load hours off - ensure it's a string
       if (settings['listhouroff'] != null) {
         final hoursValue = settings['listhouroff'];
         _hoursOffController.text = hoursValue.toString();
       }
-      
+
       // Load days off
-      if (settings['listoffday'] != null && settings['listoffday'].toString().isNotEmpty) {
+      if (settings['listoffday'] != null &&
+          settings['listoffday'].toString().isNotEmpty) {
         _selectedDaysOff.clear();
         final dateFormat = RegExp(r'(\d{4})-(\d{2})-(\d{2})');
-        final matches = dateFormat.allMatches(settings['listoffday'].toString());
+        final matches =
+            dateFormat.allMatches(settings['listoffday'].toString());
         for (var match in matches) {
           final year = int.parse(match.group(1)!);
           final month = int.parse(match.group(2)!);
@@ -97,15 +93,18 @@ class _SettingPageState extends State<SettingPage> {
     try {
       final prefs = await SharedPreferences.getInstance();
       final bookingSettingsJson = prefs.getString('bookingSettings');
-      
+
       if (bookingSettingsJson != null) {
-        final bookingSettings = jsonDecode(bookingSettingsJson) as Map<String, dynamic>;
-        print('[SettingPage] Loaded booking settings from SharedPreferences: $bookingSettings');
-        
+        final bookingSettings =
+            jsonDecode(bookingSettingsJson) as Map<String, dynamic>;
+        print(
+            '[SettingPage] Loaded booking settings from SharedPreferences: $bookingSettings');
+
         // Also update the provider so it has the data
-        final settingProvider = Provider.of<SettingProvider>(context, listen: false);
+        final settingProvider =
+            Provider.of<SettingProvider>(context, listen: false);
         settingProvider.updateBookingSettings(bookingSettings);
-        
+
         _applySettings(bookingSettings);
       } else {
         print('[SettingPage] No settings in SharedPreferences, using defaults');
@@ -121,16 +120,19 @@ class _SettingPageState extends State<SettingPage> {
   /// Database stores: 'true' or 'false' (lowercase strings)
   bool _parseBooleanString(dynamic value) {
     if (value == null) return false;
-    
+
     if (value is bool) return value;
     if (value is int) return value == 1;
-    
+
     if (value is String) {
       final lowerValue = value.toLowerCase().trim();
       // Handle database string values
-      return lowerValue == 'true' || lowerValue == '1' || lowerValue == 'on' || lowerValue == 'yes';
+      return lowerValue == 'true' ||
+          lowerValue == '1' ||
+          lowerValue == 'on' ||
+          lowerValue == 'yes';
     }
-    
+
     return false;
   }
 
@@ -141,7 +143,7 @@ class _SettingPageState extends State<SettingPage> {
       _autoBooking = true;
       _openSunday = false;
       _aiConfirm = false;
-      
+
       _selectedDaysOff.clear();
       final defaultDaysStr = '';
       final dateFormat = RegExp(r'(\d{4})-(\d{2})-(\d{2})');
@@ -157,12 +159,6 @@ class _SettingPageState extends State<SettingPage> {
 
   @override
   void dispose() {
-    // Resume booking auto-refresh when closing this page
-    final bookingProvider =
-        Provider.of<BookingProvider>(context, listen: false);
-    bookingProvider.resumeAutoRefresh();
-    print('[SettingPage] Closed, auto-refresh resumed');
-    
     _numStaffController.dispose();
     _hoursOffController.dispose();
     super.dispose();
@@ -173,36 +169,39 @@ class _SettingPageState extends State<SettingPage> {
       // Get setting provider first
       final settingProvider =
           Provider.of<SettingProvider>(context, listen: false);
-      
+
       // Get the pkey value - it should be preserved from the initial load
       String pkeyValue = '';
       if (settingProvider.bookingSettings != null) {
         // pkey is stored with key 'pkey'
         pkeyValue = settingProvider.bookingSettings!['pkey']?.toString() ?? '';
       }
-      
+
       // Validate num staff input
       final staffText = _numStaffController.text.trim();
       if (staffText.isEmpty) {
-        showAlertDialog(context, 'Error', 'NUM STAFF FOR AUTO BOOKING cannot be empty');
+        showAlertDialog(
+            context, 'Error', 'NUM STAFF FOR AUTO BOOKING cannot be empty');
         return;
       }
-      
+
       // Collect all settings data
       final numStaff = int.parse(staffText);
-      
+
       // Convert selected days to string format (YYYY-MM-DD,YYYY-MM-DD,...)
       final daysOffString = _selectedDaysOff
-          .map((date) => '${date.year}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}')
+          .map((date) =>
+              '${date.year}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}')
           .join(',');
-      
+
       // Get hours off string
       final hoursOff = _hoursOffController.text;
 
       // Build settings object for API - ALL fields as strings to match backend format
       final settingsData = {
         'pkey': pkeyValue,
-        'num_staff_for_autobooking': numStaff.toString(),  // Convert to string for API
+        'num_staff_for_autobooking':
+            numStaff.toString(), // Convert to string for API
         'onoff': _autoBooking ? 'true' : 'false',
         'sundayoff': _openSunday ? 'true' : 'false',
         'autoconfirm': _aiConfirm ? 'true' : 'false',
@@ -215,7 +214,8 @@ class _SettingPageState extends State<SettingPage> {
       // Update provider (local storage) - use database field names for consistency
       final bookingSettingsToStore = {
         'pkey': pkeyValue,
-        'num_staff_for_autobooking': numStaff,  // Keep as int - provider will convert to string when saving
+        'num_staff_for_autobooking':
+            numStaff, // Keep as int - provider will convert to string when saving
         'onoff': _autoBooking ? 'true' : 'false',
         'sundayoff': _openSunday ? 'true' : 'false',
         'autoconfirm': _aiConfirm ? 'true' : 'false',
@@ -471,16 +471,16 @@ class _SettingPageState extends State<SettingPage> {
                         runSpacing: 8,
                         children: _selectedDaysOff
                             .map((date) => Chip(
-                              label: Text(
-                                '${date.year}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}',
-                              ),
-                              onDeleted: () {
-                                setState(() {
-                                  _selectedDaysOff.remove(date);
-                                });
-                              },
-                              deleteIcon: const Icon(Icons.close, size: 18),
-                            ))
+                                  label: Text(
+                                    '${date.year}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}',
+                                  ),
+                                  onDeleted: () {
+                                    setState(() {
+                                      _selectedDaysOff.remove(date);
+                                    });
+                                  },
+                                  deleteIcon: const Icon(Icons.close, size: 18),
+                                ))
                             .toList(),
                       )
                     else
@@ -518,7 +518,8 @@ class _SettingPageState extends State<SettingPage> {
                       controller: _hoursOffController,
                       maxLines: 3,
                       decoration: InputDecoration(
-                        hintText: 'Hour numbers separated by comma (e.g., 18,19,20,)',
+                        hintText:
+                            'Hour numbers separated by comma (e.g., 18,19,20,)',
                         border: OutlineInputBorder(
                           borderSide: BorderSide(color: Colors.grey[300]!),
                         ),

@@ -8,14 +8,13 @@ class BookingProvider with ChangeNotifier {
   final OnBooking _onbooking = OnBooking();
   late StreamController<List<Booking>> _bookingStreamController;
   late Stream<List<Booking>> _bookingStreamBroadcast;
-  Timer? _refreshTimer;
   Timer? _debounceTimer;
-  bool _isVisible = false; // Track if the page is currently visible
   bool _suppressEmissions =
       false; // Prevent stream updates during UI-sensitive periods
-  static const int POLLING_INTERVAL = 10; // seconds
+  String?
+      _currentViewOption; // Track current view being displayed (e.g., 'pending', 'thisweek')
   static const int DEBOUNCE_MS =
-      1000; // Increased debounce to prevent rapid updates
+      300; // Reduced debounce for faster response while preventing rapid updates
   String _salonName = 'Salon'; // Store salon name from backend
   Map<String, dynamic>? _appSettings;
 
@@ -38,81 +37,13 @@ class BookingProvider with ChangeNotifier {
         _bookingStreamController.stream.asBroadcastStream();
   }
 
-  void startAutoRefresh() {
-    _isVisible = true;
-    // Avoid starting multiple timers
-    if (_refreshTimer != null) {
-      return;
-    }
-
-    // Load initial data immediately
-    _loadBookings();
-
-    _refreshTimer = Timer.periodic(
-      Duration(seconds: POLLING_INTERVAL),
-      (_) {
-        // Only load if the page is still visible
-        if (_isVisible) {
-          _loadBookings();
-        }
-      },
-    );
-  }
-
-  void stopAutoRefresh() {
-    _refreshTimer?.cancel();
-    _refreshTimer = null;
-    _isVisible = false;
-  }
-
-  void pauseAutoRefresh() {
-    _refreshTimer?.cancel();
-    _refreshTimer = null;
-    _isVisible = false;
-    _suppressEmissions = true;
-    _debounceTimer?.cancel();
-  }
-
-  void resumeAutoRefresh() {
-    _isVisible = true;
-    _suppressEmissions = false;
-    // Restart the timer
-    if (_refreshTimer == null) {
-      _loadBookings();
-      _refreshTimer = Timer.periodic(
-        Duration(seconds: POLLING_INTERVAL),
-        (_) {
-          if (_isVisible && !_suppressEmissions) {
-            _loadBookings();
-          }
-        },
-      );
-    }
-  }
-
-  Future<void> _loadBookings() async {
-    try {
-      final bookings = await apiManager.ListBooking();
-      for (int i = 0; i < bookings.length; i++) {}
-
-      // Debounce the stream update to prevent rapid consecutive updates
-      _debounceTimer?.cancel();
-      _debounceTimer = Timer(const Duration(milliseconds: DEBOUNCE_MS), () {
-        if (!_bookingStreamController.isClosed && !_suppressEmissions) {
-          // Schedule the update for the next frame to avoid interrupting current frame
-          WidgetsBinding.instance.addPostFrameCallback((_) {
-            if (!_bookingStreamController.isClosed && !_suppressEmissions) {
-              _bookingStreamController.add(bookings);
-            }
-          });
-        }
-      });
-    } catch (e) {}
-  }
-
   void manualRefresh() async {
     try {
-      final bookings = await apiManager.ListBooking();
+      print('[BookingProvider] Manual refresh triggered');
+      // Load bookings based on current view option or all if not set
+      final bookings = _currentViewOption != null
+          ? await apiManager.ListBooking(opt: _currentViewOption)
+          : await apiManager.ListBooking();
       if (!_bookingStreamController.isClosed && !_suppressEmissions) {
         // Schedule update for next frame
         WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -121,7 +52,9 @@ class BookingProvider with ChangeNotifier {
           }
         });
       }
-    } catch (e) {}
+    } catch (e) {
+      print('[BookingProvider] Error during manual refresh: $e');
+    }
   }
 
   Stream<List<Booking>> get bookingStream => _bookingStreamBroadcast;
@@ -130,31 +63,43 @@ class BookingProvider with ChangeNotifier {
 
   Future<void> loadBookingsWithDate(String date) async {
     try {
+      print('[BookingProvider] Loading bookings for date: $date');
+      final startTime = DateTime.now();
       final bookings = await apiManager.ListBooking(opt: date);
+      final duration = DateTime.now().difference(startTime);
+      print(
+          '[BookingProvider] Loaded ${bookings.length} bookings in ${duration.inMilliseconds}ms');
+
       if (!_bookingStreamController.isClosed && !_suppressEmissions) {
-        // Schedule update for next frame
-        WidgetsBinding.instance.addPostFrameCallback((_) {
-          if (!_bookingStreamController.isClosed && !_suppressEmissions) {
-            _bookingStreamController.add(bookings);
-          }
-        });
+        // Emit immediately for date-based loads
+        _bookingStreamController.add(bookings);
       }
-    } catch (e) {}
+    } catch (e) {
+      print('[BookingProvider] Error loading bookings with date $date: $e');
+    }
   }
 
   Future<void> loadBookingsWithOption(String option) async {
     try {
+      print('[BookingProvider] Loading bookings with option: $option');
+      final startTime = DateTime.now();
       final bookings = await apiManager.ListBooking(opt: option);
+      final duration = DateTime.now().difference(startTime);
+      print(
+          '[BookingProvider] Loaded ${bookings.length} bookings in ${duration.inMilliseconds}ms');
 
       if (!_bookingStreamController.isClosed && !_suppressEmissions) {
-        // Schedule update for next frame
-        WidgetsBinding.instance.addPostFrameCallback((_) {
-          if (!_bookingStreamController.isClosed && !_suppressEmissions) {
-            _bookingStreamController.add(bookings);
-          }
-        });
+        // Emit immediately without debounce for manual option-based loads
+        _bookingStreamController.add(bookings);
       }
-    } catch (e) {}
+    } catch (e) {
+      print('[BookingProvider] Error loading bookings with option $option: $e');
+    }
+  }
+
+  void setCurrentViewOption(String? option) {
+    _currentViewOption = option;
+    print('[BookingProvider] Current view option set to: $_currentViewOption');
   }
 
   void resetBooking() {
@@ -271,7 +216,6 @@ class BookingProvider with ChangeNotifier {
 
   @override
   void dispose() {
-    _refreshTimer?.cancel();
     _debounceTimer?.cancel();
     _bookingStreamController.close();
     super.dispose();

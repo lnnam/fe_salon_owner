@@ -14,17 +14,20 @@ import 'package:provider/provider.dart';
 import 'package:salonapp/provider/booking.provider.dart';
 
 class BookingHomeScreen extends StatefulWidget {
-  const BookingHomeScreen({super.key});
+  final String?
+      initialView; // Optional initial view: 'pending', 'today', 'week', 'log'
+
+  const BookingHomeScreen({super.key, this.initialView});
 
   @override
   _BookingHomeScreenState createState() => _BookingHomeScreenState();
 }
 
-class _BookingHomeScreenState extends State<BookingHomeScreen>
-    with WidgetsBindingObserver {
+class _BookingHomeScreenState extends State<BookingHomeScreen> {
   int _selectedNavIndex = 0;
   int _todayCount = 0;
   int _weekCount = 0;
+  int _monthCount = 0;
   int _logCount = 0;
   int _pendingCount = 0;
   bool _isLogView = false;
@@ -33,23 +36,46 @@ class _BookingHomeScreenState extends State<BookingHomeScreen>
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance.addObserver(this);
     // Set editMode to false when home page loads. Use post-frame to avoid
     // calling provider during widget construction.
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final bookingProvider =
           Provider.of<BookingProvider>(context, listen: false);
       bookingProvider.resetBooking();
-      // Start auto-refresh polling only on this page
-      bookingProvider.startAutoRefresh();
-      // Load initial counts
-      _loadInitialCounts(bookingProvider);
+
+      // Load view based on initialView parameter or default to week
+      if (widget.initialView == 'pending') {
+        _loadPendingBookings(bookingProvider);
+        setState(() {
+          _selectedNavIndex = 4; // Set to Pending tab
+        });
+      } else if (widget.initialView == 'today') {
+        _loadTodayBookings(bookingProvider);
+        setState(() {
+          _selectedNavIndex = 1; // Set to Today tab
+        });
+      } else if (widget.initialView == 'log') {
+        _loadLogBookings(bookingProvider);
+        setState(() {
+          _selectedNavIndex = 3; // Set to Log tab
+        });
+      } else {
+        // Default to month view on init
+        _loadMonthBookings(bookingProvider);
+        setState(() {
+          _selectedNavIndex =
+              0; // Set to Find tab (no highlight, just valid index)
+        });
+      }
+
+      // Load counts in background without blocking UI
+      _loadCountsInBackground(bookingProvider);
       // debug log
-      print('[BookingHomeScreen] Initialized, auto-refresh started');
+      print('[BookingHomeScreen] Initialized with month view');
     });
   }
 
-  Future<void> _loadInitialCounts(BookingProvider bookingProvider) async {
+  Future<void> _loadCountsInBackground(BookingProvider bookingProvider) async {
     try {
       // Log the API URL for booking list
       print('[API] Booking List URL: ' + AppConfig.api_url_booking_home);
@@ -61,6 +87,9 @@ class _BookingHomeScreenState extends State<BookingHomeScreen>
       // Load week bookings count
       final weekBookings = await apiManager.ListBooking(opt: 'thisweek');
 
+      // Load month bookings count
+      final monthBookings = await apiManager.ListBooking(opt: 'thismonth');
+
       // Load log bookings count
       final logBookings = await apiManager.ListBooking(opt: 'new');
 
@@ -71,58 +100,21 @@ class _BookingHomeScreenState extends State<BookingHomeScreen>
         setState(() {
           _todayCount = todayBookings.length;
           _weekCount = weekBookings.length;
+          _monthCount = monthBookings.length;
           _logCount = logBookings.length;
           _pendingCount = pendingBookings.length;
         });
       }
       print(
-          '[BookingHomeScreen] Counts loaded - Today: $_todayCount, Week: $_weekCount, Log: $_logCount, Pending: $_pendingCount');
+          '[BookingHomeScreen] Counts loaded - Today: $_todayCount, Week: $_weekCount, Month: $_monthCount, Log: $_logCount, Pending: $_pendingCount');
     } catch (e) {
       print('[BookingHomeScreen] Error loading counts: $e');
-      if (mounted) {
-        WidgetsBinding.instance.addPostFrameCallback((_) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text('Cannot connect to server. Please check your network or try again later.'),
-              backgroundColor: Colors.red,
-            ),
-          );
-        });
-      }
-    }
-  }
-
-  @override
-  void didChangeAppLifecycleState(AppLifecycleState state) {
-    final bookingProvider =
-        Provider.of<BookingProvider>(context, listen: false);
-    if (state == AppLifecycleState.paused ||
-        state == AppLifecycleState.detached) {
-      // App is paused or detached, pause polling
-      bookingProvider.pauseAutoRefresh();
-      print('[BookingHomeScreen] App lifecycle: $state, auto-refresh paused');
-    } else if (state == AppLifecycleState.resumed) {
-      // App is resumed, only resume if BookingHomeScreen is currently visible
-      // Check if there's a route on top of this one
-      if (Navigator.of(context).canPop()) {
-        // There's another page on top, don't resume auto-refresh
-        print('[BookingHomeScreen] App lifecycle: resumed, but page is not in focus, auto-refresh NOT resumed');
-      } else {
-        // BookingHomeScreen is the active page, resume polling
-        bookingProvider.resumeAutoRefresh();
-        print('[BookingHomeScreen] App lifecycle: resumed, auto-refresh resumed');
-      }
     }
   }
 
   @override
   void dispose() {
-    WidgetsBinding.instance.removeObserver(this);
-    // Stop auto-refresh when leaving this page
-    final bookingProvider =
-        Provider.of<BookingProvider>(context, listen: false);
-    bookingProvider.stopAutoRefresh();
-    print('[BookingHomeScreen] Disposed, auto-refresh stopped');
+    print('[BookingHomeScreen] Disposed');
     super.dispose();
   }
 
@@ -430,25 +422,56 @@ class _BookingHomeScreenState extends State<BookingHomeScreen>
         actions: [
           Consumer<BookingProvider>(
             builder: (context, bookingProvider, child) {
-              return IconButton(
-                icon: const Icon(Icons.refresh, color: Colors.white),
-                onPressed: () {
-                  if (_isScrolling) {
-                    WidgetsBinding.instance.addPostFrameCallback((_) {
-                      if (!mounted) return;
-                      ScaffoldMessenger.of(context).hideCurrentSnackBar();
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(
-                          duration: Duration(milliseconds: 800),
-                          content: Text('Please wait for scrolling to finish'),
+              return Stack(
+                alignment: Alignment.topRight,
+                children: [
+                  IconButton(
+                    icon: const Icon(Icons.refresh, color: Colors.white),
+                    onPressed: () {
+                      if (_isScrolling) {
+                        WidgetsBinding.instance.addPostFrameCallback((_) {
+                          if (!mounted) return;
+                          ScaffoldMessenger.of(context).hideCurrentSnackBar();
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(
+                              duration: Duration(milliseconds: 800),
+                              content:
+                                  Text('Please wait for scrolling to finish'),
+                            ),
+                          );
+                        });
+                        return;
+                      }
+                      print('[BookingHomeScreen] Manual refresh button tapped');
+                      _loadMonthBookings(bookingProvider);
+                    },
+                  ),
+                  if (_monthCount > 0)
+                    Positioned(
+                      right: 8,
+                      top: 8,
+                      child: Container(
+                        padding: const EdgeInsets.all(4),
+                        decoration: BoxDecoration(
+                          color: Colors.red,
+                          borderRadius: BorderRadius.circular(10),
                         ),
-                      );
-                    });
-                    return;
-                  }
-                  print('[BookingHomeScreen] Manual refresh button tapped');
-                  bookingProvider.manualRefresh();
-                },
+                        constraints: const BoxConstraints(
+                          minWidth: 20,
+                          minHeight: 20,
+                        ),
+                        child: Text(
+                          '$_monthCount',
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 12,
+                            fontWeight: FontWeight.bold,
+                          ),
+                          textAlign: TextAlign.center,
+                        ),
+                      ),
+                    ),
+                ],
               );
             },
           ),
@@ -479,18 +502,12 @@ class _BookingHomeScreenState extends State<BookingHomeScreen>
                   color: Colors.grey[50],
                   child: NotificationListener<ScrollNotification>(
                     onNotification: (notification) {
-                      final bp =
-                          Provider.of<BookingProvider>(context, listen: false);
                       if (notification is ScrollStartNotification &&
                           !_isScrolling) {
                         _isScrolling = true;
-                        bp.pauseAutoRefresh();
                       } else if (notification is ScrollEndNotification &&
                           _isScrolling) {
                         _isScrolling = false;
-                        Future.delayed(const Duration(milliseconds: 300), () {
-                          if (mounted && !_isScrolling) bp.resumeAutoRefresh();
-                        });
                       }
                       return false;
                     },
@@ -523,18 +540,12 @@ class _BookingHomeScreenState extends State<BookingHomeScreen>
                 color: Colors.grey[50],
                 child: NotificationListener<ScrollNotification>(
                   onNotification: (notification) {
-                    final bp =
-                        Provider.of<BookingProvider>(context, listen: false);
                     if (notification is ScrollStartNotification &&
                         !_isScrolling) {
                       _isScrolling = true;
-                      bp.pauseAutoRefresh();
                     } else if (notification is ScrollEndNotification &&
                         _isScrolling) {
                       _isScrolling = false;
-                      Future.delayed(const Duration(milliseconds: 300), () {
-                        if (mounted && !_isScrolling) bp.resumeAutoRefresh();
-                      });
                     }
                     return false;
                   },
@@ -651,9 +662,7 @@ class _BookingHomeScreenState extends State<BookingHomeScreen>
     final bookingProvider =
         Provider.of<BookingProvider>(context, listen: false);
 
-    // Stop auto-refresh when bottom menu is clicked
-    bookingProvider.stopAutoRefresh();
-    print('[BookingHomeScreen] Auto-refresh stopped after bottom menu click');
+    print('[BookingHomeScreen] Bottom nav tab clicked: $index');
 
     switch (index) {
       case 0:
@@ -715,6 +724,7 @@ class _BookingHomeScreenState extends State<BookingHomeScreen>
     setState(() {
       _isLogView = false;
     });
+    bookingProvider.setCurrentViewOption(formattedDate);
     bookingProvider.loadBookingsWithDate(formattedDate);
   }
 
@@ -723,7 +733,17 @@ class _BookingHomeScreenState extends State<BookingHomeScreen>
     setState(() {
       _isLogView = false;
     });
+    bookingProvider.setCurrentViewOption('thisweek');
     bookingProvider.loadBookingsWithOption('thisweek');
+  }
+
+  void _loadMonthBookings(BookingProvider bookingProvider) {
+    print('[BookingHomeScreen] Loading bookings for this month');
+    setState(() {
+      _isLogView = false;
+    });
+    bookingProvider.setCurrentViewOption('thismonth');
+    bookingProvider.loadBookingsWithOption('thismonth');
   }
 
   void _loadLogBookings(BookingProvider bookingProvider) {
@@ -731,6 +751,7 @@ class _BookingHomeScreenState extends State<BookingHomeScreen>
     setState(() {
       _isLogView = true;
     });
+    bookingProvider.setCurrentViewOption('new');
     bookingProvider.loadBookingsWithOption('new');
   }
 
@@ -739,6 +760,7 @@ class _BookingHomeScreenState extends State<BookingHomeScreen>
     setState(() {
       _isLogView = false;
     });
+    bookingProvider.setCurrentViewOption('pending');
     bookingProvider.loadBookingsWithOption('pending');
   }
 }

@@ -18,22 +18,10 @@ class ServicePageState extends State<ServicePage> {
   @override
   void initState() {
     super.initState();
-    // Pause booking auto-refresh when opening this page
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      final bookingProvider =
-          Provider.of<BookingProvider>(context, listen: false);
-      bookingProvider.pauseAutoRefresh();
-      print('[ServicePage] Opened, auto-refresh paused');
-    });
   }
 
   @override
   void dispose() {
-    // Resume booking auto-refresh when closing this page
-    final bookingProvider =
-        Provider.of<BookingProvider>(context, listen: false);
-    bookingProvider.resumeAutoRefresh();
-    print('[ServicePage] Closed, auto-refresh resumed');
     super.dispose();
   }
 

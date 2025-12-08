@@ -21,12 +21,13 @@ class ServerException implements Exception {
 }
 
 class MyHttp {
-    Future<dynamic> saveBooking(Map<String, dynamic> bookingData) async {
-      final String url = AppConfig.api_url_booking_save;
-      print('[API] Booking Save URL: ' + url);
-      // ...existing code for making the request...
-      // You can implement the actual request logic here or add this print to your existing save method.
-    }
+  Future<dynamic> saveBooking(Map<String, dynamic> bookingData) async {
+    final String url = AppConfig.api_url_booking_save;
+    print('[API] Booking Save URL: ' + url);
+    // ...existing code for making the request...
+    // You can implement the actual request logic here or add this print to your existing save method.
+  }
+
   /// @param username user salonkey
   /// @param password user username
   /// @param password user password
@@ -75,15 +76,17 @@ class MyHttp {
       };
 
       print('[HTTP] Making GET request to: $apiEndpoint');
-      
-      // Making the HTTP GET request with timeout
-      final http.Response response = await http.get(uri, headers: headers).timeout(
-        const Duration(seconds: 30),
-        onTimeout: () => throw TimeoutException('Request timed out after 30 seconds'),
-      );
-      
+
+      // Making the HTTP GET request with timeout (20s for faster feedback)
+      final http.Response response =
+          await http.get(uri, headers: headers).timeout(
+                const Duration(seconds: 20),
+                onTimeout: () => throw TimeoutException(
+                    'Request timed out after 20 seconds. Server may be slow or unreachable.'),
+              );
+
       print('[HTTP] Response status: ${response.statusCode}');
-      
+
       // Handling response
       if (response.statusCode == 200) {
         print(
@@ -100,7 +103,8 @@ class MyHttp {
         print(
             '[HTTP] fetchFromServer: Failed with status ${response.statusCode}');
         throw ServerException(
-          message: 'Server error (${response.statusCode}). Please try again later.',
+          message:
+              'Server error (${response.statusCode}). Please try again later.',
           originalError: response.statusCode,
         );
       }
@@ -108,18 +112,22 @@ class MyHttp {
       rethrow; // Re-throw our custom exception as-is
     } catch (e) {
       print('[HTTP] Error in fetchFromServer: $e');
-      String userMessage = 'An unexpected error occurred. Please try again later.';
-      
+      String userMessage =
+          'An unexpected error occurred. Please try again later.';
+
       if (e.toString().contains('Connection refused')) {
-        userMessage = 'Cannot connect to server. Please check your network connection.';
+        userMessage =
+            'Cannot connect to server. Please check your network connection.';
       } else if (e.toString().contains('timed out') || e is TimeoutException) {
-        userMessage = 'Request timeout. Please check your network and try again.';
-      } else if (e.toString().contains('Connection refused') || 
-                 e.toString().contains('Failed to connect') ||
-                 e.toString().contains('Network unreachable')) {
-        userMessage = 'Cannot connect to server. Please check your network connection.';
+        userMessage =
+            'Request timeout. Please check your network and try again.';
+      } else if (e.toString().contains('Connection refused') ||
+          e.toString().contains('Failed to connect') ||
+          e.toString().contains('Network unreachable')) {
+        userMessage =
+            'Cannot connect to server. Please check your network connection.';
       }
-      
+
       throw ServerException(
         message: userMessage,
         originalError: e,
@@ -134,7 +142,11 @@ class MyHttp {
         endpoint = '$endpoint?opt=$opt';
       }
 
+      print('[API] Loading bookings from: $endpoint');
+      final startTime = DateTime.now();
       final response = await fetchFromServer(endpoint);
+      final duration = DateTime.now().difference(startTime);
+      print('[API] API response received in ${duration.inMilliseconds}ms');
 
       List<Booking> bookings = [];
 
@@ -151,6 +163,7 @@ class MyHttp {
             response.map<Booking>((item) => Booking.fromJson(item)).toList();
       }
 
+      print('[API] Parsed ${bookings.length} bookings');
       return bookings;
     } catch (error) {
       print('[HTTP] ListBooking: ERROR - $error');
@@ -453,25 +466,28 @@ class MyHttp {
       if (response.statusCode == 200) {
         final responseData = jsonDecode(response.body) as Map<String, dynamic>;
         print('[HTTP] fetchAppSettings: Decoded response: $responseData');
-        
+
         // Extract settings array
-        if (responseData.containsKey('settings') && responseData['settings'] is List) {
+        if (responseData.containsKey('settings') &&
+            responseData['settings'] is List) {
           final settingsList = responseData['settings'] as List;
           if (settingsList.isNotEmpty) {
             final settings = settingsList[0] as Map<String, dynamic>;
-            print('[HTTP] fetchAppSettings: Successfully extracted settings: $settings');
+            print(
+                '[HTTP] fetchAppSettings: Successfully extracted settings: $settings');
             return settings;
           }
         }
-        
+
         print('[HTTP] fetchAppSettings: Invalid response structure');
         return null;
       } else {
-        print('[HTTP] fetchAppSettings: Failed with status ${response.statusCode}');
+        print(
+            '[HTTP] fetchAppSettings: Failed with status ${response.statusCode}');
         return null;
       }
     } catch (e) {
-        print('[HTTP] fetchAppSettings: ERROR - $e');
+      print('[HTTP] fetchAppSettings: ERROR - $e');
       return null;
     }
   }
@@ -482,9 +498,9 @@ class MyHttp {
     try {
       final User currentUser = await getCurrentUser();
       final String token = currentUser.token;
-      
+
       final Uri uri = Uri.parse(AppConfig.api_url_booking_setting_update);
-      
+
       final Map<String, String> headers = {
         'Authorization': 'Bearer $token',
         'Content-Type': 'application/json',
@@ -493,23 +509,28 @@ class MyHttp {
       print('[HTTP] saveBookingSetting: POST to $uri');
       print('[HTTP] saveBookingSetting: Data: $settingsData');
 
-      final response = await http.post(
-        uri,
-        headers: headers,
-        body: jsonEncode(settingsData),
-      ).timeout(
-        const Duration(seconds: 30),
-        onTimeout: () => throw TimeoutException('Request timed out after 30 seconds'),
-      );
+      final response = await http
+          .post(
+            uri,
+            headers: headers,
+            body: jsonEncode(settingsData),
+          )
+          .timeout(
+            const Duration(seconds: 30),
+            onTimeout: () =>
+                throw TimeoutException('Request timed out after 30 seconds'),
+          );
 
-      print('[HTTP] saveBookingSetting: Response status: ${response.statusCode}');
+      print(
+          '[HTTP] saveBookingSetting: Response status: ${response.statusCode}');
       print('[HTTP] saveBookingSetting: Response body: ${response.body}');
 
       if (response.statusCode == 200 || response.statusCode == 201) {
         print('[HTTP] saveBookingSetting: Success');
         return true;
       } else {
-        print('[HTTP] saveBookingSetting: Failed with status ${response.statusCode}');
+        print(
+            '[HTTP] saveBookingSetting: Failed with status ${response.statusCode}');
         return false;
       }
     } catch (e) {

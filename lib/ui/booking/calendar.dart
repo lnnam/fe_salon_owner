@@ -23,11 +23,6 @@ class _BookingCalendarPageState extends State<BookingCalendarPage> {
   @override
   void initState() {
     super.initState();
-    // Pause booking auto-refresh when opening this page
-    final bookingProvider =
-        Provider.of<BookingProvider>(context, listen: false);
-    bookingProvider.pauseAutoRefresh();
-    print('[BookingCalendarPage] Opened, auto-refresh paused');
 
     mockBookingService = BookingService(
         serviceName: 'Mock Service',
@@ -38,11 +33,6 @@ class _BookingCalendarPageState extends State<BookingCalendarPage> {
 
   @override
   void dispose() {
-    // Resume booking auto-refresh when closing this page
-    final bookingProvider =
-        Provider.of<BookingProvider>(context, listen: false);
-    bookingProvider.resumeAutoRefresh();
-    print('[BookingCalendarPage] Closed, auto-refresh resumed');
     super.dispose();
   }
 

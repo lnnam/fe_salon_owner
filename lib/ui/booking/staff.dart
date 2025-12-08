@@ -1,6 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:http/http.dart' as http;
-import 'dart:convert';
 import 'package:provider/provider.dart';
 import 'package:salonapp/api/api_manager.dart';
 import 'package:salonapp/model/staff.dart';
@@ -20,22 +18,10 @@ class StaffPageState extends State<StaffPage> {
   @override
   void initState() {
     super.initState();
-    // Pause booking auto-refresh when opening this page
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      final bookingProvider =
-          Provider.of<BookingProvider>(context, listen: false);
-      bookingProvider.pauseAutoRefresh();
-      print('[StaffPage] Opened, auto-refresh paused');
-    });
   }
 
   @override
   void dispose() {
-    // Resume booking auto-refresh when closing this page
-    final bookingProvider =
-        Provider.of<BookingProvider>(context, listen: false);
-    bookingProvider.resumeAutoRefresh();
-    print('[StaffPage] Closed, auto-refresh resumed');
     super.dispose();
   }
 
@@ -54,7 +40,8 @@ class StaffPageState extends State<StaffPage> {
             WidgetsBinding.instance.addPostFrameCallback((_) {
               ScaffoldMessenger.of(context).showSnackBar(
                 const SnackBar(
-                  content: Text('Cannot connect to server. Please check your network or try again later.'),
+                  content: Text(
+                      'Cannot connect to server. Please check your network or try again later.'),
                   backgroundColor: Colors.red,
                 ),
               );

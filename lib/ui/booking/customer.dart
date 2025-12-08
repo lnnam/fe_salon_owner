@@ -24,22 +24,10 @@ class _CustomerPageState extends State<CustomerPage> {
     super.initState();
     _searchController.addListener(_filterCustomers);
     _fetchCustomers();
-    // Pause booking auto-refresh when opening this page
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      final bookingProvider =
-          Provider.of<BookingProvider>(context, listen: false);
-      bookingProvider.pauseAutoRefresh();
-      print('[CustomerPage] Opened, auto-refresh paused');
-    });
   }
 
   @override
   void dispose() {
-    // Resume booking auto-refresh when closing this page
-    final bookingProvider =
-        Provider.of<BookingProvider>(context, listen: false);
-    bookingProvider.resumeAutoRefresh();
-    print('[CustomerPage] Closed, auto-refresh resumed');
     _searchController.dispose();
     super.dispose();
   }
@@ -49,7 +37,7 @@ class _CustomerPageState extends State<CustomerPage> {
       // Log the API URL for customer list
       print('[API] Customer List URL: ' + AppConfig.api_url_booking_customer);
       List<Customer> customers = await apiManager.ListCustomer();
-     
+
       if (!mounted) return;
       setState(() {
         _customerList = customers;
@@ -61,7 +49,8 @@ class _CustomerPageState extends State<CustomerPage> {
         WidgetsBinding.instance.addPostFrameCallback((_) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: Text('Cannot connect to server. Please check your network or try again later.'),
+              content: Text(
+                  'Cannot connect to server. Please check your network or try again later.'),
               backgroundColor: Colors.red,
             ),
           );
@@ -87,12 +76,6 @@ class _CustomerPageState extends State<CustomerPage> {
     final phoneController = TextEditingController(text: _searchController.text);
     final dobController = TextEditingController();
     bool isLoading = false;
-
-    // Ensure booking refresh is paused while dialog is open
-    final bookingProvider =
-        Provider.of<BookingProvider>(context, listen: false);
-    bookingProvider.pauseAutoRefresh();
-    print('[CustomerPage] Dialog opened, booking refresh paused');
 
     showDialog(
       context: context,
@@ -174,13 +157,6 @@ class _CustomerPageState extends State<CustomerPage> {
                             onPressed: isLoading
                                 ? null
                                 : () {
-                                    // Resume booking refresh when closing dialog
-                                    final bookingProvider =
-                                        Provider.of<BookingProvider>(context,
-                                            listen: false);
-                                    bookingProvider.resumeAutoRefresh();
-                                    print(
-                                        '[CustomerPage] Dialog closed, booking refresh resumed');
                                     Navigator.of(dialogContext).pop();
                                   },
                             child: const Text('Cancel'),
@@ -235,15 +211,6 @@ class _CustomerPageState extends State<CustomerPage> {
 
                                         // Close the dialog first
                                         if (mounted) {
-                                          // Resume booking refresh when closing dialog
-                                          final bookingProvider =
-                                              Provider.of<BookingProvider>(
-                                                  context,
-                                                  listen: false);
-                                          bookingProvider.resumeAutoRefresh();
-                                          print(
-                                              '[CustomerPage] Dialog closed after customer add, booking refresh resumed');
-
                                           Navigator.of(dialogContext).pop();
 
                                           // Set the new customer in the provider
