@@ -29,6 +29,7 @@ class _BookingHomeScreenState extends State<BookingHomeScreen> {
   int _monthCount = 0;
   int _logCount = 0;
   int _pendingCount = 0;
+  int _dateCount = 0;
 
   StreamSubscription<List<Booking>>? _bookingSub;
 
@@ -62,6 +63,9 @@ class _BookingHomeScreenState extends State<BookingHomeScreen> {
         switch (opt) {
           case 'thismonth':
             _maybeUpdateCount(_monthCount, () => _monthCount = list.length);
+            break;
+             case 'datecount':
+            _maybeUpdateCount(_dateCount, () => _dateCount = list.length);
             break;
           case 'thisweek':
             _maybeUpdateCount(_weekCount, () => _weekCount = list.length);
@@ -503,6 +507,13 @@ class _BookingHomeScreenState extends State<BookingHomeScreen> {
     setState(() => _isLogView = false);
     bookingProvider.setCurrentViewOption(formattedDate);
     bookingProvider.loadBookingsWithDate(formattedDate);
+    bookingProvider.bookingStream.first.then((list) {
+      if (mounted) {
+        setState(() {
+          _dateCount = list.length;
+        });
+      }
+    });
   }
 
   void _loadTodayBookings(BookingProvider bookingProvider) {
@@ -510,6 +521,14 @@ class _BookingHomeScreenState extends State<BookingHomeScreen> {
     setState(() => _isLogView = false);
     bookingProvider.setCurrentViewOption(today);
     bookingProvider.loadBookingsWithDate(today);
+    // Listen for the next event and update _dateCount
+    bookingProvider.bookingStream.first.then((list) {
+      if (mounted) {
+        setState(() {
+          _dateCount = list.length;
+        });
+      }
+    });
   }
 
   void _loadWeekBookings(BookingProvider bookingProvider) {
@@ -619,8 +638,43 @@ class _BookingHomeScreenState extends State<BookingHomeScreen> {
       ),
       bottomNavigationBar: BottomNavigationBar(
         items: [
-          const BottomNavigationBarItem(
-              icon: Icon(Icons.search), label: 'Find'),
+          BottomNavigationBarItem(
+            icon: Stack(
+              children: [
+                const Icon(Icons.search),
+                if (_dateCount > 0)
+                  Positioned(
+                    right: 0,
+                    top: 0,
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                      decoration: BoxDecoration(
+                        color: Colors.redAccent,
+                        borderRadius: BorderRadius.circular(10),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withOpacity(0.08),
+                            blurRadius: 2,
+                            offset: const Offset(0, 1),
+                          ),
+                        ],
+                      ),
+                      constraints: const BoxConstraints(minWidth: 16, minHeight: 16),
+                      child: Text(
+                        _dateCount.toString(),
+                        textAlign: TextAlign.center,
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 10,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
+                  ),
+              ],
+            ),
+            label: 'Find',
+          ),
             BottomNavigationBarItem(
               icon: Stack(
                 children: [
@@ -659,116 +713,12 @@ class _BookingHomeScreenState extends State<BookingHomeScreen> {
               label: 'Today',
             ),
           BottomNavigationBarItem(
-            icon: Stack(
-              children: [
-                const Icon(Icons.view_week),
-                if (_weekCount > 0)
-                  Positioned(
-                    right: 0,
-                    top: 0,
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                      decoration: BoxDecoration(
-                        color: Colors.redAccent,
-                        borderRadius: BorderRadius.circular(10),
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.black.withOpacity(0.08),
-                            blurRadius: 2,
-                            offset: const Offset(0, 1),
-                          ),
-                        ],
-                      ),
-                      constraints: const BoxConstraints(minWidth: 16, minHeight: 16),
-                      child: Text(
-                        _weekCount.toString(),
-                        textAlign: TextAlign.center,
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontSize: 10,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                    ),
-                  ),
-              ],
-            ),
-            label: 'Week',
-          ),
+              icon: const Icon(Icons.view_week), label: 'Week ($_weekCount)'),
           BottomNavigationBarItem(
-            icon: Stack(
-              children: [
-                const Icon(Icons.assignment),
-                if (_logCount > 0)
-                  Positioned(
-                    right: 0,
-                    top: 0,
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                      decoration: BoxDecoration(
-                        color: Colors.redAccent,
-                        borderRadius: BorderRadius.circular(10),
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.black.withOpacity(0.08),
-                            blurRadius: 2,
-                            offset: const Offset(0, 1),
-                          ),
-                        ],
-                      ),
-                      constraints: const BoxConstraints(minWidth: 16, minHeight: 16),
-                      child: Text(
-                        _logCount.toString(),
-                        textAlign: TextAlign.center,
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontSize: 10,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                    ),
-                  ),
-              ],
-            ),
-            label: 'Log',
-          ),
+              icon: const Icon(Icons.assignment), label: 'Log ($_logCount)'),
           BottomNavigationBarItem(
-            icon: Stack(
-              children: [
-                const Icon(Icons.hourglass_bottom),
-                if (_pendingCount > 0)
-                  Positioned(
-                    right: 0,
-                    top: 0,
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                      decoration: BoxDecoration(
-                        color: Colors.redAccent,
-                        borderRadius: BorderRadius.circular(10),
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.black.withOpacity(0.08),
-                            blurRadius: 2,
-                            offset: const Offset(0, 1),
-                          ),
-                        ],
-                      ),
-                      constraints: const BoxConstraints(minWidth: 16, minHeight: 16),
-                      child: Text(
-                        _pendingCount.toString(),
-                        textAlign: TextAlign.center,
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontSize: 10,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                    ),
-                  ),
-              ],
-            ),
-            label: 'Pending',
-          ),
+              icon: const Icon(Icons.hourglass_bottom),
+              label: 'Pending ($_pendingCount)'),
         ],
         currentIndex: _selectedNavIndex,
         onTap: _handleBottomNavTap,

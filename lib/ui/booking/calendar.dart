@@ -213,12 +213,12 @@ class _BookingCalendarPageState extends State<BookingCalendarPage> {
         child: BookingCalendar(
           bookingService: mockBookingService,
           convertStreamResultToDateTimeRanges: (
-                  {required dynamic streamResult}) =>
-              streamResult as List<DateTimeRange>,
+              {required dynamic streamResult}) =>
+            streamResult as List<DateTimeRange>,
 
           getBookingStream: (
-                  {required DateTime start, required DateTime end}) =>
-              getBookingStreamFromServer(start: start, end: end),
+              {required DateTime start, required DateTime end}) =>
+            getBookingStreamFromServer(start: start, end: end),
           // convertStreamResultToDateTimeRanges: convertStreamResultMock,
           // getBookingStream: getBookingStreamMock,
           uploadBooking: uploadBookingMock,
@@ -232,9 +232,10 @@ class _BookingCalendarPageState extends State<BookingCalendarPage> {
 
           startingDayOfWeek: StartingDayOfWeek.monday,
           wholeDayIsBookedWidget:
-              const Text('Sorry, for this day everything is booked'),
+            const Text('Sorry, for this day everything is booked'),
           //disabledDates: [DateTime(2023, 1, 20)],
           //disabledDays: [6, 7],
+          bookingButtonColor: color,
         ),
       ),
     );
