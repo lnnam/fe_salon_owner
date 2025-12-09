@@ -128,14 +128,18 @@ class _SummaryPageState extends State<SummaryPage> {
 
   Color _statusColor(String status) {
     final s = status.toLowerCase();
-    if (s.contains('pending') || s.contains('wait'))
+    if (s.contains('pending') || s.contains('wait')) {
       return Colors.orange.shade700;
+    }
     if (s.contains('confirm') ||
         s.contains('booked') ||
-        s.contains('confirmed')) return Colors.green.shade600;
+        s.contains('confirmed')) {
+      return Colors.green.shade600;
+    }
     if (s.contains('cancel') || s.contains('void')) return Colors.red.shade600;
-    if (s.contains('done') || s.contains('completed'))
+    if (s.contains('done') || s.contains('completed')) {
       return Colors.blueGrey.shade600;
+    }
     return Colors.grey.shade600;
   }
 
@@ -145,7 +149,9 @@ class _SummaryPageState extends State<SummaryPage> {
     if (s.contains('confirm') ||
         s.contains('book') ||
         s.contains('booked') ||
-        s.contains('confirmed')) return 'Confirmed';
+        s.contains('confirmed')) {
+      return 'Confirmed';
+    }
     if (s.contains('cancel') || s.contains('void')) return 'Cancelled';
     if (s.contains('done') || s.contains('completed')) return 'Completed';
     return status;
@@ -193,12 +199,12 @@ class _SummaryPageState extends State<SummaryPage> {
                 ],
               ),
             ),
-            content: Padding(
-              padding: const EdgeInsets.symmetric(vertical: 16),
+            content: const Padding(
+              padding: EdgeInsets.symmetric(vertical: 16),
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  const Text(
+                  Text(
                     'Your booking has been confirmed successfully.',
                     textAlign: TextAlign.center,
                     style: TextStyle(
@@ -413,10 +419,10 @@ class _SummaryPageState extends State<SummaryPage> {
               },
             )
           else
-            Opacity(
+            const Opacity(
               opacity: 0.5,
               child: IconButton(
-                icon: const Icon(Icons.sms, color: Colors.white),
+                icon: Icon(Icons.sms, color: Colors.white),
                 tooltip: 'SMS not available',
                 splashRadius: 24,
                 onPressed: null,

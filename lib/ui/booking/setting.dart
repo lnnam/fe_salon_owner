@@ -20,7 +20,7 @@ class _SettingPageState extends State<SettingPage> {
   bool _autoBooking = true;
   bool _openSunday = false;
   bool _aiConfirm = false;
-  List<DateTime> _selectedDaysOff = [];
+  final List<DateTime> _selectedDaysOff = [];
 
   @override
   void initState() {
@@ -145,7 +145,7 @@ class _SettingPageState extends State<SettingPage> {
       _aiConfirm = false;
 
       _selectedDaysOff.clear();
-      final defaultDaysStr = '';
+      const defaultDaysStr = '';
       final dateFormat = RegExp(r'(\d{4})-(\d{2})-(\d{2})');
       final matches = dateFormat.allMatches(defaultDaysStr);
       for (var match in matches) {
@@ -367,7 +367,7 @@ class _SettingPageState extends State<SettingPage> {
                           _autoBooking = value;
                         });
                       },
-                      activeColor: const Color(COLOR_PRIMARY),
+                      activeThumbColor: const Color(COLOR_PRIMARY),
                     ),
                   ],
                 ),
@@ -398,7 +398,7 @@ class _SettingPageState extends State<SettingPage> {
                           _openSunday = value;
                         });
                       },
-                      activeColor: const Color(COLOR_PRIMARY),
+                      activeThumbColor: const Color(COLOR_PRIMARY),
                     ),
                   ],
                 ),
@@ -429,7 +429,7 @@ class _SettingPageState extends State<SettingPage> {
                           _aiConfirm = value;
                         });
                       },
-                      activeColor: const Color(COLOR_PRIMARY),
+                      activeThumbColor: const Color(COLOR_PRIMARY),
                     ),
                   ],
                 ),

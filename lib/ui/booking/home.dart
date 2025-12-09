@@ -51,7 +51,7 @@ class _BookingHomeScreenState extends State<BookingHomeScreen> {
         if (opt == null) return;
         final todayStr = DateFormat('yyyy-MM-dd').format(DateTime.now());
 
-        void _maybeUpdateCount(int oldValue, void Function() update) {
+        void maybeUpdateCount(int oldValue, void Function() update) {
           if (oldValue != list.length && mounted) {
             WidgetsBinding.instance.addPostFrameCallback((_) {
               if (!mounted) return;
@@ -62,23 +62,23 @@ class _BookingHomeScreenState extends State<BookingHomeScreen> {
 
         switch (opt) {
           case 'thismonth':
-            _maybeUpdateCount(_monthCount, () => _monthCount = list.length);
+            maybeUpdateCount(_monthCount, () => _monthCount = list.length);
             break;
              case 'datecount':
-            _maybeUpdateCount(_dateCount, () => _dateCount = list.length);
+            maybeUpdateCount(_dateCount, () => _dateCount = list.length);
             break;
           case 'thisweek':
-            _maybeUpdateCount(_weekCount, () => _weekCount = list.length);
+            maybeUpdateCount(_weekCount, () => _weekCount = list.length);
             break;
           case 'new':
-            _maybeUpdateCount(_logCount, () => _logCount = list.length);
+            maybeUpdateCount(_logCount, () => _logCount = list.length);
             break;
           case 'pending':
-            _maybeUpdateCount(_pendingCount, () => _pendingCount = list.length);
+            maybeUpdateCount(_pendingCount, () => _pendingCount = list.length);
             break;
           default:
             if (opt == todayStr) {
-              _maybeUpdateCount(_todayCount, () => _todayCount = list.length);
+              maybeUpdateCount(_todayCount, () => _todayCount = list.length);
             }
         }
       });
@@ -151,7 +151,7 @@ class _BookingHomeScreenState extends State<BookingHomeScreen> {
               barrierDismissible: false,
               builder: (context) => WillPopScope(
                 onWillPop: () async => false,
-                child: Dialog(
+                child: const Dialog(
                   backgroundColor: Colors.transparent,
                   elevation: 0,
                   child: Center(
@@ -255,10 +255,9 @@ class _BookingHomeScreenState extends State<BookingHomeScreen> {
                 const SizedBox(height: 4),
                 _infoRow(
                     icon: Icons.person_outline,
-                    text: 'Staff: ${booking.staffname}' +
-                        (booking.note.isNotEmpty
+                    text: 'Staff: ${booking.staffname}${booking.note.isNotEmpty
                             ? ' | Note: ${booking.note}'
-                            : ''),
+                            : ''}',
                     color: color,
                     muted: isPastLocal),
                 const SizedBox(height: 4),
@@ -403,14 +402,18 @@ class _BookingHomeScreenState extends State<BookingHomeScreen> {
 
   Color _statusColor(String status, Color defaultColor) {
     final s = status.toLowerCase();
-    if (s.contains('pending') || s.contains('wait'))
+    if (s.contains('pending') || s.contains('wait')) {
       return Colors.orange.shade700;
+    }
     if (s.contains('confirm') ||
         s.contains('booked') ||
-        s.contains('confirmed')) return Colors.green.shade600;
+        s.contains('confirmed')) {
+      return Colors.green.shade600;
+    }
     if (s.contains('cancel') || s.contains('void')) return Colors.red.shade600;
-    if (s.contains('done') || s.contains('completed'))
+    if (s.contains('done') || s.contains('completed')) {
       return Colors.blueGrey.shade600;
+    }
     return defaultColor;
   }
 

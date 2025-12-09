@@ -22,8 +22,8 @@ class ServerException implements Exception {
 
 class MyHttp {
   Future<dynamic> saveBooking(Map<String, dynamic> bookingData) async {
-    final String url = AppConfig.api_url_booking_save;
-    print('[API] Booking Save URL: ' + url);
+    const String url = AppConfig.api_url_booking_save;
+    print('[API] Booking Save URL: $url');
     // ...existing code for making the request...
     // You can implement the actual request logic here or add this print to your existing save method.
   }

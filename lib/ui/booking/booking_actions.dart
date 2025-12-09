@@ -70,11 +70,11 @@ Future<void> saveBooking(
             ],
           ),
         ),
-        content: Padding(
-          padding: const EdgeInsets.symmetric(vertical: 16),
+        content: const Padding(
+          padding: EdgeInsets.symmetric(vertical: 16),
           child: Column(
             mainAxisSize: MainAxisSize.min,
-            children: const [
+            children: [
               Text(
                 'Your booking has been saved successfully.',
                 textAlign: TextAlign.center,

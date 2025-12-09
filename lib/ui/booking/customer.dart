@@ -35,7 +35,7 @@ class _CustomerPageState extends State<CustomerPage> {
   void _fetchCustomers() async {
     try {
       // Log the API URL for customer list
-      print('[API] Customer List URL: ' + AppConfig.api_url_booking_customer);
+      print('[API] Customer List URL: ${AppConfig.api_url_booking_customer}');
       List<Customer> customers = await apiManager.ListCustomer();
 
       if (!mounted) return;
@@ -48,7 +48,7 @@ class _CustomerPageState extends State<CustomerPage> {
       if (mounted) {
         WidgetsBinding.instance.addPostFrameCallback((_) {
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
+            const SnackBar(
               content: Text(
                   'Cannot connect to server. Please check your network or try again later.'),
               backgroundColor: Colors.red,

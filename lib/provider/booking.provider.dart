@@ -9,13 +9,13 @@ class BookingProvider with ChangeNotifier {
   late StreamController<List<Booking>> _bookingStreamController;
   late Stream<List<Booking>> _bookingStreamBroadcast;
   Timer? _debounceTimer;
-  bool _suppressEmissions =
+  final bool _suppressEmissions =
       false; // Prevent stream updates during UI-sensitive periods
   String?
       _currentViewOption; // Track current view being displayed (e.g., 'pending', 'thisweek')
   static const int DEBOUNCE_MS =
       300; // Reduced debounce for faster response while preventing rapid updates
-  String _salonName = 'Salon'; // Store salon name from backend
+  final String _salonName = 'Salon'; // Store salon name from backend
   Map<String, dynamic>? _appSettings;
 
   BookingProvider() {

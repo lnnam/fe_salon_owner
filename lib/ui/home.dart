@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:salonapp/ui/common/drawer_dashboard.dart';
 import 'package:salonapp/services/helper.dart';
-import 'package:salonapp/model/user.dart';
 
 class Home extends StatelessWidget {
   const Home({super.key});

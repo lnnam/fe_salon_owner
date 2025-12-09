@@ -91,7 +91,7 @@ class MyAppState extends State<MyApp> with WidgetsBindingObserver {
         scaffoldBackgroundColor: Colors.white,
        
         appBarTheme: AppBarTheme(
-          color: color, // Set default app bar background color
+          backgroundColor: color, // Set default app bar background color
           iconTheme: const IconThemeData(color: Colors.white),
          titleTextStyle: Theme.of(context).textTheme.titleLarge?.copyWith(
         fontFamily: 'OpenSans',
