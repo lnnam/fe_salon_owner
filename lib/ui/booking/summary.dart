@@ -55,15 +55,14 @@ class _SummaryPageState extends State<SummaryPage> {
   @override
   void initState() {
     super.initState();
-    // Auto-refresh is disabled, no pause/resume needed
-    //print('bookingDetails: ${bookingProvider.bookingDetails}');
-
-    // ✅ Set edit mode to true
-    //  bookingProvider.setEditMode(true);
-    // Schedule provider update after build
+    
+    // Set edit mode immediately
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      Provider.of<BookingProvider>(context, listen: false).setEditMode(true);
+      if (mounted) {
+        Provider.of<BookingProvider>(context, listen: false).setEditMode(true);
+      }
     });
+    
     if (widget.booking != null) {
       final booking = widget.booking!;
       bookingkey = booking.pkey;
@@ -82,7 +81,8 @@ class _SummaryPageState extends State<SummaryPage> {
       serviceName = booking.servicename;
       status = booking.status;
       note = booking.note;
-      // Start async decode of customer image (if any) so UI isn't blocked
+      
+      // Decode base64 image asynchronously without blocking UI
       if (booking.customerphoto.isNotEmpty) {
         decodeBase64Image(booking.customerphoto).then((img) {
           if (!mounted) return;
@@ -92,12 +92,9 @@ class _SummaryPageState extends State<SummaryPage> {
         });
       }
     } else {
-      print('bookingProvider');
-
       final bookingProvider =
           Provider.of<BookingProvider>(context, listen: false);
       final bookingDetails = bookingProvider.bookingDetails;
-      //   print('Booking : ${bookingDetails}');
       bookingkey = bookingDetails['bookingkey'] ?? 0;
       customerKey = bookingDetails['customerkey'] ?? '';
       serviceKey = bookingDetails['servicekey'] ?? '';
@@ -112,12 +109,11 @@ class _SummaryPageState extends State<SummaryPage> {
       note = bookingDetails['note'] ?? '';
       status =
           bookingDetails['status'] ?? bookingDetails['bookingstatus'] ?? '';
-      noteController = TextEditingController(text: note);
     }
 
     noteController = TextEditingController(text: note);
 
-    // Set booking key and details after frame is built to avoid setState during build
+    // Set booking details after frame is built
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
       final bookingProvider =

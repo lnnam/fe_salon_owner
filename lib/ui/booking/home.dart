@@ -141,7 +141,30 @@ class _BookingHomeScreenState extends State<BookingHomeScreen> {
         color: isPastLocal ? Colors.grey[100] : Colors.white,
         child: GestureDetector(
           behavior: HitTestBehavior.opaque,
-          onTap: () => safePush(context, SummaryPage(booking: booking)),
+          onTap: () {
+            showDialog(
+              context: context,
+              barrierDismissible: false,
+              builder: (context) => WillPopScope(
+                onWillPop: () async => false,
+                child: Dialog(
+                  backgroundColor: Colors.transparent,
+                  elevation: 0,
+                  child: Center(
+                    child: CircularProgressIndicator(
+                      valueColor: AlwaysStoppedAnimation<Color>(_primaryColor),
+                    ),
+                  ),
+                ),
+              ),
+            );
+            
+            // Navigate after showing loading dialog
+            Future.delayed(Duration.zero, () {
+              Navigator.of(context).pop(); // Close loading dialog
+              safePush(context, SummaryPage(booking: booking));
+            });
+          },
           child: Padding(
             padding: const EdgeInsets.all(16.0),
             child: Column(

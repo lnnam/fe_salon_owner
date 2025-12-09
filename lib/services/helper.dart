@@ -1,11 +1,12 @@
 import 'dart:async';
 import 'dart:io';
 import 'dart:convert';
+import 'dart:typed_data' show Uint8List;
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/foundation.dart' show kIsWeb;
+import 'package:flutter/foundation.dart' show kIsWeb, compute;
 import 'package:salonapp/constants.dart';
 import 'package:progress_dialog_null_safe/progress_dialog_null_safe.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -422,11 +423,21 @@ ImageProvider? getImage(String base64String) {
 
 final Map<String, MemoryImage> _imageCache = {};
 
-/// Decode a base64 image asynchronously and store it in an in-memory cache.
+/// Helper function to decode base64 in background
+Future<Uint8List> _decodeBase64InBackground(String base64String) async {
+  return base64Decode(base64String.split(',').last);
+}
+
+/// Decode a base64 image asynchronously in a background isolate and cache it.
 Future<ImageProvider?> decodeBase64Image(String base64String) async {
   try {
-    final bytes =
-        await Future(() => base64Decode(base64String.split(',').last));
+    // Check cache first
+    if (_imageCache.containsKey(base64String)) {
+      return _imageCache[base64String];
+    }
+
+    // Decode in background isolate to avoid blocking UI
+    final bytes = await compute(_decodeBase64InBackground, base64String);
     final image = MemoryImage(bytes);
     _imageCache[base64String] = image;
     return image;
