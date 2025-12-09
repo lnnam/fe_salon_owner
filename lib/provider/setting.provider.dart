@@ -12,10 +12,16 @@ class SettingProvider with ChangeNotifier {
   bool _isInitialized = false;
 
   SettingProvider() {
-    // Don't auto-load from cache - wait for explicit login to load from API
-    _isInitialized = true;
+    // Try to load settings from SharedPreferences on initialization
+    // Note: This is called without await because it's in constructor
+    // The _loadSettingsFromStorage completes asynchronously
+    _loadSettingsFromStorage().then((_) {
+      print('[SettingProvider] Constructor - Settings loaded from storage');
+    }).catchError((e) {
+      print('[SettingProvider] Constructor - Error loading settings: $e');
+    });
     print(
-        '[SettingProvider] Constructor called - isInitialized: $_isInitialized');
+        '[SettingProvider] Constructor called - Settings loading in background');
   }
 
   // Getter for app settings
@@ -26,6 +32,43 @@ class SettingProvider with ChangeNotifier {
 
   // Getter to check if settings have been loaded
   bool get isInitialized => _isInitialized;
+
+  // Load settings from SharedPreferences on initialization
+  Future<void> _loadSettingsFromStorage() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final settingsJson = prefs.getString('appSettings');
+
+      if (settingsJson != null && settingsJson.isNotEmpty) {
+        final settings = jsonDecode(settingsJson) as Map<String, dynamic>;
+        _appSettings = settings;
+
+        // Parse individual fields
+        salonName = settings['salon_name'] as String?;
+        sms_pending = settings['sms_pending'] as String?;
+        sms_confirm = settings['sms_confirm'] as String? ??
+            settings['smsConfirm'] as String? ??
+            settings['sms_confirmation'] as String? ??
+            sms_pending;
+        email = settings['email'] as String?;
+
+        print(
+            '[SettingProvider] Loaded settings from storage - salonName: $salonName, sms_pending: $sms_pending, sms_confirm: $sms_confirm');
+        _isInitialized = true;
+      }
+
+      // Also load booking settings
+      final bookingJson = prefs.getString('bookingSettings');
+      if (bookingJson != null && bookingJson.isNotEmpty) {
+        final bookingSettings = jsonDecode(bookingJson) as Map<String, dynamic>;
+        _bookingSettings = bookingSettings;
+        print(
+            '[SettingProvider] Loaded booking settings from storage: $bookingSettings');
+      }
+    } catch (e) {
+      print('[SettingProvider] Error loading settings from storage: $e');
+    }
+  }
 
   // Future that completes when settings are loaded
   Future<void> waitForInitialization() async {
@@ -56,6 +99,9 @@ class SettingProvider with ChangeNotifier {
     email = settings['email'] as String?;
     print(
         '[SettingProvider] Updated settings - salonName: $salonName, sms_pending: $sms_pending, sms_confirm: $sms_confirm, email: $email');
+
+    // Mark as initialized AFTER settings are loaded
+    _isInitialized = true;
 
     // Save to SharedPreferences
     _saveSettings(settings);
@@ -134,5 +180,77 @@ class SettingProvider with ChangeNotifier {
     _isInitialized = false;
     print('[SettingProvider] Reset all settings');
     notifyListeners();
+  }
+
+  // Clear all settings from SharedPreferences (call on logout)
+  Future<void> clearSettingsStorage() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.remove('appSettings');
+      await prefs.remove('bookingSettings');
+      print('[SettingProvider] Cleared settings from storage');
+    } catch (e) {
+      print('[SettingProvider] Error clearing settings from storage: $e');
+    }
+  }
+
+  // Get individual setting values from SharedPreferences directly
+  Future<String?> getSalonName() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final settingsJson = prefs.getString('appSettings');
+      if (settingsJson != null) {
+        final settings = jsonDecode(settingsJson) as Map<String, dynamic>;
+        return settings['salon_name'] as String?;
+      }
+    } catch (e) {
+      print('[SettingProvider] Error getting salonName: $e');
+    }
+    return null;
+  }
+
+  Future<String?> getSmsPending() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final settingsJson = prefs.getString('appSettings');
+      if (settingsJson != null) {
+        final settings = jsonDecode(settingsJson) as Map<String, dynamic>;
+        return settings['sms_pending'] as String?;
+      }
+    } catch (e) {
+      print('[SettingProvider] Error getting sms_pending: $e');
+    }
+    return null;
+  }
+
+  Future<String?> getSmsConfirm() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final settingsJson = prefs.getString('appSettings');
+      if (settingsJson != null) {
+        final settings = jsonDecode(settingsJson) as Map<String, dynamic>;
+        return settings['sms_confirm'] as String? ??
+            settings['smsConfirm'] as String? ??
+            settings['sms_confirmation'] as String? ??
+            settings['sms_pending'] as String?;
+      }
+    } catch (e) {
+      print('[SettingProvider] Error getting sms_confirm: $e');
+    }
+    return null;
+  }
+
+  Future<String?> getEmail() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final settingsJson = prefs.getString('appSettings');
+      if (settingsJson != null) {
+        final settings = jsonDecode(settingsJson) as Map<String, dynamic>;
+        return settings['email'] as String?;
+      }
+    } catch (e) {
+      print('[SettingProvider] Error getting email: $e');
+    }
+    return null;
   }
 }

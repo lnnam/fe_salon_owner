@@ -401,17 +401,27 @@ class _SummaryPageState extends State<SummaryPage> {
               ),
             ),
           // SMS Button
-          IconButton(
-            icon: const Icon(Icons.sms, color: Colors.white),
-            tooltip: 'SMS',
-            onPressed: customerPhone.isNotEmpty && customerPhone != 'N/A'
-                ? () {
-                    print(
-                        '[SummaryPage] SMS button pressed, phone: $customerPhone');
-                    _openSMS(customerPhone);
-                  }
-                : null,
-          ),
+          if (customerPhone.isNotEmpty && customerPhone != 'N/A')
+            IconButton(
+              icon: const Icon(Icons.sms, color: Colors.white),
+              tooltip: 'SMS',
+              splashRadius: 24,
+              onPressed: () {
+                print(
+                    '[SummaryPage] SMS button pressed, phone: $customerPhone');
+                _openSMS(customerPhone);
+              },
+            )
+          else
+            Opacity(
+              opacity: 0.5,
+              child: IconButton(
+                icon: const Icon(Icons.sms, color: Colors.white),
+                tooltip: 'SMS not available',
+                splashRadius: 24,
+                onPressed: null,
+              ),
+            ),
           // Call Button
           IconButton(
             icon: const Icon(Icons.phone, color: Colors.white),
@@ -785,25 +795,18 @@ class _SummaryPageState extends State<SummaryPage> {
     try {
       print('[SummaryPage] _openSMS called with phone: $phoneNumber');
 
-      // Get SMS message from SettingProvider
+      // Get SMS message from SettingProvider (reads from SharedPreferences)
       final settingProvider =
           Provider.of<SettingProvider>(context, listen: false);
 
-      print(
-          '[SummaryPage] SettingProvider isInitialized: ${settingProvider.isInitialized}');
-      print(
-          '[SummaryPage] SettingProvider salonName: ${settingProvider.salonName}');
-      print(
-          '[SummaryPage] SettingProvider sms_pending before wait: ${settingProvider.sms_pending}');
+      print('[SummaryPage] Getting SMS pending message from SharedPreferences');
 
-      // Wait for settings to be initialized if not already done
-      await settingProvider.waitForInitialization();
+      // Get settings directly from SharedPreferences
+      final smsMessage = await settingProvider.getSmsPending() ?? '';
+      final salonName = await settingProvider.getSalonName() ?? '';
 
       print(
-          '[SummaryPage] After waitForInitialization - sms_pending: ${settingProvider.sms_pending}');
-
-      var smsMessage = settingProvider.sms_pending ?? '';
-      var salonName = settingProvider.salonName ?? '';
+          '[SummaryPage] SMS - smsMessage: $smsMessage, salonName: $salonName');
 
       // Replace placeholders with actual booking details
       // Extract time from bookingTime (format: "HH:mm, dd/MM/yyyy")
@@ -812,20 +815,24 @@ class _SummaryPageState extends State<SummaryPage> {
       final date = timeParts.length > 1 ? timeParts[1] : '';
 
       // Replace HH:MM on DD/MM/YYYY with actual values
-      smsMessage =
+      final finalMessage =
           smsMessage.replaceAll('HH:MM on DD/MM/YYYY', '$time on $date');
-      print('[SummaryPage] SMS - Phone: $phoneNumber, Message: $smsMessage');
+      print('[SummaryPage] SMS - Phone: $phoneNumber, Message: $finalMessage');
 
-      if (smsMessage.isEmpty) {
+      if (finalMessage.isEmpty) {
         print(
             '[SummaryPage] SMS message is empty - sms_pending not configured');
+        if (!mounted) return;
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('SMS message not configured')),
+          const SnackBar(
+            content: Text('SMS message not configured in settings'),
+            duration: Duration(seconds: 3),
+          ),
         );
         return;
       }
 
-      final String body = '$smsMessage\n\n$salonName';
+      final String body = '$finalMessage\n\n$salonName';
       print('[SummaryPage] SMS body: $body');
       print('[SummaryPage] SMS phoneNumber: $phoneNumber');
       // Use proper SMS URI format: sms:phonenumber?body=message
@@ -836,12 +843,14 @@ class _SummaryPageState extends State<SummaryPage> {
       if (await canLaunchUrl(smsUri)) {
         await launchUrl(smsUri);
       } else {
+        if (!mounted) return;
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Could not open SMS app')),
         );
       }
     } catch (e) {
       print('[SummaryPage] Error in _openSMS: $e');
+      if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Error opening SMS: $e')),
       );
@@ -870,15 +879,15 @@ class _SummaryPageState extends State<SummaryPage> {
 
   Future<void> _sendEmail(String email) async {
     try {
-      // Get email message from SettingProvider
+      // Get email message from SettingProvider (reads from SharedPreferences)
       final settingProvider =
           Provider.of<SettingProvider>(context, listen: false);
 
-      // Wait for settings to be initialized if not already done
-      await settingProvider.waitForInitialization();
+      print('[SummaryPage] Getting email message from SharedPreferences');
 
-      var emailMessage = settingProvider.email ?? '';
-      var salonName = settingProvider.salonName ?? '';
+      // Get settings directly from SharedPreferences
+      final emailMessage = await settingProvider.getEmail() ?? '';
+      final salonName = await settingProvider.getSalonName() ?? '';
 
       // Replace placeholders with actual booking details
       // Extract time from bookingTime (format: "HH:mm, dd/MM/yyyy")
@@ -887,30 +896,36 @@ class _SummaryPageState extends State<SummaryPage> {
       final date = timeParts.length > 1 ? timeParts[1] : '';
 
       // Replace HH:MM on DD/MM/YYYY with actual values
-      emailMessage =
+      final finalMessage =
           emailMessage.replaceAll('HH:MM on DD/MM/YYYY', '$time on $date');
-      print('[SummaryPage] Email - Recipient: $email, Message: $emailMessage');
+      print('[SummaryPage] Email - Recipient: $email, Message: $finalMessage');
 
-      if (emailMessage.isEmpty) {
+      if (finalMessage.isEmpty) {
+        if (!mounted) return;
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Email message not configured')),
+          const SnackBar(
+            content: Text('Email message not configured in settings'),
+            duration: Duration(seconds: 3),
+          ),
         );
         return;
       }
 
-      final String body = '$emailMessage\n\n$salonName';
+      final String body = '$finalMessage\n\n$salonName';
       final Uri emailUri =
           Uri.parse('mailto:$email?body=${Uri.encodeComponent(body)}');
 
       if (await canLaunchUrl(emailUri)) {
         await launchUrl(emailUri);
       } else {
+        if (!mounted) return;
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Could not open email app')),
         );
       }
     } catch (e) {
       print('[SummaryPage] Error in _sendEmail: $e');
+      if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Error opening email: $e')),
       );
@@ -921,25 +936,15 @@ class _SummaryPageState extends State<SummaryPage> {
     try {
       print('[SummaryPage] _sendSMSConfirm called');
 
-      // Get SMS confirm message from SettingProvider
+      // Get SMS confirm message from SettingProvider (reads from SharedPreferences)
       final settingProvider =
           Provider.of<SettingProvider>(context, listen: false);
 
-      print(
-          '[SummaryPage] SettingProvider isInitialized: ${settingProvider.isInitialized}');
-      print(
-          '[SummaryPage] SettingProvider sms_confirm before wait: ${settingProvider.sms_confirm}');
-      print(
-          '[SummaryPage] SettingProvider salonName: ${settingProvider.salonName}');
+      print('[SummaryPage] Getting SMS confirm message from SharedPreferences');
 
-      // Wait for settings to be initialized if not already done
-      await settingProvider.waitForInitialization();
-
-      print(
-          '[SummaryPage] After waitForInitialization - sms_confirm: ${settingProvider.sms_confirm}');
-
-      var smsMessage = settingProvider.sms_confirm ?? '';
-      var salonName = settingProvider.salonName ?? '';
+      // Get settings directly from SharedPreferences
+      final smsMessage = await settingProvider.getSmsConfirm() ?? '';
+      final salonName = await settingProvider.getSalonName() ?? '';
 
       print(
           '[SummaryPage] SMS Confirm - smsMessage: $smsMessage, salonName: $salonName');
@@ -951,21 +956,25 @@ class _SummaryPageState extends State<SummaryPage> {
       final date = timeParts.length > 1 ? timeParts[1] : '';
 
       // Replace HH:MM on DD/MM/YYYY with actual values
-      smsMessage =
+      final finalMessage =
           smsMessage.replaceAll('HH:MM on DD/MM/YYYY', '$time on $date');
       print(
-          '[SummaryPage] SMS Confirm - Phone: $customerPhone, Message after replacement: $smsMessage');
+          '[SummaryPage] SMS Confirm - Phone: $customerPhone, Message after replacement: $finalMessage');
 
-      if (smsMessage.isEmpty) {
+      if (finalMessage.isEmpty) {
         print(
             '[SummaryPage] SMS confirm message is empty - sms_confirm not configured');
+        if (!mounted) return;
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('SMS confirm message not configured')),
+          const SnackBar(
+            content: Text('SMS confirm message not configured in settings'),
+            duration: Duration(seconds: 3),
+          ),
         );
         return;
       }
 
-      final String body = '$smsMessage\n\n$salonName';
+      final String body = '$finalMessage\n\n$salonName';
       print('[SummaryPage] SMS Confirm body: $body');
       print('[SummaryPage] SMS Confirm phoneNumber: $customerPhone');
 
@@ -976,12 +985,14 @@ class _SummaryPageState extends State<SummaryPage> {
       if (await canLaunchUrl(smsUri)) {
         await launchUrl(smsUri);
       } else {
+        if (!mounted) return;
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Could not open SMS app')),
         );
       }
     } catch (e) {
       print('[SummaryPage] Error in _sendSMSConfirm: $e');
+      if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Error sending SMS: $e')),
       );

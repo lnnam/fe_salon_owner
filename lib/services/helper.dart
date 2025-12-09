@@ -371,35 +371,40 @@ String audioMessageTime(Duration? audioDuration) {
 
 logout(BuildContext context) async {
   SharedPreferences prefs = await SharedPreferences.getInstance();
-  
+
   // Clear ONLY authentication-related data from SharedPreferences
   await prefs.remove('token');
   await prefs.remove('objuser');
-  
+
   // Keep app preferences (but clear user-specific settings)
   // Clear: app settings, booking settings (these are user-specific)
   // Keep: language, theme (these are user preferences)
   await prefs.remove('appSettings');
   await prefs.remove('bookingSettings');
-  
+
   print('[logout] Cleared auth & user-specific data:');
   print('  - token');
   print('  - objuser');
   print('  - appSettings');
   print('  - bookingSettings');
   print('[logout] Preserved user preferences: language, theme, etc');
-  
+
   // Reset provider state if context is still mounted
   if (context.mounted) {
     try {
-      final settingProvider = Provider.of<SettingProvider>(context, listen: false);
+      final settingProvider =
+          Provider.of<SettingProvider>(context, listen: false);
+
+      // Clear both in-memory state and SharedPreferences
+      await settingProvider.clearSettingsStorage();
       settingProvider.resetSettings();
-      print('[logout] Reset SettingProvider state');
+
+      print('[logout] Reset SettingProvider state and cleared storage');
     } catch (e) {
       print('[logout] Could not reset provider: $e');
     }
   }
-  
+
   if (!context.mounted) return;
   safePushReplacementNamed(context, '/login');
 }
