@@ -49,7 +49,6 @@ class Booking {
     DateTime bookingDateTime;
     String formattedBookingDate = '';
 
-   
     // Use 'bookingstart' if available, otherwise use 'date' field
     if (json['bookingstart'] != null && json['bookingstart'] != '') {
       bookingDateTime = DateTime.parse(json['bookingstart']);
@@ -74,7 +73,6 @@ class Booking {
     final String parsedPhone = json['customerphone']?.toString() ?? '';
     final String parsedEmail = json['customeremail']?.toString() ?? '';
 
-
     return Booking(
       pkey: json['pkey'] is int
           ? json['pkey']
@@ -89,7 +87,14 @@ class Booking {
       staffname: json['staffname'] ?? 'N/A',
       servicename: json['servicename'] ?? 'N/A',
       servicekey: json['servicekey']?.toString() ?? 'Unknown',
-      numbooked: json['pkey']?.toString() ?? 'Unknown',
+      numbooked: (() {
+        final dynamic v = json['numbooking'] ??
+            json['num_booked'] ??
+            json['numbooking'] ??
+            json['num'];
+        final s = v?.toString() ?? '';
+        return s.isEmpty ? '1' : s;
+      })(),
       customertype: json['customertype'] ?? 'N/A',
       created_datetime: createdDateTime,
       bookingdate: formattedBookingDate,

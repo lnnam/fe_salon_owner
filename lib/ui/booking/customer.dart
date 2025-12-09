@@ -413,9 +413,26 @@ class _CustomerPageState extends State<CustomerPage> {
                         style: const TextStyle(
                             fontSize: 18, fontWeight: FontWeight.bold),
                       ),
-                      subtitle: Text(
-                        'Email: ${customer.email}',
-                        style: TextStyle(fontSize: 14, color: Colors.grey[600]),
+                      subtitle: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Text(
+                            'Phone: ${customer.phone}',
+                            style: TextStyle(
+                              fontSize: 14,
+                              color: Colors.grey[700],
+                            ),
+                          ),
+                          const SizedBox(height: 2),
+                          Text(
+                            'Email: ${customer.email}',
+                            style: TextStyle(
+                              fontSize: 14,
+                              color: Colors.grey[600],
+                            ),
+                          ),
+                        ],
                       ),
                       trailing: const Icon(Icons.arrow_forward_ios),
                     ),

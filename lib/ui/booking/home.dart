@@ -158,7 +158,7 @@ class _BookingHomeScreenState extends State<BookingHomeScreen> {
                 ),
               ),
             );
-            
+
             // Navigate after showing loading dialog
             Future.delayed(Duration.zero, () {
               Navigator.of(context).pop(); // Close loading dialog
@@ -239,7 +239,9 @@ class _BookingHomeScreenState extends State<BookingHomeScreen> {
                     icon: Icons.person,
                     text: booking.customername,
                     color: color,
-                    muted: isPastLocal),
+                    muted: isPastLocal,
+                    badgeCount: int.tryParse(booking.numbooked),
+                    boxed: true),
                 const SizedBox(height: 4),
                 _infoRow(
                     icon: Icons.spa,
@@ -250,13 +252,16 @@ class _BookingHomeScreenState extends State<BookingHomeScreen> {
                 _infoRow(
                     icon: Icons.person_outline,
                     text: 'Staff: ${booking.staffname}' +
-                        (booking.note.isNotEmpty ? ' | Note: ${booking.note}' : ''),
+                        (booking.note.isNotEmpty
+                            ? ' | Note: ${booking.note}'
+                            : ''),
                     color: color,
                     muted: isPastLocal),
                 const SizedBox(height: 4),
                 _infoRow(
                     icon: Icons.schedule,
-                    text: 'Created on: ${_formatSchedule(booking.created_datetime)}',
+                    text:
+                        'Created on: ${_formatSchedule(booking.created_datetime)}',
                     color: color,
                     muted: isPastLocal,
                     textStyle: const TextStyle(fontSize: 12)),
@@ -274,17 +279,118 @@ class _BookingHomeScreenState extends State<BookingHomeScreen> {
     required Color color,
     bool muted = false,
     TextStyle? textStyle,
+    int? badgeCount,
+    bool boxed = false,
   }) {
+    final showBadge =
+        (badgeCount != null && badgeCount > 1 && badgeCount < 100);
+    final baseTextStyle = textStyle ??
+        TextStyle(
+            color: muted ? Colors.grey[600] : Colors.black54, fontSize: 14);
+
     return Row(children: [
-      Icon(icon, color: muted ? Colors.grey[500] : color.withOpacity(0.7), size: 16),
+      Icon(icon,
+          color: muted ? Colors.grey[500] : color.withOpacity(0.7), size: 16),
       const SizedBox(width: 4),
-      Expanded(
-        child: Text(text,
-            style: textStyle ??
-                TextStyle(
-                    color: muted ? Colors.grey[600] : Colors.black54,
-                    fontSize: 14)),
-      ),
+      if (boxed)
+        Flexible(
+          fit: FlexFit.loose,
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+            decoration: BoxDecoration(
+              color: muted ? Colors.grey[200] : Colors.grey[100],
+              borderRadius: BorderRadius.circular(8),
+              border: Border.all(
+                color: muted ? Colors.grey[300]! : color.withOpacity(0.25),
+              ),
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  text,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: baseTextStyle,
+                ),
+                if (showBadge) ...[
+                  const SizedBox(width: 6),
+                  Container(
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                    decoration: BoxDecoration(
+                      color: Colors.redAccent,
+                      borderRadius: BorderRadius.circular(10),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withOpacity(0.08),
+                          blurRadius: 2,
+                          offset: const Offset(0, 1),
+                        ),
+                      ],
+                    ),
+                    constraints:
+                        const BoxConstraints(minWidth: 16, minHeight: 16),
+                    child: Text(
+                      badgeCount.toString(),
+                      textAlign: TextAlign.center,
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 10,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+                ],
+              ],
+            ),
+          ),
+        )
+      else
+        Expanded(
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Flexible(
+                fit: FlexFit.tight,
+                child: Text(
+                  text,
+                  overflow: TextOverflow.ellipsis,
+                  style: baseTextStyle,
+                ),
+              ),
+              if (showBadge) ...[
+                const SizedBox(width: 6),
+                Container(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                  decoration: BoxDecoration(
+                    color: Colors.redAccent,
+                    borderRadius: BorderRadius.circular(10),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.08),
+                        blurRadius: 2,
+                        offset: const Offset(0, 1),
+                      ),
+                    ],
+                  ),
+                  constraints:
+                      const BoxConstraints(minWidth: 16, minHeight: 16),
+                  child: Text(
+                    badgeCount.toString(),
+                    textAlign: TextAlign.center,
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 10,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ),
+              ],
+            ],
+          ),
+        ),
     ]);
   }
 
@@ -293,10 +399,14 @@ class _BookingHomeScreenState extends State<BookingHomeScreen> {
 
   Color _statusColor(String status, Color defaultColor) {
     final s = status.toLowerCase();
-    if (s.contains('pending') || s.contains('wait')) return Colors.orange.shade700;
-    if (s.contains('confirm') || s.contains('booked') || s.contains('confirmed')) return Colors.green.shade600;
+    if (s.contains('pending') || s.contains('wait'))
+      return Colors.orange.shade700;
+    if (s.contains('confirm') ||
+        s.contains('booked') ||
+        s.contains('confirmed')) return Colors.green.shade600;
     if (s.contains('cancel') || s.contains('void')) return Colors.red.shade600;
-    if (s.contains('done') || s.contains('completed')) return Colors.blueGrey.shade600;
+    if (s.contains('done') || s.contains('completed'))
+      return Colors.blueGrey.shade600;
     return defaultColor;
   }
 
@@ -315,7 +425,8 @@ class _BookingHomeScreenState extends State<BookingHomeScreen> {
     return bookingDateTime.isBefore(DateTime.now());
   }
 
-  static Map<DateTime, List<Booking>> _groupBookingsByDate(List<Booking> bookings) {
+  static Map<DateTime, List<Booking>> _groupBookingsByDate(
+      List<Booking> bookings) {
     final Map<DateTime, List<Booking>> grouped = {};
     for (final b in bookings) {
       final date = DateTime.parse(b.bookingdate);
@@ -356,7 +467,8 @@ class _BookingHomeScreenState extends State<BookingHomeScreen> {
 
   void _handleBottomNavTap(int index) {
     setState(() => _selectedNavIndex = index);
-    final bookingProvider = Provider.of<BookingProvider>(context, listen: false);
+    final bookingProvider =
+        Provider.of<BookingProvider>(context, listen: false);
 
     switch (index) {
       case 0:
@@ -442,11 +554,13 @@ class _BookingHomeScreenState extends State<BookingHomeScreen> {
         ],
       ),
       drawer: const AppDrawerBooking(),
-      body: Consumer<BookingProvider>(builder: (context, bookingProvider, child) {
+      body:
+          Consumer<BookingProvider>(builder: (context, bookingProvider, child) {
         return StreamBuilder<List<Booking>>(
           stream: bookingProvider.bookingStream,
           builder: (context, snapshot) {
-            if (snapshot.connectionState == ConnectionState.waiting && !snapshot.hasData) {
+            if (snapshot.connectionState == ConnectionState.waiting &&
+                !snapshot.hasData) {
               return const Center(child: CircularProgressIndicator());
             }
 
@@ -465,7 +579,8 @@ class _BookingHomeScreenState extends State<BookingHomeScreen> {
                 child: ListView.builder(
                   padding: const EdgeInsets.only(bottom: 16.0),
                   itemCount: bookings.length,
-                  itemBuilder: (context, index) => _buildBookingCard(bookings[index], _primaryColor),
+                  itemBuilder: (context, index) =>
+                      _buildBookingCard(bookings[index], _primaryColor),
                 ),
               );
             }
@@ -493,17 +608,29 @@ class _BookingHomeScreenState extends State<BookingHomeScreen> {
         );
       }),
       floatingActionButton: FloatingActionButton(
-        onPressed: () => safePush(context, const StaffPage()),
+        onPressed: () {
+          final bookingProvider =
+              Provider.of<BookingProvider>(context, listen: false);
+          bookingProvider.setEditMode(false);
+          safePush(context, const StaffPage());
+        },
         backgroundColor: _primaryColor,
         child: const Icon(Icons.add, color: Colors.white),
       ),
       bottomNavigationBar: BottomNavigationBar(
         items: [
-          const BottomNavigationBarItem(icon: Icon(Icons.search), label: 'Find'),
-          BottomNavigationBarItem(icon: const Icon(Icons.calendar_today), label: 'Today ($_todayCount)'),
-          BottomNavigationBarItem(icon: const Icon(Icons.view_week), label: 'Week ($_weekCount)'),
-          BottomNavigationBarItem(icon: const Icon(Icons.assignment), label: 'Log ($_logCount)'),
-          BottomNavigationBarItem(icon: const Icon(Icons.hourglass_bottom), label: 'Pending ($_pendingCount)'),
+          const BottomNavigationBarItem(
+              icon: Icon(Icons.search), label: 'Find'),
+          BottomNavigationBarItem(
+              icon: const Icon(Icons.calendar_today),
+              label: 'Today ($_todayCount)'),
+          BottomNavigationBarItem(
+              icon: const Icon(Icons.view_week), label: 'Week ($_weekCount)'),
+          BottomNavigationBarItem(
+              icon: const Icon(Icons.assignment), label: 'Log ($_logCount)'),
+          BottomNavigationBarItem(
+              icon: const Icon(Icons.hourglass_bottom),
+              label: 'Pending ($_pendingCount)'),
         ],
         currentIndex: _selectedNavIndex,
         onTap: _handleBottomNavTap,

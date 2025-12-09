@@ -182,11 +182,22 @@ class _BookingCalendarPageState extends State<BookingCalendarPage> {
   }
 
   List<DateTimeRange> generatePauseSlots() {
-    return [
-      DateTimeRange(
-          start: DateTime(now.year, now.month, now.day, 12, 0),
-          end: DateTime(now.year, now.month, now.day, 13, 0))
-    ];
+    // Mark past time slots (today) as paused/disabled to render in grey
+    final List<DateTimeRange> pauses = [];
+    final DateTime todayStart = DateTime(now.year, now.month, now.day, 9, 0);
+    final DateTime todayEnd = DateTime(now.year, now.month, now.day, 18, 0);
+    final DateTime cutoff = DateTime.now();
+
+    if (cutoff.isAfter(todayStart)) {
+      DateTime cursor = todayStart;
+      while (cursor.isBefore(cutoff) && cursor.isBefore(todayEnd)) {
+        final DateTime next = cursor.add(const Duration(minutes: 15));
+        pauses.add(DateTimeRange(start: cursor, end: next));
+        cursor = next;
+      }
+    }
+
+    return pauses;
   }
 
   @override

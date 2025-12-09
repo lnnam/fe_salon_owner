@@ -249,8 +249,6 @@ class _LoginState extends State<Login> {
             };
             settingProvider.updateBookingSettings(bookingSettingsData); 
             
-            print('[Login] Updated SettingProvider with: salonName=${settingProvider.salonName}, sms=${settingProvider.sms}, email=${settingProvider.email}');
-            print('[Login] Updated Booking Settings: $bookingSettingsData');
           } else {
             print('[Login] Failed to fetch app settings');
           }

@@ -75,7 +75,6 @@ class MyHttp {
         'Content-Type': 'application/json',
       };
 
-
       // Making the HTTP GET request with timeout (20s for faster feedback)
       final http.Response response =
           await http.get(uri, headers: headers).timeout(
@@ -83,7 +82,6 @@ class MyHttp {
                 onTimeout: () => throw TimeoutException(
                     'Request timed out after 20 seconds. Server may be slow or unreachable.'),
               );
-
 
       // Handling response
       if (response.statusCode == 200) {
@@ -141,8 +139,9 @@ class MyHttp {
       print('[API] Loading bookings from: $endpoint');
       final startTime = DateTime.now();
       final response = await fetchFromServer(endpoint);
+   //   print('[API] ListBooking raw response object: ' + response.toString());
       final duration = DateTime.now().difference(startTime);
-      print('[API] API response received in ${duration.inMilliseconds}ms');
+    //  print('[API] ListBooking fetch duration: ${duration.inMilliseconds} ms');
 
       List<Booking> bookings = [];
 

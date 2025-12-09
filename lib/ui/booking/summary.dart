@@ -7,6 +7,7 @@ import 'package:salonapp/model/booking.dart';
 import 'package:salonapp/provider/booking.provider.dart';
 import 'package:salonapp/provider/setting.provider.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:salonapp/constants.dart';
 
 import 'home.dart';
 import 'calendar.dart'; // ⬅️ Replace with actual path
@@ -55,14 +56,14 @@ class _SummaryPageState extends State<SummaryPage> {
   @override
   void initState() {
     super.initState();
-    
+
     // Set edit mode immediately
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted) {
         Provider.of<BookingProvider>(context, listen: false).setEditMode(true);
       }
     });
-    
+
     if (widget.booking != null) {
       final booking = widget.booking!;
       bookingkey = booking.pkey;
@@ -81,7 +82,7 @@ class _SummaryPageState extends State<SummaryPage> {
       serviceName = booking.servicename;
       status = booking.status;
       note = booking.note;
-      
+
       // Decode base64 image asynchronously without blocking UI
       if (booking.customerphoto.isNotEmpty) {
         decodeBase64Image(booking.customerphoto).then((img) {
@@ -206,30 +207,7 @@ class _SummaryPageState extends State<SummaryPage> {
                       height: 1.5,
                     ),
                   ),
-                  const SizedBox(height: 16),
-                  Container(
-                    padding: const EdgeInsets.all(12),
-                    decoration: BoxDecoration(
-                      color: Colors.blue.shade50,
-                      borderRadius: BorderRadius.circular(8),
-                      border: Border.all(color: Colors.blue.shade200),
-                    ),
-                    child: const Row(
-                      children: [
-                        Icon(Icons.info, color: Colors.blue, size: 20),
-                        SizedBox(width: 12),
-                        Expanded(
-                          child: Text(
-                            'You will be redirected to pending list.',
-                            style: TextStyle(
-                              fontSize: 14,
-                              color: Colors.blue,
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
+                  // Info message removed per request
                 ],
               ),
             ),
@@ -388,10 +366,15 @@ class _SummaryPageState extends State<SummaryPage> {
         s.contains('confirmed') ||
         s.contains('booked') ||
         s.contains('book');
+
+    // Debug: Check phone availability
+    print(
+        '[SummaryPage] Build - customerPhone: $customerPhone, empty: ${customerPhone.isEmpty}, isNA: ${customerPhone == "N/A"}');
+
     return Scaffold(
       appBar: AppBar(
         title: const Text('Summary Booking'),
-        backgroundColor: Colors.blue,
+        backgroundColor: const Color(COLOR_PRIMARY),
         actions: [
           if (status.isNotEmpty)
             Padding(
@@ -422,7 +405,11 @@ class _SummaryPageState extends State<SummaryPage> {
             icon: const Icon(Icons.sms, color: Colors.white),
             tooltip: 'SMS',
             onPressed: customerPhone.isNotEmpty && customerPhone != 'N/A'
-                ? () => _openSMS(customerPhone)
+                ? () {
+                    print(
+                        '[SummaryPage] SMS button pressed, phone: $customerPhone');
+                    _openSMS(customerPhone);
+                  }
                 : null,
           ),
           // Call Button
@@ -532,7 +519,7 @@ class _SummaryPageState extends State<SummaryPage> {
                                 onPressed:
                                     isLoading ? null : () => _confirmBooking(),
                                 style: ElevatedButton.styleFrom(
-                                  backgroundColor: Colors.green.shade600,
+                                  backgroundColor: const Color(COLOR_PRIMARY),
                                   padding: const EdgeInsets.symmetric(
                                       horizontal: 24, vertical: 10),
                                   shape: RoundedRectangleBorder(
@@ -643,42 +630,71 @@ class _SummaryPageState extends State<SummaryPage> {
                   const SizedBox(height: 16),
                   Column(
                     children: [
-                      ElevatedButton(
-                        onPressed: isLoading
-                            ? null
-                            : () => saveBooking(
-                                  context,
-                                  bookingkey,
-                                  (bool val) => setState(() =>
-                                      isLoading = val), // <-- Accepts a bool
-                                  customerKey,
-                                  serviceKey,
-                                  staffKey,
-                                  bookingDate,
-                                  bookingTime,
-                                  note,
-                                  customerName,
-                                  staffName,
-                                  serviceName,
+                      Row(
+                        children: [
+                          Expanded(
+                            child: ElevatedButton(
+                              onPressed: isLoading
+                                  ? null
+                                  : () => saveBooking(
+                                        context,
+                                        bookingkey,
+                                        (bool val) => setState(() => isLoading =
+                                            val), // <-- Accepts a bool
+                                        customerKey,
+                                        serviceKey,
+                                        staffKey,
+                                        bookingDate,
+                                        bookingTime,
+                                        note,
+                                        customerName,
+                                        staffName,
+                                        serviceName,
+                                      ),
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: const Color(COLOR_PRIMARY),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(12),
                                 ),
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.blue,
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12),
+                                padding: const EdgeInsets.symmetric(
+                                    horizontal: 16, vertical: 14),
+                              ),
+                              child: isLoading
+                                  ? const CircularProgressIndicator(
+                                      color: Colors.white)
+                                  : const Text(
+                                      'Save Booking',
+                                      style: TextStyle(
+                                          fontSize: 16,
+                                          fontWeight: FontWeight.bold,
+                                          color: Colors.white),
+                                    ),
+                            ),
                           ),
-                          padding: const EdgeInsets.symmetric(
-                              horizontal: 32, vertical: 14),
-                        ),
-                        child: isLoading
-                            ? const CircularProgressIndicator(
-                                color: Colors.white)
-                            : const Text(
-                                'Save Booking',
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: ElevatedButton.icon(
+                              onPressed:
+                                  isLoading ? null : () => _sendSMSConfirm(),
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: Colors.green.shade600,
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                                padding: const EdgeInsets.symmetric(
+                                    horizontal: 16, vertical: 14),
+                              ),
+                              icon: const Icon(Icons.sms),
+                              label: const Text(
+                                'SMS Confirm',
                                 style: TextStyle(
-                                    fontSize: 16,
+                                    fontSize: 14,
                                     fontWeight: FontWeight.bold,
                                     color: Colors.white),
                               ),
+                            ),
+                          ),
+                        ],
                       ),
                       const SizedBox(height: 12),
                       if (widget.booking != null)
@@ -731,7 +747,7 @@ class _SummaryPageState extends State<SummaryPage> {
         padding: const EdgeInsets.all(12),
         child: Row(
           children: [
-            Icon(icon, color: Colors.blue),
+            Icon(icon, color: const Color(COLOR_PRIMARY)),
             const SizedBox(width: 12),
             Expanded(
               child: Text(
@@ -767,14 +783,26 @@ class _SummaryPageState extends State<SummaryPage> {
 
   Future<void> _openSMS(String phoneNumber) async {
     try {
+      print('[SummaryPage] _openSMS called with phone: $phoneNumber');
+
       // Get SMS message from SettingProvider
       final settingProvider =
           Provider.of<SettingProvider>(context, listen: false);
 
+      print(
+          '[SummaryPage] SettingProvider isInitialized: ${settingProvider.isInitialized}');
+      print(
+          '[SummaryPage] SettingProvider salonName: ${settingProvider.salonName}');
+      print(
+          '[SummaryPage] SettingProvider sms_pending before wait: ${settingProvider.sms_pending}');
+
       // Wait for settings to be initialized if not already done
       await settingProvider.waitForInitialization();
 
-      var smsMessage = settingProvider.sms ?? '';
+      print(
+          '[SummaryPage] After waitForInitialization - sms_pending: ${settingProvider.sms_pending}');
+
+      var smsMessage = settingProvider.sms_pending ?? '';
       var salonName = settingProvider.salonName ?? '';
 
       // Replace placeholders with actual booking details
@@ -789,6 +817,8 @@ class _SummaryPageState extends State<SummaryPage> {
       print('[SummaryPage] SMS - Phone: $phoneNumber, Message: $smsMessage');
 
       if (smsMessage.isEmpty) {
+        print(
+            '[SummaryPage] SMS message is empty - sms_pending not configured');
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('SMS message not configured')),
         );
@@ -796,6 +826,8 @@ class _SummaryPageState extends State<SummaryPage> {
       }
 
       final String body = '$smsMessage\n\n$salonName';
+      print('[SummaryPage] SMS body: $body');
+      print('[SummaryPage] SMS phoneNumber: $phoneNumber');
       // Use proper SMS URI format: sms:phonenumber?body=message
       // Note: Must use Uri.parse instead of Uri constructor to properly encode the body
       final Uri smsUri =
@@ -881,6 +913,77 @@ class _SummaryPageState extends State<SummaryPage> {
       print('[SummaryPage] Error in _sendEmail: $e');
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Error opening email: $e')),
+      );
+    }
+  }
+
+  Future<void> _sendSMSConfirm() async {
+    try {
+      print('[SummaryPage] _sendSMSConfirm called');
+
+      // Get SMS confirm message from SettingProvider
+      final settingProvider =
+          Provider.of<SettingProvider>(context, listen: false);
+
+      print(
+          '[SummaryPage] SettingProvider isInitialized: ${settingProvider.isInitialized}');
+      print(
+          '[SummaryPage] SettingProvider sms_confirm before wait: ${settingProvider.sms_confirm}');
+      print(
+          '[SummaryPage] SettingProvider salonName: ${settingProvider.salonName}');
+
+      // Wait for settings to be initialized if not already done
+      await settingProvider.waitForInitialization();
+
+      print(
+          '[SummaryPage] After waitForInitialization - sms_confirm: ${settingProvider.sms_confirm}');
+
+      var smsMessage = settingProvider.sms_confirm ?? '';
+      var salonName = settingProvider.salonName ?? '';
+
+      print(
+          '[SummaryPage] SMS Confirm - smsMessage: $smsMessage, salonName: $salonName');
+
+      // Replace placeholders with actual booking details
+      // Extract time from bookingTime (format: "HH:mm, dd/MM/yyyy")
+      final timeParts = bookingTime.split(', ');
+      final time = timeParts.isNotEmpty ? timeParts[0] : '';
+      final date = timeParts.length > 1 ? timeParts[1] : '';
+
+      // Replace HH:MM on DD/MM/YYYY with actual values
+      smsMessage =
+          smsMessage.replaceAll('HH:MM on DD/MM/YYYY', '$time on $date');
+      print(
+          '[SummaryPage] SMS Confirm - Phone: $customerPhone, Message after replacement: $smsMessage');
+
+      if (smsMessage.isEmpty) {
+        print(
+            '[SummaryPage] SMS confirm message is empty - sms_confirm not configured');
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('SMS confirm message not configured')),
+        );
+        return;
+      }
+
+      final String body = '$smsMessage\n\n$salonName';
+      print('[SummaryPage] SMS Confirm body: $body');
+      print('[SummaryPage] SMS Confirm phoneNumber: $customerPhone');
+
+      // Use proper SMS URI format: sms:phonenumber?body=message
+      final Uri smsUri =
+          Uri.parse('sms:$customerPhone?body=${Uri.encodeComponent(body)}');
+
+      if (await canLaunchUrl(smsUri)) {
+        await launchUrl(smsUri);
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Could not open SMS app')),
+        );
+      }
+    } catch (e) {
+      print('[SummaryPage] Error in _sendSMSConfirm: $e');
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error sending SMS: $e')),
       );
     }
   }

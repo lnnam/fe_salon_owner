@@ -43,16 +43,68 @@ Future<void> saveBooking(
     safeShowDialog(
       context,
       (context) => AlertDialog(
-        title: const Text("Success"),
-        content: const Text("Booking Saved Successfully"),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        backgroundColor: Colors.white,
+        title: Container(
+          decoration: BoxDecoration(
+            color: Colors.green.shade50,
+            borderRadius: BorderRadius.circular(12),
+          ),
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            children: [
+              Icon(
+                Icons.check_circle,
+                color: Colors.green.shade600,
+                size: 48,
+              ),
+              const SizedBox(height: 12),
+              const Text(
+                'Booking Saved',
+                style: TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.green,
+                ),
+              ),
+            ],
+          ),
+        ),
+        content: Padding(
+          padding: const EdgeInsets.symmetric(vertical: 16),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: const [
+              Text(
+                'Your booking has been saved successfully.',
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  fontSize: 16,
+                  color: Colors.black87,
+                  height: 1.5,
+                ),
+              ),
+            ],
+          ),
+        ),
         actions: [
           Center(
-            child: ElevatedButton(
+            child: ElevatedButton.icon(
               onPressed: () {
                 Navigator.of(context).pop();
                 safePush(context, const BookingHomeScreen());
               },
-              child: const Text("OK"),
+              icon: const Icon(Icons.check),
+              label: const Text('Done'),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.green.shade600,
+                foregroundColor: Colors.white,
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 32, vertical: 12),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8),
+                ),
+              ),
             ),
           ),
         ],
