@@ -102,7 +102,7 @@ class _BookingHomeScreenState extends State<BookingHomeScreen> {
           break;
         default:
           _selectedNavIndex = 0;
-          _loadMonthBookings(bookingProvider);
+          _loadPendingBookings(bookingProvider);
       }
     });
   }
@@ -116,6 +116,9 @@ class _BookingHomeScreenState extends State<BookingHomeScreen> {
   /// Booking card
   Widget _buildBookingCard(Booking booking, Color color) {
     final isPastLocal = isBookingInPast(booking);
+    final bookingProvider =
+        Provider.of<BookingProvider>(context, listen: false);
+    final isLogView = bookingProvider.currentViewOption == 'new';
 
     return Container(
       margin: const EdgeInsets.symmetric(vertical: 6.0, horizontal: 16.0),
@@ -146,6 +149,25 @@ class _BookingHomeScreenState extends State<BookingHomeScreen> {
         child: GestureDetector(
           behavior: HitTestBehavior.opaque,
           onTap: () {
+            final bookingProvider =
+                Provider.of<BookingProvider>(context, listen: false);
+
+            // Check if current view is 'pending'
+            if (bookingProvider.currentViewOption == 'pending') {
+              // Load bookings with the pending booking's date
+              setState(() => _isLogView = false);
+              bookingProvider.setCurrentViewOption(booking.bookingdate);
+              bookingProvider.loadBookingsWithDate(booking.bookingdate);
+              // Listen for the next event and update _dateCount
+              bookingProvider.bookingStream.first.then((list) {
+                if (mounted) {
+                  setState(() {
+                    _dateCount = list.length;
+                  });
+                }
+              });
+              return;
+            }
             showDialog(
               context: context,
               barrierDismissible: false,
@@ -192,7 +214,9 @@ class _BookingHomeScreenState extends State<BookingHomeScreen> {
                               color: Colors.white, size: 14),
                           const SizedBox(width: 4),
                           Text(
-                            formatBookingTime(booking.bookingstart),
+                            isLogView
+                                ? _formatSchedule(booking.bookingtime)
+                                : formatBookingTime(booking.bookingstart),
                             style: const TextStyle(
                                 color: Colors.white,
                                 fontWeight: FontWeight.bold,
@@ -397,7 +421,7 @@ class _BookingHomeScreenState extends State<BookingHomeScreen> {
   }
 
   String _formatSchedule(DateTime dateTime) =>
-      DateFormat('HH:mm, dd-MM-yyyy').format(dateTime);
+      DateFormat('EEEE, dd MMM yyyy HH:mm').format(dateTime);
 
   Color _statusColor(String status, Color defaultColor) {
     final s = status.toLowerCase();

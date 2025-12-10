@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'package:salonapp/api/api_manager.dart';
 import 'package:salonapp/services/helper.dart';
 import 'package:easy_localization/easy_localization.dart';
+import 'package:salonapp/provider/booking.provider.dart';
 import 'home.dart';
 
 Future<void> saveBooking(
@@ -124,8 +126,9 @@ Future<void> deleteBookingAction(
   BuildContext context,
   bool isLoading,
   Function(bool) setLoading,
-  dynamic booking, // Pass widget.booking here
-) async {
+  dynamic booking, {
+  String? currentView,
+}) async {
   final confirm = await showDialog<bool>(
     context: context,
     builder: (context) => AlertDialog(
@@ -157,11 +160,14 @@ Future<void> deleteBookingAction(
     if (!context.mounted) return;
 
     if (success) {
-      safePushAndRemoveUntil(
-        context,
-        const BookingHomeScreen(),
-        (route) => false,
-      );
+      Navigator.of(context).pop();
+      // Reload the booking list after successful deletion
+      if (!context.mounted) return;
+      final bookingProvider =
+          Provider.of<BookingProvider>(context, listen: false);
+      if (currentView != null) {
+        bookingProvider.loadBookingsWithOption(currentView);
+      }
     } else {
       showDialog(
         context: context,

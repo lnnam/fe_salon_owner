@@ -717,12 +717,20 @@ class _SummaryPageState extends State<SummaryPage> {
                         TextButton(
                           onPressed: isLoading
                               ? null
-                              : () => deleteBookingAction(
+                              : () {
+                                  final bookingProvider =
+                                      Provider.of<BookingProvider>(context,
+                                          listen: false);
+                                  final currentView =
+                                      bookingProvider.currentViewOption;
+                                  deleteBookingAction(
                                     context,
                                     isLoading,
                                     (val) => setState(() => isLoading = val),
                                     widget.booking,
-                                  ),
+                                    currentView: currentView,
+                                  );
+                                },
                           child: const Text(
                             'Delete',
                             style: TextStyle(
