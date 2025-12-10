@@ -367,7 +367,8 @@ class _SettingPageState extends State<SettingPage> {
                           _autoBooking = value;
                         });
                       },
-                      activeThumbColor: const Color(COLOR_PRIMARY),
+                      thumbColor:
+                          MaterialStateProperty.all(const Color(COLOR_PRIMARY)),
                     ),
                   ],
                 ),
@@ -398,7 +399,8 @@ class _SettingPageState extends State<SettingPage> {
                           _openSunday = value;
                         });
                       },
-                      activeThumbColor: const Color(COLOR_PRIMARY),
+                      thumbColor:
+                          MaterialStateProperty.all(const Color(COLOR_PRIMARY)),
                     ),
                   ],
                 ),
@@ -429,7 +431,8 @@ class _SettingPageState extends State<SettingPage> {
                           _aiConfirm = value;
                         });
                       },
-                      activeThumbColor: const Color(COLOR_PRIMARY),
+                      thumbColor:
+                          MaterialStateProperty.all(const Color(COLOR_PRIMARY)),
                     ),
                   ],
                 ),
