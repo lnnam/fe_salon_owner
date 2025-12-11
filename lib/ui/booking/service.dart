@@ -4,6 +4,7 @@ import 'package:salonapp/api/api_manager.dart';
 import 'package:salonapp/model/service.dart';
 import 'package:salonapp/services/helper.dart';
 import 'package:salonapp/provider/booking.provider.dart';
+import 'home.dart';
 import 'calendar.dart'; // Import SchedulePage
 import 'summary.dart';
 
@@ -30,6 +31,19 @@ class ServicePageState extends State<ServicePage> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Services'),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.cancel, color: Colors.white),
+            tooltip: 'Back to Home',
+            onPressed: () {
+              safePushAndRemoveUntil(
+                context,
+                const BookingHomeScreen(),
+                (route) => false,
+              );
+            },
+          ),
+        ],
       ),
       body: FutureBuilder<List<Service>>(
         future: apiManager.ListServices(),

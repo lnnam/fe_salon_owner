@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import 'package:salonapp/provider/booking.provider.dart';
 import 'package:booking_calendar/booking_calendar.dart';
 import 'package:salonapp/constants.dart';
+import 'home.dart';
 import 'customer.dart'; // Import SchedulePage
 import 'summary.dart';
 import 'package:salonapp/services/helper.dart';
@@ -208,17 +209,30 @@ class _BookingCalendarPageState extends State<BookingCalendarPage> {
         title: const Text('Booking Calendar',
             style: TextStyle(color: Colors.white)),
         backgroundColor: color, // Set app bar color
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.cancel, color: Colors.white),
+            tooltip: 'Back to Home',
+            onPressed: () {
+              safePushAndRemoveUntil(
+                context,
+                const BookingHomeScreen(),
+                (route) => false,
+              );
+            },
+          ),
+        ],
       ),
       body: Center(
         child: BookingCalendar(
           bookingService: mockBookingService,
           convertStreamResultToDateTimeRanges: (
-              {required dynamic streamResult}) =>
-            streamResult as List<DateTimeRange>,
+                  {required dynamic streamResult}) =>
+              streamResult as List<DateTimeRange>,
 
           getBookingStream: (
-              {required DateTime start, required DateTime end}) =>
-            getBookingStreamFromServer(start: start, end: end),
+                  {required DateTime start, required DateTime end}) =>
+              getBookingStreamFromServer(start: start, end: end),
           // convertStreamResultToDateTimeRanges: convertStreamResultMock,
           // getBookingStream: getBookingStreamMock,
           uploadBooking: uploadBookingMock,
@@ -232,7 +246,7 @@ class _BookingCalendarPageState extends State<BookingCalendarPage> {
 
           startingDayOfWeek: StartingDayOfWeek.monday,
           wholeDayIsBookedWidget:
-            const Text('Sorry, for this day everything is booked'),
+              const Text('Sorry, for this day everything is booked'),
           //disabledDates: [DateTime(2023, 1, 20)],
           //disabledDays: [6, 7],
           bookingButtonColor: color,

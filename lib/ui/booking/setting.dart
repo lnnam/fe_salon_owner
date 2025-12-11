@@ -19,7 +19,8 @@ class _SettingPageState extends State<SettingPage> {
   late TextEditingController _hoursOffController;
   bool _autoBooking = true;
   bool _openSunday = false;
-  bool _aiConfirm = false;
+  bool _autoconfirm = false;
+  bool _aicheck = false;
   final List<DateTime> _selectedDaysOff = [];
 
   @override
@@ -60,10 +61,10 @@ class _SettingPageState extends State<SettingPage> {
       // Load boolean values - database stores as strings 'true'/'false'
       _autoBooking = _parseBooleanString(settings['onoff']);
       _openSunday = _parseBooleanString(settings['sundayoff']);
-      _aiConfirm = _parseBooleanString(settings['autoconfirm']);
-
+      _autoconfirm = _parseBooleanString(settings['autoconfirm']);
+       _aicheck = _parseBooleanString(settings['aicheck']);
       print(
-          '[SettingPage] Parsed booleans - onoff: ${settings['onoff']} -> $_autoBooking, sundayoff: ${settings['sundayoff']} -> $_openSunday, autoconfirm: ${settings['autoconfirm']} -> $_aiConfirm');
+          '[SettingPage] Parsed booleans - onoff: ${settings['onoff']} -> $_autoBooking, sundayoff: ${settings['sundayoff']} -> $_openSunday, autoconfirm: ${settings['autoconfirm']} -> $_autoconfirm');
 
       // Load hours off - ensure it's a string
       if (settings['listhouroff'] != null) {
@@ -142,7 +143,7 @@ class _SettingPageState extends State<SettingPage> {
       _hoursOffController.text = '';
       _autoBooking = true;
       _openSunday = false;
-      _aiConfirm = false;
+      _autoconfirm = false;
 
       _selectedDaysOff.clear();
       const defaultDaysStr = '';
@@ -204,7 +205,8 @@ class _SettingPageState extends State<SettingPage> {
             numStaff.toString(), // Convert to string for API
         'onoff': _autoBooking ? 'true' : 'false',
         'sundayoff': _openSunday ? 'true' : 'false',
-        'autoconfirm': _aiConfirm ? 'true' : 'false',
+        'autoconfirm': _autoconfirm ? 'true' : 'false',
+        'aicheck': _aicheck ? 'yes' : 'no',
         'listoffday': daysOffString,
         'listhouroff': hoursOff,
       };
@@ -218,7 +220,8 @@ class _SettingPageState extends State<SettingPage> {
             numStaff, // Keep as int - provider will convert to string when saving
         'onoff': _autoBooking ? 'true' : 'false',
         'sundayoff': _openSunday ? 'true' : 'false',
-        'autoconfirm': _aiConfirm ? 'true' : 'false',
+        'autoconfirm': _autoconfirm ? 'true' : 'false',
+        'aicheck': _aicheck ? 'yes' : 'no',
         'listoffday': daysOffString,
         'listhouroff': hoursOff,
       };
@@ -406,6 +409,36 @@ class _SettingPageState extends State<SettingPage> {
                 ),
               ),
               const SizedBox(height: 12),
+              Container(
+                padding: const EdgeInsets.all(12.0),
+                decoration: BoxDecoration(
+                  border: Border.all(color: Colors.grey[300]!),
+                  borderRadius: BorderRadius.circular(4),
+                ),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    const Text(
+                      'AI Check',
+                      style: TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                    Switch(
+                      value: _aicheck,
+                      onChanged: (value) {
+                        setState(() {
+                          _aicheck = value;
+                        });
+                      },
+                      thumbColor:
+                          MaterialStateProperty.all(const Color(COLOR_PRIMARY)),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 12),
 
               // AI CONFIRM
               Container(
@@ -418,17 +451,17 @@ class _SettingPageState extends State<SettingPage> {
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     const Text(
-                      'AI Confirm',
+                      'Auto Confirm',
                       style: TextStyle(
                         fontSize: 14,
                         fontWeight: FontWeight.w500,
                       ),
                     ),
                     Switch(
-                      value: _aiConfirm,
+                      value: _autoconfirm,
                       onChanged: (value) {
                         setState(() {
-                          _aiConfirm = value;
+                          _autoconfirm = value;
                         });
                       },
                       thumbColor:

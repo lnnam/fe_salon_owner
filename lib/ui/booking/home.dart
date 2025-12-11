@@ -102,7 +102,7 @@ class _BookingHomeScreenState extends State<BookingHomeScreen> {
           break;
         default:
           _selectedNavIndex = 0;
-          _loadPendingBookings(bookingProvider);
+          _loadTodayBookings(bookingProvider);
       }
     });
   }
@@ -610,12 +610,66 @@ class _BookingHomeScreenState extends State<BookingHomeScreen> {
             }
 
             if (snapshot.hasError) {
-              return Center(child: Text('Error: ${snapshot.error}'));
+              return Center(
+                child: Padding(
+                  padding: const EdgeInsets.all(16.0),
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(
+                        Icons.error_outline,
+                        size: 64,
+                        color: Colors.red.shade300,
+                      ),
+                      const SizedBox(height: 16),
+                      const Text(
+                        'Server connection issue',
+                        textAlign: TextAlign.center,
+                        style: TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                          color: Color(0xFFC62828),
+                        ),
+                      ),
+                      const SizedBox(height: 24),
+                      ElevatedButton.icon(
+                        onPressed: () {
+                          final bookingProvider = Provider.of<BookingProvider>(
+                              context,
+                              listen: false);
+                          final currentOption =
+                              bookingProvider.currentViewOption;
+                          if (currentOption != null) {
+                            bookingProvider
+                                .loadBookingsWithOption(currentOption);
+                          }
+                        },
+                        icon: const Icon(Icons.refresh),
+                        label: const Text('Retry'),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: _primaryColor,
+                          foregroundColor: Colors.white,
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 24,
+                            vertical: 12,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              );
             }
 
             final bookings = snapshot.data ?? [];
             if (bookings.isEmpty) {
-              return const Center(child: Text('No bookings available.'));
+              final bookingProvider =
+                  Provider.of<BookingProvider>(context, listen: false);
+              final currentOption = bookingProvider.currentViewOption;
+              final emptyMessage = currentOption == 'pending'
+                  ? 'No pending booking'
+                  : 'No bookings available.';
+              return Center(child: Text(emptyMessage));
             }
 
             if (_isLogView) {

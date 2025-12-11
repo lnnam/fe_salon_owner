@@ -34,30 +34,46 @@ class MyHttp {
   Future<dynamic> salonLogin(
       String salonkey, String username, String password) async {
     try {
-      final response = await http.post(
-        Uri.parse(AppConfig.api_url_login),
-        headers: <String, String>{
-          'Content-Type': 'application/json; charset=UTF-8',
-        },
-        body: jsonEncode(<String, String>{
-          'salonkey': salonkey,
-          'username': username,
-          'password': password,
-        }),
-      );
-
-      // Map<String, dynamic> response = {};
+      final response = await http
+          .post(
+            Uri.parse(AppConfig.api_url_login),
+            headers: <String, String>{
+              'Content-Type': 'application/json; charset=UTF-8',
+            },
+            body: jsonEncode(<String, String>{
+              'salonkey': salonkey,
+              'username': username,
+              'password': password,
+            }),
+          )
+          .timeout(
+            const Duration(seconds: 20),
+            onTimeout: () => throw TimeoutException('Request timed out'),
+          );
 
       if (response.statusCode == 200) {
         return User.fromJson(jsonDecode(response.body));
       } else {
-        // then throw an exception.
-        //throw Exception('Login Fail !');
-        return null;
+        throw ServerException(
+          message:
+              'Login failed with status ${response.statusCode}. Please try again.',
+          originalError: response.statusCode,
+        );
       }
+    } on ServerException {
+      rethrow;
+    } on TimeoutException catch (e) {
+      print('[HTTP] Timeout error in salonLogin: $e');
+      throw ServerException(
+        message: 'Error',
+        originalError: e,
+      );
     } catch (e) {
-      // debugPrint(e.toString() + '$s');
-      return e;
+      print('[HTTP] Error in salonLogin: $e');
+      throw ServerException(
+        message: 'Server connection issue',
+        originalError: e,
+      );
     }
   }
 
@@ -104,26 +120,16 @@ class MyHttp {
       }
     } on ServerException {
       rethrow; // Re-throw our custom exception as-is
+    } on TimeoutException catch (e) {
+      print('[HTTP] Timeout error in fetchFromServer: $e');
+      throw ServerException(
+        message: 'Error',
+        originalError: e,
+      );
     } catch (e) {
       print('[HTTP] Error in fetchFromServer: $e');
-      String userMessage =
-          'An unexpected error occurred. Please try again later.';
-
-      if (e.toString().contains('Connection refused')) {
-        userMessage =
-            'Cannot connect to server. Please check your network connection.';
-      } else if (e.toString().contains('timed out') || e is TimeoutException) {
-        userMessage =
-            'Request timeout. Please check your network and try again.';
-      } else if (e.toString().contains('Connection refused') ||
-          e.toString().contains('Failed to connect') ||
-          e.toString().contains('Network unreachable')) {
-        userMessage =
-            'Cannot connect to server. Please check your network connection.';
-      }
-
       throw ServerException(
-        message: userMessage,
+        message: 'Server connection issue',
         originalError: e,
       );
     }
@@ -137,12 +143,7 @@ class MyHttp {
       }
 
       print('[API] Loading bookings from: $endpoint');
-      final startTime = DateTime.now();
       final response = await fetchFromServer(endpoint);
-   //   print('[API] ListBooking raw response object: ' + response.toString());
-      final duration = DateTime.now().difference(startTime);
-    //  print('[API] ListBooking fetch duration: ${duration.inMilliseconds} ms');
-
       List<Booking> bookings = [];
 
       // Handle response as Map (object with numeric keys) or List
@@ -381,6 +382,9 @@ class MyHttp {
           'Authorization': 'Bearer $token',
           'Content-Type': 'application/json',
         },
+      ).timeout(
+        const Duration(seconds: 20),
+        onTimeout: () => throw TimeoutException('Request timed out'),
       );
 
       if (response.statusCode == 200) {
@@ -410,8 +414,15 @@ class MyHttp {
         print('Fetch availability failed: ${response.statusCode}');
         return [];
       }
+    } on TimeoutException catch (e) {
+      print('Timeout error fetching availability: $e');
+      return [];
     } catch (e) {
       print('Error fetching availability: $e');
+      if (e.toString().contains('Connection refused') ||
+          e.toString().contains('ERR_CONNECTION_REFUSED')) {
+        print('Cannot connect to server for availability');
+      }
       return [];
     }
   }
@@ -445,17 +456,16 @@ class MyHttp {
   /// Fetch app settings from the booking/setting endpoint
   Future<Map<String, dynamic>?> fetchAppSettings(String? token) async {
     try {
-      print('[HTTP] fetchAppSettings: Starting with token: $token');
       final response = await http.get(
         Uri.parse(AppConfig.api_url_booking_setting),
         headers: <String, String>{
           'Content-Type': 'application/json; charset=UTF-8',
           if (token != null) 'Authorization': 'Bearer $token',
         },
+      ).timeout(
+        const Duration(seconds: 20),
+        onTimeout: () => throw TimeoutException('Request timed out'),
       );
-
-      print('[HTTP] fetchAppSettings: Response status: ${response.statusCode}');
-      print('[HTTP] fetchAppSettings: Response body: ${response.body}');
 
       if (response.statusCode == 200) {
         final responseData = jsonDecode(response.body) as Map<String, dynamic>;
@@ -473,15 +483,21 @@ class MyHttp {
           }
         }
 
-        print('[HTTP] fetchAppSettings: Invalid response structure');
         return null;
       } else {
         print(
             '[HTTP] fetchAppSettings: Failed with status ${response.statusCode}');
         return null;
       }
+    } on TimeoutException catch (e) {
+      print('[HTTP] fetchAppSettings: Timeout - $e');
+      return null;
     } catch (e) {
       print('[HTTP] fetchAppSettings: ERROR - $e');
+      if (e.toString().contains('Connection refused') ||
+          e.toString().contains('ERR_CONNECTION_REFUSED')) {
+        print('[HTTP] fetchAppSettings: Cannot connect to server');
+      }
       return null;
     }
   }

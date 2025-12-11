@@ -4,6 +4,7 @@ import 'package:salonapp/api/api_manager.dart';
 import 'package:salonapp/model/staff.dart';
 import 'package:salonapp/services/helper.dart';
 import 'package:salonapp/provider/booking.provider.dart';
+import 'home.dart';
 import 'service.dart';
 import 'summary.dart';
 
@@ -30,6 +31,19 @@ class StaffPageState extends State<StaffPage> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Staffs'),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.cancel, color: Colors.white),
+            tooltip: 'Back to Home',
+            onPressed: () {
+              safePushAndRemoveUntil(
+                context,
+                const BookingHomeScreen(),
+                (route) => false,
+              );
+            },
+          ),
+        ],
       ),
       body: FutureBuilder<List<Staff>>(
         future: apiManager.ListStaff(),

@@ -5,6 +5,7 @@ import 'package:salonapp/model/customer.dart';
 import 'package:salonapp/provider/booking.provider.dart';
 import 'package:salonapp/services/helper.dart';
 import 'package:salonapp/config/app_config.dart';
+import 'home.dart';
 import 'Summary.dart';
 
 class CustomerPage extends StatefulWidget {
@@ -288,6 +289,19 @@ class _CustomerPageState extends State<CustomerPage> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Customers'),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.cancel, color: Colors.white),
+            tooltip: 'Back to Home',
+            onPressed: () {
+              safePushAndRemoveUntil(
+                context,
+                const BookingHomeScreen(),
+                (route) => false,
+              );
+            },
+          ),
+        ],
       ),
       body: Column(
         children: [

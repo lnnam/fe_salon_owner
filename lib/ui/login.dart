@@ -233,22 +233,24 @@ class _LoginState extends State<Login> {
           final settings = await apiManager.fetchAppSettings(result.token);
           print('[Login] Fetched App Settings: $settings');
           if (settings != null) {
-            final settingProvider = Provider.of<SettingProvider>(context, listen: false);
+            final settingProvider =
+                Provider.of<SettingProvider>(context, listen: false);
             settingProvider.updateAppSettings(settings);
-            
+
             // Map the booking settings from the API response
             // Use database field names for consistency
-             final bookingSettingsData = {
+            final bookingSettingsData = {
               'pkey': settings['pkey'] ?? '',
-              'num_staff_for_autobooking': settings['num_staff_for_autobooking'] ?? 4,
+              'num_staff_for_autobooking':
+                  settings['num_staff_for_autobooking'] ?? 4,
               'onoff': settings['onoff'] ?? 'true',
               'sundayoff': settings['sundayoff'] ?? 'false',
               'autoconfirm': settings['autoconfirm'] ?? 'false',
+              'aicheck': settings['ai_check'] ?? 'no',
               'listoffday': settings['listoffday'] ?? '',
               'listhouroff': settings['listhouroff'] ?? '',
             };
-            settingProvider.updateBookingSettings(bookingSettingsData); 
-            
+            settingProvider.updateBookingSettings(bookingSettingsData);
           } else {
             print('[Login] Failed to fetch app settings');
           }
@@ -259,23 +261,74 @@ class _LoginState extends State<Login> {
               'Login failed, Please try again.'.tr());
         }
       } catch (e) {
-        // Show dialog if server is not connected
+        print('[Login] Error during login: $e');
+
         showDialog(
           context: context,
           builder: (context) => AlertDialog(
-            title: const Text('Error'),
-            content: const Text('Unable to connect to the server'),
+            shape:
+                RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+            backgroundColor: Colors.white,
+            title: Container(
+              decoration: BoxDecoration(
+                color: Colors.red.shade50,
+                borderRadius: BorderRadius.circular(12),
+              ),
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                children: [
+                  Icon(
+                    Icons.error_outline,
+                    color: Colors.red.shade600,
+                    size: 48,
+                  ),
+                  const SizedBox(height: 12),
+                  const Text(
+                    'Server connection issue',
+                    style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                      color: Color(0xFFC62828),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            content: const Padding(
+              padding: EdgeInsets.symmetric(vertical: 16),
+              child: Text(
+                'Server connection issue',
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  fontSize: 14,
+                  color: Colors.black87,
+                  height: 1.5,
+                ),
+              ),
+            ),
             actions: [
-              TextButton(
-                onPressed: () => Navigator.of(context).pop(),
-                child: const Text('OK'),
+              Center(
+                child: ElevatedButton(
+                  onPressed: () => Navigator.of(context).pop(),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(COLOR_PRIMARY),
+                    foregroundColor: Colors.white,
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 32,
+                      vertical: 12,
+                    ),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                  ),
+                  child: const Text('Try Again'),
+                ),
               ),
             ],
           ),
         );
-        print('Error during login: $e');
       }
-    } 
+    }
   }
 
   // Function to set the cookie on the web platform

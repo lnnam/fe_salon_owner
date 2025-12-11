@@ -54,6 +54,14 @@ class BookingProvider with ChangeNotifier {
       }
     } catch (e) {
       print('[BookingProvider] Error during manual refresh: $e');
+      // Pass error to stream so it shows in UI
+      if (!_bookingStreamController.isClosed) {
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (!_bookingStreamController.isClosed) {
+            _bookingStreamController.addError(e);
+          }
+        });
+      }
     }
   }
 
@@ -76,6 +84,10 @@ class BookingProvider with ChangeNotifier {
       }
     } catch (e) {
       print('[BookingProvider] Error loading bookings with date $date: $e');
+      // Pass error to stream so it shows in UI
+      if (!_bookingStreamController.isClosed) {
+        _bookingStreamController.addError(e);
+      }
     }
   }
 
@@ -94,6 +106,10 @@ class BookingProvider with ChangeNotifier {
       }
     } catch (e) {
       print('[BookingProvider] Error loading bookings with option $option: $e');
+      // Pass error to stream so it shows in UI
+      if (!_bookingStreamController.isClosed) {
+        _bookingStreamController.addError(e);
+      }
     }
   }
 
