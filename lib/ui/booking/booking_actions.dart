@@ -66,7 +66,7 @@ Future<void> saveBooking(
               ),
               const SizedBox(height: 12),
               const Text(
-                'Book now',
+                'Confirmed',
                 style: TextStyle(
                   fontSize: 20,
                   fontWeight: FontWeight.bold,
@@ -76,23 +76,7 @@ Future<void> saveBooking(
             ],
           ),
         ),
-        content: const Padding(
-          padding: EdgeInsets.symmetric(vertical: 16),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Text(
-                'Your booking has been saved successfully.',
-                textAlign: TextAlign.center,
-                style: TextStyle(
-                  fontSize: 16,
-                  color: Colors.black87,
-                  height: 1.5,
-                ),
-              ),
-            ],
-          ),
-        ),
+       
         actions: [
           Center(
             child: ElevatedButton.icon(

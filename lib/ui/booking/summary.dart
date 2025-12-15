@@ -677,7 +677,7 @@ class _SummaryPageState extends State<SummaryPage> {
                                   ? const CircularProgressIndicator(
                                       color: Colors.white)
                                   : const Text(
-                                      'Save Booking',
+                                      'Save',
                                       style: TextStyle(
                                           fontSize: 16,
                                           fontWeight: FontWeight.bold,
