@@ -17,6 +17,8 @@ Future<void> saveBooking(
   String bookingTime,
   String note,
   String customerName,
+  String customerEmail,
+  String customerPhone,
   String staffName,
   String serviceName,
 ) async {
@@ -33,6 +35,8 @@ Future<void> saveBooking(
     bookingTime,
     note,
     customerName,
+    customerEmail,
+    customerPhone,
     staffName,
     serviceName,
   );
@@ -62,7 +66,7 @@ Future<void> saveBooking(
               ),
               const SizedBox(height: 12),
               const Text(
-                'Booking Saved',
+                'Book now',
                 style: TextStyle(
                   fontSize: 20,
                   fontWeight: FontWeight.bold,

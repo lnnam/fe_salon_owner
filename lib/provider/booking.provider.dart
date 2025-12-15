@@ -191,8 +191,12 @@ class BookingProvider with ChangeNotifier {
       'formattedschedule': formattedSchedule,
       'customername': _onbooking.customer?['fullname'],
       'customerkey': _onbooking.customer?['customerkey'].toString(),
-      'customerphone': _onbooking.customer?['customerphone'] ?? 'N/A',
-      'customeremail': _onbooking.customer?['customeremail'] ?? 'N/A',
+      'customerphone': _onbooking.customer?['phone'] ??
+          _onbooking.customer?['customerphone'] ??
+          'N/A',
+      'customeremail': _onbooking.customer?['email'] ??
+          _onbooking.customer?['customeremail'] ??
+          'N/A',
       'staffname': _onbooking.staff?['fullname'].toString(),
       'staffkey': _onbooking.staff?['staffkey'].toString(),
       'servicename': _onbooking.service?['name'].toString(),

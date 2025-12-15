@@ -99,6 +99,7 @@ class MyHttp {
                     'Request timed out after 20 seconds. Server may be slow or unreachable.'),
               );
 
+    
       // Handling response
       if (response.statusCode == 200) {
         // Request successful, parse and return response data
@@ -263,6 +264,8 @@ class MyHttp {
     String schedule,
     String note,
     String customerName,
+    String customerEmail,
+    String customerPhone,
     String staffName,
     String serviceName,
   ) async {
@@ -281,14 +284,15 @@ class MyHttp {
         'datetime': schedule,
         'note': note,
         'customername': customerName,
-        'customeremail': '', // Add missing field
-        'customerphone': '', // Add missing field
+        'customeremail': customerEmail,
+        'customerphone': customerPhone,
         'staffname': staffName,
         'servicename': serviceName,
         'userkey': '1',
       };
 
       print('SaveBooking request body: $requestBody');
+
 
       final response = await http.post(
         Uri.parse(AppConfig.api_url_booking_save),

@@ -373,10 +373,6 @@ class _SummaryPageState extends State<SummaryPage> {
         s.contains('booked') ||
         s.contains('book');
 
-    // Debug: Check phone availability
-    print(
-        '[SummaryPage] Build - customerPhone: $customerPhone, empty: ${customerPhone.isEmpty}, isNA: ${customerPhone == "N/A"}');
-
     return Scaffold(
       appBar: AppBar(
         title: const Text('Summary Booking'),
@@ -664,6 +660,8 @@ class _SummaryPageState extends State<SummaryPage> {
                                         bookingTime,
                                         note,
                                         customerName,
+                                        customerEmail,
+                                        customerPhone,
                                         staffName,
                                         serviceName,
                                       ),
