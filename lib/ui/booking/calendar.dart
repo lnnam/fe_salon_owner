@@ -4,8 +4,9 @@ import 'package:salonapp/provider/booking.provider.dart';
 import 'package:booking_calendar/booking_calendar.dart';
 import 'package:salonapp/constants.dart';
 import 'home.dart';
-import 'customer.dart'; // Import SchedulePage
+import 'customer.dart';
 import 'summary.dart';
+import 'schedule.dart';
 import 'package:salonapp/services/helper.dart';
 import 'package:salonapp/api/api_manager.dart';
 
@@ -218,6 +219,19 @@ class _BookingCalendarPageState extends State<BookingCalendarPage> {
                 context,
                 const BookingHomeScreen(),
                 (route) => false,
+              );
+            },
+          ),
+          TextButton.icon(
+            icon: const Icon(Icons.assignment_turned_in, color: Colors.white),
+            label: const Text('Check', style: TextStyle(color: Colors.white)),
+            style: TextButton.styleFrom(
+              foregroundColor: Colors.white,
+            ),
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => const SchedulePage()),
               );
             },
           ),
