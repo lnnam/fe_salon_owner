@@ -2,6 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:salonapp/api/api_manager.dart';
 import 'package:salonapp/config/app_config.dart';
 import 'package:intl/intl.dart';
+import 'package:provider/provider.dart';
+import 'package:salonapp/provider/booking.provider.dart';
+import 'package:booking_calendar/booking_calendar.dart';
+import 'summary.dart';
+import 'customer.dart';
+import 'package:salonapp/services/helper.dart';
 
 class SchedulePage extends StatefulWidget {
   const SchedulePage({super.key});
@@ -88,6 +94,51 @@ class _SchedulePageState extends State<SchedulePage> {
     return slots;
   }
 
+  Future<void> _onTimeSlotSelected(String timeSlot) async {
+    // Parse the time slot (HH:MM format)
+    final timeParts = timeSlot.split(':');
+    final hour = int.parse(timeParts[0]);
+    final minute = int.parse(timeParts[1]);
+
+    // Create start and end times for the booking
+    final bookingStart = DateTime(
+      selectedDate.year,
+      selectedDate.month,
+      selectedDate.day,
+      hour,
+      minute,
+    );
+    final bookingEnd = bookingStart.add(const Duration(minutes: 15));
+
+    // Create BookingService object with the selected slot
+    final BookingService newBooking = BookingService(
+      serviceName: 'Booking',
+      serviceDuration: 15,
+      bookingStart: bookingStart,
+      bookingEnd: bookingEnd,
+    );
+
+    // Set the schedule in BookingProvider
+    Provider.of<BookingProvider>(context, listen: false)
+        .setSchedule(newBooking.toJson());
+
+    print(
+        '[Schedule] Booking set: $timeSlot on ${DateFormat('yyyy-MM-dd').format(selectedDate)}');
+
+    // Navigate based on edit mode (same as calendar.dart)
+    final bookingProvider =
+        Provider.of<BookingProvider>(context, listen: false);
+    final isEditMode = bookingProvider.onbooking.editMode;
+
+    if (!mounted) return;
+
+    if (isEditMode) {
+      safePush(context, const SummaryPage());
+    } else {
+      safePush(context, const CustomerPage());
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final timeSlots = getTimeSlots();
@@ -139,51 +190,57 @@ class _SchedulePageState extends State<SchedulePage> {
                   ),
                   itemCount: timeSlots.length,
                   itemBuilder: (context, index) {
-                    return Stack(
-                      clipBehavior: Clip.none,
-                      children: [
-                        Container(
-                          decoration: BoxDecoration(
-                            color: Colors.blue.shade50,
-                            border: Border.all(color: Colors.blue.shade200),
-                            borderRadius: BorderRadius.circular(8),
+                    return GestureDetector(
+                      onTap: () {
+                        _onTimeSlotSelected(timeSlots[index]);
+                      },
+                      child: Stack(
+                        clipBehavior: Clip.none,
+                        children: [
+                          Container(
+                            decoration: BoxDecoration(
+                              color: Colors.blue.shade50,
+                              border: Border.all(color: Colors.blue.shade200),
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            alignment: Alignment.center,
+                            child: Text(
+                              timeSlots[index],
+                              style:
+                                  const TextStyle(fontWeight: FontWeight.bold),
+                            ),
                           ),
-                          alignment: Alignment.center,
-                          child: Text(
-                            timeSlots[index],
-                            style: const TextStyle(fontWeight: FontWeight.bold),
-                          ),
-                        ),
-                        if ((slotCounts[timeSlots[index]] ?? 0) > 0)
-                          Positioned(
-                            top: -6,
-                            right: -6,
-                            child: Container(
-                              width: 22,
-                              height: 22,
-                              decoration: BoxDecoration(
-                                color: Colors.red,
-                                shape: BoxShape.circle,
-                                boxShadow: [
-                                  BoxShadow(
-                                    color: Colors.black.withOpacity(0.15),
-                                    blurRadius: 4,
-                                    offset: const Offset(0, 2),
+                          if ((slotCounts[timeSlots[index]] ?? 0) > 0)
+                            Positioned(
+                              top: -6,
+                              right: -6,
+                              child: Container(
+                                width: 22,
+                                height: 22,
+                                decoration: BoxDecoration(
+                                  color: Colors.red,
+                                  shape: BoxShape.circle,
+                                  boxShadow: [
+                                    BoxShadow(
+                                      color: Colors.black.withOpacity(0.15),
+                                      blurRadius: 4,
+                                      offset: const Offset(0, 2),
+                                    ),
+                                  ],
+                                ),
+                                alignment: Alignment.center,
+                                child: Text(
+                                  '${slotCounts[timeSlots[index]] ?? 0}',
+                                  style: const TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 13,
+                                    fontWeight: FontWeight.bold,
                                   ),
-                                ],
-                              ),
-                              alignment: Alignment.center,
-                              child: Text(
-                                '${slotCounts[timeSlots[index]] ?? 0}',
-                                style: const TextStyle(
-                                  color: Colors.white,
-                                  fontSize: 13,
-                                  fontWeight: FontWeight.bold,
                                 ),
                               ),
                             ),
-                          ),
-                      ],
+                        ],
+                      ),
                     );
                   },
                 ),
