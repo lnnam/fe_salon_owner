@@ -29,6 +29,12 @@ class AppDrawerDashboard extends StatelessWidget {
               safePushReplacementNamed(context, '/profile');
             },
           ),
+           ListTile(
+            title: const Text('Customers'),
+            onTap: () {
+              safePushReplacementNamed(context, '/customers');
+            },
+          ),
           ListTile(
             title: const Text('Setting'),
             onTap: () {

@@ -94,6 +94,23 @@ class _SchedulePageState extends State<SchedulePage> {
     return slots;
   }
 
+  bool _isTimeSlotInPast(String timeSlot) {
+    final now = DateTime.now();
+    final timeParts = timeSlot.split(':');
+    final hour = int.parse(timeParts[0]);
+    final minute = int.parse(timeParts[1]);
+
+    final slotDateTime = DateTime(
+      selectedDate.year,
+      selectedDate.month,
+      selectedDate.day,
+      hour,
+      minute,
+    );
+
+    return slotDateTime.isBefore(now);
+  }
+
   Future<void> _onTimeSlotSelected(String timeSlot) async {
     // Parse the time slot (HH:MM format)
     final timeParts = timeSlot.split(':');
@@ -190,27 +207,39 @@ class _SchedulePageState extends State<SchedulePage> {
                   ),
                   itemCount: timeSlots.length,
                   itemBuilder: (context, index) {
+                    final isInPast = _isTimeSlotInPast(timeSlots[index]);
+
                     return GestureDetector(
-                      onTap: () {
-                        _onTimeSlotSelected(timeSlots[index]);
-                      },
+                      onTap: isInPast
+                          ? null
+                          : () {
+                              _onTimeSlotSelected(timeSlots[index]);
+                            },
                       child: Stack(
                         clipBehavior: Clip.none,
                         children: [
                           Container(
                             decoration: BoxDecoration(
-                              color: Colors.blue.shade50,
-                              border: Border.all(color: Colors.blue.shade200),
+                              color: isInPast
+                                  ? Colors.grey.shade300
+                                  : Colors.blue.shade50,
+                              border: Border.all(
+                                  color: isInPast
+                                      ? Colors.grey.shade400
+                                      : Colors.blue.shade200),
                               borderRadius: BorderRadius.circular(8),
                             ),
                             alignment: Alignment.center,
                             child: Text(
                               timeSlots[index],
-                              style:
-                                  const TextStyle(fontWeight: FontWeight.bold),
+                              style: TextStyle(
+                                fontWeight: FontWeight.bold,
+                                color: isInPast ? Colors.grey : Colors.black,
+                              ),
                             ),
                           ),
-                          if ((slotCounts[timeSlots[index]] ?? 0) > 0)
+                          if (!isInPast &&
+                              (slotCounts[timeSlots[index]] ?? 0) > 0)
                             Positioned(
                               top: -6,
                               right: -6,
