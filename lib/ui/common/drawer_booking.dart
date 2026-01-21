@@ -3,6 +3,7 @@ import 'package:salonapp/constants.dart';
 import 'package:salonapp/services/helper.dart';
 import 'package:salonapp/ui/booking/setting.dart';
 import 'package:salonapp/ui/customer/customer_list.dart';
+import 'package:salonapp/ui/staff/home.dart';
 
 class AppDrawerBooking extends StatelessWidget {
   const AppDrawerBooking({super.key});
@@ -49,6 +50,15 @@ class AppDrawerBooking extends StatelessWidget {
               safePush(
                 context,
                 const CustomerListPage(),
+              );
+            },
+          ),
+          ListTile(
+            title: const Text('Staff'),
+            onTap: () {
+              safePush(
+                context,
+                const StaffListPage(),
               );
             },
           ),

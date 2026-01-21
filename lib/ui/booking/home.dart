@@ -10,6 +10,7 @@ import 'package:salonapp/services/helper.dart';
 import 'package:salonapp/ui/common/drawer_booking.dart';
 import 'package:salonapp/ui/booking/staff.dart';
 import 'summary.dart';
+import 'schedule.dart';
 
 class BookingHomeScreen extends StatefulWidget {
   final String? initialView;
@@ -588,14 +589,34 @@ class _BookingHomeScreenState extends State<BookingHomeScreen> {
         title: const Text('Appointment', style: TextStyle(color: Colors.white)),
         backgroundColor: _primaryColor,
         actions: [
-          Consumer<BookingProvider>(
-            builder: (context, bookingProvider, child) {
-              return IconButton(
-                icon: const Icon(Icons.refresh, color: Colors.white),
-                onPressed: () => _loadMonthBookings(bookingProvider),
-              );
-            },
-          )
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 12.0),
+            child: ElevatedButton(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.white,
+                foregroundColor: _primaryColor,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(20),
+                ),
+                elevation: 0,
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              ),
+              onPressed: () {
+                Navigator.of(context).push(
+                  MaterialPageRoute(builder: (context) => const SchedulePage()),
+                );
+              },
+              child: const Text(
+                'Book Now',
+                style: TextStyle(
+                  color: Color(COLOR_PRIMARY),
+                  fontWeight: FontWeight.bold,
+                  fontSize: 16,
+                ),
+              ),
+            ),
+          ),
         ],
       ),
       drawer: const AppDrawerBooking(),

@@ -172,35 +172,54 @@ class _SummaryPageState extends State<SummaryPage> {
           context,
           (context) => AlertDialog(
             shape:
-                RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
             backgroundColor: Colors.white,
+            elevation: 16,
+            insetPadding:
+                const EdgeInsets.symmetric(horizontal: 24, vertical: 24),
+            titlePadding: EdgeInsets.zero,
             title: Container(
               decoration: BoxDecoration(
-                color: Colors.green.shade50,
-                borderRadius: BorderRadius.circular(12),
+                gradient: LinearGradient(
+                  colors: [Colors.green.shade400, Colors.green.shade200],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                ),
+                borderRadius: const BorderRadius.only(
+                  topLeft: Radius.circular(20),
+                  topRight: Radius.circular(20),
+                ),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.green.withOpacity(0.15),
+                    blurRadius: 16,
+                    offset: const Offset(0, 6),
+                  ),
+                ],
               ),
-              padding: const EdgeInsets.all(16),
+              padding: const EdgeInsets.symmetric(vertical: 28, horizontal: 16),
               child: Column(
                 children: [
                   Icon(
                     Icons.check_circle,
-                    color: Colors.green.shade600,
-                    size: 48,
+                    color: Colors.white,
+                    size: 54,
                   ),
-                  const SizedBox(height: 12),
+                  const SizedBox(height: 14),
                   const Text(
                     'Booking Confirmed',
                     style: TextStyle(
-                      fontSize: 20,
+                      fontSize: 22,
                       fontWeight: FontWeight.bold,
-                      color: Colors.green,
+                      color: Colors.white,
+                      letterSpacing: 0.5,
                     ),
                   ),
                 ],
               ),
             ),
             content: const Padding(
-              padding: EdgeInsets.symmetric(vertical: 16),
+              padding: EdgeInsets.symmetric(vertical: 20, horizontal: 8),
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
@@ -208,23 +227,21 @@ class _SummaryPageState extends State<SummaryPage> {
                     'Your booking has been confirmed successfully.',
                     textAlign: TextAlign.center,
                     style: TextStyle(
-                      fontSize: 16,
+                      fontSize: 17,
                       color: Colors.black87,
-                      height: 1.5,
+                      height: 1.6,
                     ),
                   ),
-                  // Info message removed per request
                 ],
               ),
             ),
+            actionsPadding: const EdgeInsets.only(bottom: 18),
             actions: [
               Center(
                 child: ElevatedButton.icon(
                   onPressed: () {
                     Navigator.of(context).pop();
-                    // Navigate back to home list after confirmation
                     if (mounted) {
-                      // Reload pending list when returning to home
                       final bookingProvider =
                           Provider.of<BookingProvider>(context, listen: false);
                       bookingProvider.loadBookingsWithOption('pending');
@@ -241,10 +258,13 @@ class _SummaryPageState extends State<SummaryPage> {
                     backgroundColor: Colors.green.shade600,
                     foregroundColor: Colors.white,
                     padding: const EdgeInsets.symmetric(
-                        horizontal: 32, vertical: 12),
+                        horizontal: 40, vertical: 14),
+                    textStyle: const TextStyle(
+                        fontSize: 16, fontWeight: FontWeight.w600),
                     shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(8),
+                      borderRadius: BorderRadius.circular(10),
                     ),
+                    elevation: 2,
                   ),
                 ),
               ),
@@ -256,35 +276,54 @@ class _SummaryPageState extends State<SummaryPage> {
           context,
           (context) => AlertDialog(
             shape:
-                RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
             backgroundColor: Colors.white,
+            elevation: 16,
+            insetPadding:
+                const EdgeInsets.symmetric(horizontal: 24, vertical: 24),
+            titlePadding: EdgeInsets.zero,
             title: Container(
               decoration: BoxDecoration(
-                color: Colors.red.shade50,
-                borderRadius: BorderRadius.circular(12),
+                gradient: LinearGradient(
+                  colors: [Colors.red.shade400, Colors.red.shade200],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                ),
+                borderRadius: const BorderRadius.only(
+                  topLeft: Radius.circular(20),
+                  topRight: Radius.circular(20),
+                ),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.red.withOpacity(0.15),
+                    blurRadius: 16,
+                    offset: const Offset(0, 6),
+                  ),
+                ],
               ),
-              padding: const EdgeInsets.all(16),
+              padding: const EdgeInsets.symmetric(vertical: 28, horizontal: 16),
               child: Column(
                 children: [
                   Icon(
                     Icons.error_outline,
-                    color: Colors.red.shade600,
-                    size: 48,
+                    color: Colors.white,
+                    size: 54,
                   ),
-                  const SizedBox(height: 12),
+                  const SizedBox(height: 14),
                   const Text(
                     'Confirmation Failed',
                     style: TextStyle(
-                      fontSize: 20,
+                      fontSize: 22,
                       fontWeight: FontWeight.bold,
-                      color: Colors.red,
+                      color: Colors.white,
+                      letterSpacing: 0.5,
                     ),
                   ),
                 ],
               ),
             ),
             content: Padding(
-              padding: const EdgeInsets.symmetric(vertical: 16),
+              padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 8),
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
@@ -292,12 +331,12 @@ class _SummaryPageState extends State<SummaryPage> {
                     'Failed to confirm booking. Please try again.',
                     textAlign: TextAlign.center,
                     style: TextStyle(
-                      fontSize: 16,
+                      fontSize: 17,
                       color: Colors.black87,
-                      height: 1.5,
+                      height: 1.6,
                     ),
                   ),
-                  const SizedBox(height: 16),
+                  const SizedBox(height: 18),
                   Container(
                     padding: const EdgeInsets.all(12),
                     decoration: BoxDecoration(
@@ -324,6 +363,7 @@ class _SummaryPageState extends State<SummaryPage> {
                 ],
               ),
             ),
+            actionsPadding: const EdgeInsets.only(bottom: 18),
             actions: [
               Center(
                 child: ElevatedButton.icon(
@@ -334,10 +374,13 @@ class _SummaryPageState extends State<SummaryPage> {
                     backgroundColor: Colors.red.shade600,
                     foregroundColor: Colors.white,
                     padding: const EdgeInsets.symmetric(
-                        horizontal: 32, vertical: 12),
+                        horizontal: 40, vertical: 14),
+                    textStyle: const TextStyle(
+                        fontSize: 16, fontWeight: FontWeight.w600),
                     shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(8),
+                      borderRadius: BorderRadius.circular(10),
                     ),
+                    elevation: 2,
                   ),
                 ),
               ),

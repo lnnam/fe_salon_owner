@@ -99,10 +99,9 @@ class MyHttp {
                     'Request timed out after 20 seconds. Server may be slow or unreachable.'),
               );
 
-    
       // Handling response
       if (response.statusCode == 200) {
-      //  print(json.decode(response.body));
+        //  print(json.decode(response.body));
         // Request successful, parse and return response data
         return json.decode(response.body);
       } else if (response.statusCode == 401) {
@@ -181,6 +180,27 @@ class MyHttp {
     }
   }
 
+  Future<List<Staff>> ListStaff2() async {
+    try {
+      final response = await fetchFromServer(AppConfig.api_url_staff_list);
+      print('[API] ListStaff2 Response: $response');
+      List<dynamic> data = response;
+      final staffList = data.map<Staff>((item) {
+        print('[API] Staff Item: $item');
+        return Staff.fromJson(item);
+      }).toList();
+      print('[API] Parsed Staff List: ${staffList.length} items');
+      for (var staff in staffList) {
+        print(
+            '[API] Staff: ${staff.fullname}, Active: ${staff.active}, DateLastActivated: ${staff.datelastactivated}');
+      }
+      return staffList;
+    } catch (error) {
+      print('[API] ListStaff2 Error: $error');
+      rethrow;
+    }
+  }
+
   Future<List<Customer>> ListCustomer() async {
     try {
       final response =
@@ -239,6 +259,49 @@ class MyHttp {
     } catch (e) {
       print('Error adding customer: $e');
       return null;
+    }
+  }
+
+  Future<dynamic> AddStaff({
+    required String fullname,
+    required String phone,
+    required String email,
+    required String dob,
+  }) async {
+    try {
+      final User currentUser = await getCurrentUser();
+      final String token = currentUser.token;
+
+      final requestBody = <String, String>{
+        'fullname': fullname,
+        'phone': phone,
+        'email': email,
+        'dob': dob,
+      };
+
+      print('AddStaff request body: $requestBody');
+
+      final response = await http.post(
+        Uri.parse(AppConfig.api_url_staff_add),
+        headers: <String, String>{
+          'Authorization': 'Bearer $token',
+          'Content-Type': 'application/json; charset=UTF-8',
+        },
+        body: jsonEncode(requestBody),
+      );
+
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        return jsonDecode(response.body);
+      } else {
+        print('Error: ${response.statusCode}, Response: ${response.body}');
+        throw ServerException(
+          message: 'Failed to add staff: ${response.statusCode}',
+          originalError: response.body,
+        );
+      }
+    } catch (e) {
+      print('Error adding staff: $e');
+      rethrow;
     }
   }
 
@@ -550,6 +613,41 @@ class MyHttp {
       }
     } catch (e) {
       print('[HTTP] saveBookingSetting: ERROR - $e');
+      return false;
+    }
+  }
+
+  Future<bool> activateStaff(int staffKey, bool activate) async {
+    try {
+      final User currentUser = await getCurrentUser();
+      final String token = currentUser.token;
+
+      final requestBody = <String, dynamic>{
+        'active': activate,
+      };
+
+      print('[API] Activate staff $staffKey with active: $activate');
+
+      final response = await http.post(
+        Uri.parse('${AppConfig.api_url_staff_activate}/$staffKey'),
+        headers: <String, String>{
+          'Authorization': 'Bearer $token',
+          'Content-Type': 'application/json; charset=UTF-8',
+        },
+        body: jsonEncode(requestBody),
+      );
+
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        print('[API] Staff activation successful');
+        return true;
+      } else {
+        print(
+            '[HTTP] activateStaff: Failed with status ${response.statusCode}');
+        print('[HTTP] Response: ${response.body}');
+        return false;
+      }
+    } catch (e) {
+      print('[HTTP] activateStaff: ERROR - $e');
       return false;
     }
   }
