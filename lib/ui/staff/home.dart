@@ -64,6 +64,20 @@ class _StaffListPageState extends State<StaffListPage> {
         title: const Text('Staff Management'),
         centerTitle: true,
         elevation: 0,
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.add),
+            onPressed: () async {
+              final result = await Navigator.of(context).push<bool>(
+                MaterialPageRoute(builder: (context) => const StaffFormPage()),
+              );
+              if (result == true) {
+                _fetchStaff();
+              }
+            },
+            tooltip: 'Add Staff',
+          ),
+        ],
       ),
       body: Column(
         children: [
@@ -231,8 +245,20 @@ class _StaffListPageState extends State<StaffListPage> {
                                                 Text('Edit'),
                                               ],
                                             ),
-                                            onTap: () {
-                                              // TODO: Implement edit functionality
+                                            onTap: () async {
+                                              final result =
+                                                  await Navigator.of(context)
+                                                      .push<bool>(
+                                                MaterialPageRoute(
+                                                  builder: (context) =>
+                                                      StaffFormPage(
+                                                    staff: staff,
+                                                  ),
+                                                ),
+                                              );
+                                              if (result == true) {
+                                                _fetchStaff();
+                                              }
                                             },
                                           ),
                                           PopupMenuItem(
@@ -243,8 +269,39 @@ class _StaffListPageState extends State<StaffListPage> {
                                                 Text('Delete'),
                                               ],
                                             ),
-                                            onTap: () {
-                                              // TODO: Implement delete functionality
+                                            onTap: () async {
+                                              final success = await apiManager
+                                                  .activateStaff(
+                                                staff.staffkey,
+                                                false,
+                                              );
+
+                                              if (success) {
+                                                setState(() {
+                                                  staff.active = false;
+                                                  staff.datelastactivated =
+                                                      null;
+                                                });
+                                                ScaffoldMessenger.of(context)
+                                                    .showSnackBar(
+                                                  const SnackBar(
+                                                    content: Text(
+                                                        'Staff deactivated successfully'),
+                                                    duration:
+                                                        Duration(seconds: 2),
+                                                  ),
+                                                );
+                                              } else {
+                                                ScaffoldMessenger.of(context)
+                                                    .showSnackBar(
+                                                  const SnackBar(
+                                                    content: Text(
+                                                        'Failed to deactivate staff'),
+                                                    duration:
+                                                        Duration(seconds: 2),
+                                                  ),
+                                                );
+                                              }
                                             },
                                           ),
                                         ],
@@ -260,18 +317,6 @@ class _StaffListPageState extends State<StaffListPage> {
                           ),
           ),
         ],
-      ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () async {
-          final result = await Navigator.of(context).push<bool>(
-            MaterialPageRoute(builder: (context) => const StaffFormPage()),
-          );
-          if (result == true) {
-            _fetchStaff();
-          }
-        },
-        tooltip: 'Add Staff',
-        child: const Icon(Icons.add),
       ),
     );
   }

@@ -26,4 +26,6 @@ class AppConfig {
   static const api_url_staff_add = '$api_url/api/staff/addstaff';
   static const api_url_staff_get_by_id = '$api_url/api/staff';
   static const api_url_staff_activate = '$api_url/api/staff/activate';
+  static const api_url_staff_update = '$api_url/api/staff/updatestaff';
+  static const api_url_staff_delete = '$api_url/api/staff/delete';
 }

@@ -39,25 +39,33 @@ class _StaffFormPageState extends State<StaffFormPage> {
         '${AppConfig.api_url_staff_get_by_id}/${widget.staff!.staffkey}',
       );
 
+      print('[FORM] Staff data response: $response');
+
       if (response != null) {
         final staffData = response is List ? response.first : response;
+        print('[FORM] Staff data: $staffData');
+        print('[FORM] Birthday field: ${staffData['birthday']}');
+
         setState(() {
           _nameController.text = staffData['fullname'] ?? '';
           _phoneController.text = staffData['phone'] ?? '';
           _emailController.text = staffData['email'] ?? '';
 
-          if (staffData['dob'] != null &&
-              staffData['dob'].toString().isNotEmpty) {
+          if (staffData['birthday'] != null &&
+              staffData['birthday'].toString().isNotEmpty) {
             try {
-              _selectedDOB = DateTime.parse(staffData['dob']);
+              _selectedDOB = DateTime.parse(staffData['birthday']);
+              print('[FORM] Parsed DOB: $_selectedDOB');
             } catch (e) {
-              print('Error parsing DOB: $e');
+              print('[FORM] Error parsing DOB: $e');
             }
+          } else {
+            print('[FORM] Birthday is null or empty');
           }
         });
       }
     } catch (e) {
-      print('Error loading staff data: $e');
+      print('[FORM] Error loading staff data: $e');
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('Error loading staff data: $e')),
@@ -103,18 +111,38 @@ class _StaffFormPageState extends State<StaffFormPage> {
       final dobString = _selectedDOB != null
           ? '${_selectedDOB!.year}-${_selectedDOB!.month.toString().padLeft(2, '0')}-${_selectedDOB!.day.toString().padLeft(2, '0')}'
           : '';
-      await apiManager.AddStaff(
-        fullname: _nameController.text,
-        phone: _phoneController.text,
-        email: _emailController.text,
-        dob: dobString,
-      );
 
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Staff added successfully')),
+      if (_isEditMode && widget.staff != null) {
+        // Update existing staff
+        await apiManager.UpdateStaff(
+          staffkey: widget.staff!.staffkey,
+          fullname: _nameController.text,
+          phone: _phoneController.text,
+          email: _emailController.text,
+          dob: dobString,
         );
-        Navigator.of(context).pop(true);
+
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Staff updated successfully')),
+          );
+          Navigator.of(context).pop(true);
+        }
+      } else {
+        // Add new staff
+        await apiManager.AddStaff(
+          fullname: _nameController.text,
+          phone: _phoneController.text,
+          email: _emailController.text,
+          dob: dobString,
+        );
+
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Staff added successfully')),
+          );
+          Navigator.of(context).pop(true);
+        }
       }
     } catch (e) {
       if (mounted) {

@@ -276,7 +276,7 @@ class MyHttp {
         'fullname': fullname,
         'phone': phone,
         'email': email,
-        'dob': dob,
+        'birthday': dob,
       };
 
       print('AddStaff request body: $requestBody');
@@ -301,6 +301,50 @@ class MyHttp {
       }
     } catch (e) {
       print('Error adding staff: $e');
+      rethrow;
+    }
+  }
+
+  Future<dynamic> UpdateStaff({
+    required int staffkey,
+    required String fullname,
+    required String phone,
+    required String email,
+    required String dob,
+  }) async {
+    try {
+      final User currentUser = await getCurrentUser();
+      final String token = currentUser.token;
+
+      final requestBody = <String, dynamic>{
+        'fullname': fullname,
+        'phone': phone,
+        'email': email,
+        'birthday': dob,
+      };
+
+      print('UpdateStaff request body: $requestBody');
+
+      final response = await http.put(
+        Uri.parse('${AppConfig.api_url_staff_update}/$staffkey'),
+        headers: <String, String>{
+          'Authorization': 'Bearer $token',
+          'Content-Type': 'application/json; charset=UTF-8',
+        },
+        body: jsonEncode(requestBody),
+      );
+
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        return jsonDecode(response.body);
+      } else {
+        print('Error: ${response.statusCode}, Response: ${response.body}');
+        throw ServerException(
+          message: 'Failed to update staff: ${response.statusCode}',
+          originalError: response.body,
+        );
+      }
+    } catch (e) {
+      print('Error updating staff: $e');
       rethrow;
     }
   }
@@ -648,6 +692,35 @@ class MyHttp {
       }
     } catch (e) {
       print('[HTTP] activateStaff: ERROR - $e');
+      return false;
+    }
+  }
+
+  Future<bool> deleteStaff(int staffKey) async {
+    try {
+      final User currentUser = await getCurrentUser();
+      final String token = currentUser.token;
+
+      print('[API] Delete staff $staffKey');
+
+      final response = await http.delete(
+        Uri.parse('${AppConfig.api_url_staff_delete}/$staffKey'),
+        headers: <String, String>{
+          'Authorization': 'Bearer $token',
+          'Content-Type': 'application/json; charset=UTF-8',
+        },
+      );
+
+      if (response.statusCode == 200 || response.statusCode == 204) {
+        print('[API] Staff deletion successful');
+        return true;
+      } else {
+        print('[HTTP] deleteStaff: Failed with status ${response.statusCode}');
+        print('[HTTP] Response: ${response.body}');
+        return false;
+      }
+    } catch (e) {
+      print('[HTTP] deleteStaff: ERROR - $e');
       return false;
     }
   }
