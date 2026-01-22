@@ -11,16 +11,18 @@ class Customer {
     required this.email,
     required this.phone,
     required this.photo,
-
   });
 
   factory Customer.fromJson(Map<String, dynamic> json) {
+    print('[DEBUG] Customer.fromJson input: $json');
     return Customer(
       customerkey: json['pkey'] ?? 0,
       fullname: json['fullname'] ?? 'Unknown',
       email: json['email'] ?? 'Unknown',
       phone: json['phone'] ?? 'Unknown',
-      photo: json['photobase64'] != null && json['photobase64'] != '' ? json['photobase64'] : 'Unknown',
+      photo: json['photobase64'] != null && json['photobase64'] != ''
+          ? json['photobase64']
+          : 'Unknown',
     );
   }
 

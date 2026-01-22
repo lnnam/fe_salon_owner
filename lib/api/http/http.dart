@@ -192,7 +192,7 @@ class MyHttp {
       print('[API] Parsed Staff List: ${staffList.length} items');
       for (var staff in staffList) {
         print(
-            '[API] Staff: ${staff.fullname}, Active: ${staff.active}, DateLastActivated: ${staff.datelastactivated}');
+            '[API] Staff: ${staff.fullname}, Active: ${staff.active}, DateLastActivated: ${staff.datelastactivated}, Photo: ${staff.photo.substring(0, staff.photo.length > 50 ? 50 : staff.photo.length)}...');
       }
       return staffList;
     } catch (error) {
@@ -203,8 +203,10 @@ class MyHttp {
 
   Future<List<Customer>> ListCustomer() async {
     try {
-      final response =
-          await fetchFromServer(AppConfig.api_url_booking_customer);
+      final currentUser = await getCurrentUser();
+      final storeName = Uri.encodeComponent(currentUser.salonname);
+      final url = '${AppConfig.api_url}/api/getdata?storename=$storeName';
+      final response = await fetchFromServer(url);
       List<dynamic> data = response;
       return data.map<Customer>((item) => Customer.fromJson(item)).toList();
     } catch (error) {

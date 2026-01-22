@@ -33,9 +33,48 @@ class _CustomerListPageState extends State<CustomerListPage> {
     try {
       final data =
           await apiManager.fetchFromServer(AppConfig.api_url_customer_list);
-      final List<Customer> customers = (data as List)
-          .map((json) => Customer.fromJson(json as Map<String, dynamic>))
-          .toList();
+      print('API Response Data: $data');
+      print('API Response Date: ${DateTime.now()}');
+
+      // Handle response - API returns a List containing a Map with customer data
+      final List<dynamic> customerList;
+      if (data is List && data.isNotEmpty) {
+        print('[DEBUG] Response is a List with ${data.length} items');
+        // Check if first item is a Map containing all customers
+        if (data[0] is Map) {
+          print('[DEBUG] First item is a Map, extracting customer values');
+          final Map<dynamic, dynamic> customerMap = data[0];
+          customerList = customerMap.values.toList();
+          print('[DEBUG] Extracted ${customerList.length} customers from Map');
+        } else {
+          // List of individual customer objects
+          customerList = data;
+          print('[DEBUG] List contains ${data.length} customer items');
+        }
+      } else if (data is Map) {
+        print('[DEBUG] Response is directly a Map');
+        customerList = data.values.toList();
+        print('[DEBUG] Extracted ${customerList.length} customers from Map');
+      } else {
+        throw Exception('Unexpected data format from API: ${data.runtimeType}');
+      }
+
+      if (customerList.isNotEmpty) {
+        print('[DEBUG] First item type: ${customerList[0].runtimeType}');
+        print('[DEBUG] First item: ${customerList[0]}');
+      }
+
+      final List<Customer> customers = customerList.where((json) {
+        // Filter out metadata objects - they have 'fieldCount', 'affectedRows', etc.
+        if (json is! Map<String, dynamic>) return false;
+        // Metadata has these fields, real customers have 'fullname' and 'pkey'
+        return json.containsKey('fullname') && json.containsKey('pkey');
+      }).map((json) {
+        final customer = Customer.fromJson(json as Map<String, dynamic>);
+        print(
+            '[DEBUG] Parsed customer: key=${customer.customerkey}, name=${customer.fullname}, email=${customer.email}, phone=${customer.phone}');
+        return customer;
+      }).toList();
       setState(() {
         _customers = customers;
         _filteredCustomers = customers;
@@ -55,8 +94,8 @@ class _CustomerListPageState extends State<CustomerListPage> {
       _filteredCustomers = _customers.where((c) {
         final q = value.toLowerCase();
         return c.fullname.toLowerCase().contains(q) ||
-            c.phone.toLowerCase().contains(q) ||
-            c.email.toLowerCase().contains(q);
+            (c.phone.isNotEmpty && c.phone.toLowerCase().contains(q)) ||
+            (c.email.isNotEmpty && c.email.toLowerCase().contains(q));
       }).toList();
     });
   }

@@ -151,11 +151,22 @@ class _StaffListPageState extends State<StaffListPage> {
                             itemBuilder: (context, index) {
                               final staff = _filteredStaff[index];
                               Uint8List? photoBytes;
+                              print(
+                                  '[DEBUG] Staff ${staff.fullname}: photo="${staff.photo}", isEmpty=${staff.photo.isEmpty}, isUnknown=${staff.photo == 'Unknown'}');
                               if (staff.photo != 'Unknown' &&
                                   staff.photo.isNotEmpty) {
                                 try {
-                                  photoBytes = base64Decode(staff.photo);
-                                } catch (_) {
+                                  // Handle data URI format: data:image/jpeg;base64,xxxxx
+                                  String base64String = staff.photo;
+                                  if (base64String.startsWith('data:')) {
+                                    base64String = base64String.split(',').last;
+                                  }
+                                  photoBytes = base64Decode(base64String);
+                                  print(
+                                      '[DEBUG] Successfully decoded photo for ${staff.fullname}');
+                                } catch (e) {
+                                  print(
+                                      'Error decoding photo for ${staff.fullname}: $e');
                                   photoBytes = null;
                                 }
                               }
@@ -165,12 +176,12 @@ class _StaffListPageState extends State<StaffListPage> {
                                 child: ListTile(
                                   leading: CircleAvatar(
                                     backgroundColor: Colors.blue.shade100,
+                                    backgroundImage: (photoBytes != null)
+                                        ? MemoryImage(photoBytes)
+                                        : null,
                                     child: (photoBytes == null)
                                         ? Icon(Icons.person,
                                             color: Colors.blue.shade600)
-                                        : null,
-                                    backgroundImage: (photoBytes != null)
-                                        ? MemoryImage(photoBytes)
                                         : null,
                                   ),
                                   title: Text(
