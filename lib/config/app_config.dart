@@ -20,6 +20,9 @@ class AppConfig {
   // CUSTOMER MANAGEMENT
   static const api_url_customer_list =
       '$api_url/api/getdata?storename=GetCustomersList()';
+  static const api_url_customer_delete = '$api_url/api/customer/delete';
+  static const api_url_customer_get = '$api_url/api/customer';
+  static const api_url_customer_update = '$api_url/api/customer/updatecustomer';
 
   // STAFF MANAGEMENT
   static const api_url_staff_list = '$api_url/api/staff/list';

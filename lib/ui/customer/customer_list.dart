@@ -4,6 +4,9 @@ import 'package:salonapp/config/app_config.dart';
 import 'package:salonapp/model/customer.dart';
 import 'dart:convert';
 import 'dart:typed_data';
+import 'package:salonapp/api/http/customer.dart';
+import 'package:salonapp/ui/customer/customer_form.dart';
+import 'package:salonapp/ui/customer/customer_detail.dart';
 
 class CustomerListPage extends StatefulWidget {
   const CustomerListPage({super.key});
@@ -13,16 +16,38 @@ class CustomerListPage extends StatefulWidget {
 }
 
 class _CustomerListPageState extends State<CustomerListPage> {
-  List<Customer> _customers = [];
-  List<Customer> _filteredCustomers = [];
+  List<Customer> _allCustomers = []; // All customers for search
+  List<Customer> _displayedCustomers = []; // Customers being displayed
+  List<Customer> _filteredCustomers = []; // Filtered results
   bool _loading = true;
-  String _search = '';
+  bool _loadingMore = false;
   String? _error;
+  String _searchQuery = '';
+  final int _pageSize = 50;
+  int _currentPage = 0;
+  final ScrollController _scrollController = ScrollController();
 
   @override
   void initState() {
     super.initState();
+    _scrollController.addListener(_onScroll);
     _fetchCustomers();
+  }
+
+  @override
+  void dispose() {
+    _scrollController.dispose();
+    super.dispose();
+  }
+
+  void _onScroll() {
+    // Load more when user scrolls near the bottom
+    if (_scrollController.position.pixels >=
+            _scrollController.position.maxScrollExtent - 200 &&
+        !_loadingMore &&
+        _searchQuery.isEmpty) {
+      _loadMore();
+    }
   }
 
   Future<void> _fetchCustomers() async {
@@ -75,11 +100,20 @@ class _CustomerListPageState extends State<CustomerListPage> {
             '[DEBUG] Parsed customer: key=${customer.customerkey}, name=${customer.fullname}, email=${customer.email}, phone=${customer.phone}');
         return customer;
       }).toList();
+
+      // Sort by key descending to get latest customers first
+      customers.sort((a, b) => b.customerkey.compareTo(a.customerkey));
+
       setState(() {
-        _customers = customers;
-        _filteredCustomers = customers;
+        _allCustomers = customers;
+        _currentPage = 0;
+        _displayedCustomers = _getPagedCustomers(0);
+        _filteredCustomers = _displayedCustomers;
         _loading = false;
       });
+
+      print('[DEBUG] Total customers: ${_allCustomers.length}');
+      print('[DEBUG] Displaying: ${_displayedCustomers.length}');
     } catch (e) {
       setState(() {
         _error = e.toString();
@@ -88,22 +122,159 @@ class _CustomerListPageState extends State<CustomerListPage> {
     }
   }
 
+  List<Customer> _getPagedCustomers(int page) {
+    final start = page * _pageSize;
+    final end = start + _pageSize;
+    if (start >= _allCustomers.length) return [];
+    return _allCustomers.sublist(start, end.clamp(0, _allCustomers.length));
+  }
+
+  Future<void> _loadMore() async {
+    if (_searchQuery.isNotEmpty) return; // Don't paginate during search
+
+    setState(() {
+      _loadingMore = true;
+    });
+
+    // Simulate network delay
+    await Future.delayed(const Duration(milliseconds: 300));
+
+    final nextPage = _currentPage + 1;
+    final moreCustomers = _getPagedCustomers(nextPage);
+
+    if (moreCustomers.isNotEmpty) {
+      setState(() {
+        _currentPage = nextPage;
+        _displayedCustomers.addAll(moreCustomers);
+        _filteredCustomers = _displayedCustomers;
+        _loadingMore = false;
+      });
+      print('[DEBUG] Loaded page ${nextPage + 1}');
+    } else {
+      setState(() {
+        _loadingMore = false;
+      });
+    }
+  }
+
   void _filter(String value) {
     setState(() {
-      _search = value;
-      _filteredCustomers = _customers.where((c) {
-        final q = value.toLowerCase();
-        return c.fullname.toLowerCase().contains(q) ||
-            (c.phone.isNotEmpty && c.phone.toLowerCase().contains(q)) ||
-            (c.email.isNotEmpty && c.email.toLowerCase().contains(q));
-      }).toList();
+      _searchQuery = value;
+      if (value.isEmpty) {
+        // Show first page of all customers
+        _currentPage = 0;
+        _displayedCustomers = _getPagedCustomers(0);
+        _filteredCustomers = _displayedCustomers;
+      } else {
+        // Search all customers
+        _filteredCustomers = _allCustomers.where((c) {
+          final q = value.toLowerCase();
+          return c.fullname.toLowerCase().contains(q) ||
+              (c.phone.isNotEmpty && c.phone.toLowerCase().contains(q)) ||
+              (c.email.isNotEmpty && c.email.toLowerCase().contains(q));
+        }).toList();
+      }
     });
+  }
+
+  Future<void> _deleteCustomer(Customer customer) async {
+    final confirm = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Delete Customer'),
+        content: Text('Are you sure you want to delete ${customer.fullname}?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(context, true),
+            child: const Text('Delete', style: TextStyle(color: Colors.red)),
+          ),
+        ],
+      ),
+    );
+
+    if (confirm != true) return;
+
+    try {
+      final customerApi = CustomerApi(apiManager);
+      final success = await customerApi.deleteCustomer(customer.customerkey);
+
+      if (!mounted) return;
+
+      if (success) {
+        // Remove from lists
+        setState(() {
+          _allCustomers
+              .removeWhere((c) => c.customerkey == customer.customerkey);
+          _displayedCustomers
+              .removeWhere((c) => c.customerkey == customer.customerkey);
+          _filteredCustomers
+              .removeWhere((c) => c.customerkey == customer.customerkey);
+        });
+
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('${customer.fullname} deleted successfully'),
+            backgroundColor: Colors.green,
+            duration: const Duration(seconds: 2),
+          ),
+        );
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Failed to delete customer'),
+            backgroundColor: Colors.red,
+            duration: const Duration(seconds: 2),
+          ),
+        );
+      }
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Error: ${e.toString()}'),
+          backgroundColor: Colors.red,
+          duration: const Duration(seconds: 2),
+        ),
+      );
+    }
+  }
+
+  Future<void> _addCustomer() async {
+    final result = await Navigator.push<bool>(
+      context,
+      MaterialPageRoute(
+        builder: (context) => const CustomerFormPage(customer: null),
+      ),
+    );
+
+    if (result == true) {
+      // Refresh the list after successful add
+      _fetchCustomers();
+    }
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Customers')),
+      appBar: AppBar(
+        title: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Text('Customers'),
+            Text(
+              'Total: ${_allCustomers.length}',
+              style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                    color: Colors.white70,
+                  ),
+            ),
+          ],
+        ),
+      ),
       body: Column(
         children: [
           Padding(
@@ -111,12 +282,21 @@ class _CustomerListPageState extends State<CustomerListPage> {
             child: TextField(
               decoration: const InputDecoration(
                 labelText: 'Search',
+                hintText: 'Name, phone, or email',
                 prefixIcon: Icon(Icons.search),
                 border: OutlineInputBorder(),
               ),
               onChanged: _filter,
             ),
           ),
+          if (_searchQuery.isNotEmpty)
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 8.0),
+              child: Text(
+                'Search results: ${_filteredCustomers.length} found',
+                style: Theme.of(context).textTheme.bodySmall,
+              ),
+            ),
           Expanded(
             child: _loading
                 ? const Center(child: CircularProgressIndicator())
@@ -125,8 +305,18 @@ class _CustomerListPageState extends State<CustomerListPage> {
                     : _filteredCustomers.isEmpty
                         ? const Center(child: Text('No customers found'))
                         : ListView.builder(
-                            itemCount: _filteredCustomers.length,
+                            controller: _scrollController,
+                            itemCount: _filteredCustomers.length +
+                                (_loadingMore && _searchQuery.isEmpty ? 1 : 0),
                             itemBuilder: (context, index) {
+                              // Loading indicator at the bottom
+                              if (index == _filteredCustomers.length) {
+                                return const Padding(
+                                  padding: EdgeInsets.all(16.0),
+                                  child: CircularProgressIndicator(),
+                                );
+                              }
+
                               final customer = _filteredCustomers[index];
                               Uint8List? photoBytes;
                               if (customer.photo != 'Unknown' &&
@@ -153,16 +343,19 @@ class _CustomerListPageState extends State<CustomerListPage> {
                                   mainAxisSize: MainAxisSize.min,
                                   children: [
                                     IconButton(
-                                      icon: const Icon(Icons.edit),
-                                      onPressed: () {},
-                                    ),
-                                    IconButton(
                                       icon: const Icon(Icons.delete),
-                                      onPressed: () {},
+                                      onPressed: () =>
+                                          _deleteCustomer(customer),
                                     ),
                                   ],
                                 ),
-                                onTap: () {},
+                                onTap: () => Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (context) =>
+                                        CustomerDetailPage(customer: customer),
+                                  ),
+                                ),
                               );
                             },
                           ),
@@ -170,7 +363,7 @@ class _CustomerListPageState extends State<CustomerListPage> {
         ],
       ),
       floatingActionButton: FloatingActionButton(
-        onPressed: () {},
+        onPressed: _addCustomer,
         child: const Icon(Icons.add),
         tooltip: 'Add Customer',
       ),

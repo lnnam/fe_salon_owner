@@ -4,6 +4,7 @@ class Customer {
   String email;
   String phone;
   String photo;
+  String birthday;
 
   Customer({
     required this.customerkey,
@@ -11,6 +12,7 @@ class Customer {
     required this.email,
     required this.phone,
     required this.photo,
+    this.birthday = '',
   });
 
   factory Customer.fromJson(Map<String, dynamic> json) {
@@ -23,6 +25,7 @@ class Customer {
       photo: json['photobase64'] != null && json['photobase64'] != ''
           ? json['photobase64']
           : 'Unknown',
+      birthday: json['dob'] ?? json['birthday'] ?? '',
     );
   }
 
@@ -33,6 +36,7 @@ class Customer {
       'email': email,
       'phone': phone,
       'photo': photo,
+      'dob': birthday,
     };
   }
 }

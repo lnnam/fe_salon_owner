@@ -6,7 +6,6 @@ import 'package:salonapp/model/user.dart';
 import 'package:salonapp/model/booking.dart';
 import 'package:salonapp/model/staff.dart';
 import 'package:salonapp/model/service.dart';
-import 'package:salonapp/model/customer.dart';
 import 'package:salonapp/services/helper.dart';
 
 /// Custom exception for server/network errors
@@ -198,69 +197,6 @@ class MyHttp {
     } catch (error) {
       print('[API] ListStaff2 Error: $error');
       rethrow;
-    }
-  }
-
-  Future<List<Customer>> ListCustomer() async {
-    try {
-      final currentUser = await getCurrentUser();
-      final storeName = Uri.encodeComponent(currentUser.salonname);
-      final url = '${AppConfig.api_url}/api/getdata?storename=$storeName';
-      final response = await fetchFromServer(url);
-      List<dynamic> data = response;
-      return data.map<Customer>((item) => Customer.fromJson(item)).toList();
-    } catch (error) {
-      // Handle error
-      print(error);
-
-      rethrow;
-    }
-  }
-
-  Future<dynamic> AddCustomer({
-    required String name,
-    required String email,
-    required String phone,
-    required String dob,
-  }) async {
-    try {
-      final User currentUser = await getCurrentUser();
-      final String token = currentUser.token;
-
-      final requestBody = <String, String>{
-        'fullname': name,
-        'email': email,
-        'phone': phone,
-        'dob': dob,
-      };
-
-      print('AddCustomer request body: $requestBody');
-
-      final response = await http.post(
-        Uri.parse(AppConfig.api_url_booking_customer_add),
-        headers: <String, String>{
-          'Authorization': 'Bearer $token',
-          'Content-Type': 'application/json; charset=UTF-8',
-        },
-        body: jsonEncode(requestBody),
-      );
-
-      if (response.statusCode == 200 || response.statusCode == 201) {
-        return jsonDecode(response.body);
-      } else if (response.statusCode == 409) {
-        // Customer already exists - extract and return the customer data
-        print(
-            'Customer already exists: ${response.statusCode}, Response: ${response.body}');
-        final responseData = jsonDecode(response.body);
-        // Return the customer data from the response
-        return responseData['customer'] ?? responseData;
-      } else {
-        print('Error: ${response.statusCode}, Response: ${response.body}');
-        return null;
-      }
-    } catch (e) {
-      print('Error adding customer: $e');
-      return null;
     }
   }
 

@@ -564,12 +564,6 @@ class _BookingHomeScreenState extends State<BookingHomeScreen> {
     bookingProvider.loadBookingsWithOption('thisweek');
   }
 
-  void _loadMonthBookings(BookingProvider bookingProvider) {
-    setState(() => _isLogView = false);
-    bookingProvider.setCurrentViewOption('thismonth');
-    bookingProvider.loadBookingsWithOption('thismonth');
-  }
-
   void _loadLogBookings(BookingProvider bookingProvider) {
     setState(() => _isLogView = true);
     bookingProvider.setCurrentViewOption('new');

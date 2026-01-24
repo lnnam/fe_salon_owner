@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:salonapp/api/api_manager.dart';
 import 'package:salonapp/model/customer.dart';
+import 'package:salonapp/api/http/customer.dart';
 import 'package:salonapp/provider/booking.provider.dart';
 import 'package:salonapp/services/helper.dart';
 import 'package:salonapp/config/app_config.dart';
@@ -37,7 +38,8 @@ class _CustomerPageState extends State<CustomerPage> {
     try {
       // Log the API URL for customer list
       print('[API] Customer List URL: ${AppConfig.api_url_booking_customer}');
-      List<Customer> customers = await apiManager.ListCustomer();
+      final customerApi = CustomerApi(apiManager);
+      List<Customer> customers = await customerApi.listCustomer();
 
       if (!mounted) return;
       setState(() {
@@ -179,12 +181,14 @@ class _CustomerPageState extends State<CustomerPage> {
                                     });
 
                                     try {
+                                      final customerApi =
+                                          CustomerApi(apiManager);
                                       final result =
-                                          await apiManager.AddCustomer(
+                                          await customerApi.addCustomer(
                                         name: nameController.text,
                                         email: emailController.text,
                                         phone: phoneController.text,
-                                        dob: dobController.text.isEmpty
+                                        birthday: dobController.text.isEmpty
                                             ? ''
                                             : dobController.text,
                                       );
