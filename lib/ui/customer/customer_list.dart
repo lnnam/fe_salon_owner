@@ -243,6 +243,20 @@ class _CustomerListPageState extends State<CustomerListPage> {
     }
   }
 
+  Future<void> _openCustomerDetail(Customer customer) async {
+    final result = await Navigator.push<bool>(
+      context,
+      MaterialPageRoute(
+        builder: (context) => CustomerDetailPage(customer: customer),
+      ),
+    );
+
+    if (result == true) {
+      // Refresh the list after customer is updated
+      _fetchCustomers();
+    }
+  }
+
   Future<void> _addCustomer() async {
     final result = await Navigator.push<bool>(
       context,
@@ -349,13 +363,7 @@ class _CustomerListPageState extends State<CustomerListPage> {
                                     ),
                                   ],
                                 ),
-                                onTap: () => Navigator.push(
-                                  context,
-                                  MaterialPageRoute(
-                                    builder: (context) =>
-                                        CustomerDetailPage(customer: customer),
-                                  ),
-                                ),
+                                onTap: () => _openCustomerDetail(customer),
                               );
                             },
                           ),

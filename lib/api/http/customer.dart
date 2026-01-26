@@ -182,4 +182,41 @@ class CustomerApi {
       return null;
     }
   }
+
+  Future<bool> setVip({
+    required int customerId,
+    required int isVip,
+  }) async {
+    try {
+      final User currentUser = await getCurrentUser();
+      final String token = currentUser.token;
+
+      final requestBody = <String, int>{
+        'isvip': isVip,
+      };
+
+      print('[API] Setting VIP status for customer $customerId: $requestBody');
+
+      final response = await http.post(
+        Uri.parse('${AppConfig.api_url}/api/customer/setvip/$customerId'),
+        headers: <String, String>{
+          'Authorization': 'Bearer $token',
+          'Content-Type': 'application/json; charset=UTF-8',
+        },
+        body: jsonEncode(requestBody),
+      );
+
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        print('[API] VIP status set successfully');
+        return true;
+      } else {
+        print('[HTTP] setVip: Failed with status ${response.statusCode}');
+        print('[HTTP] Response: ${response.body}');
+        return false;
+      }
+    } catch (e) {
+      print('[HTTP] setVip: ERROR - $e');
+      return false;
+    }
+  }
 }

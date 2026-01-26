@@ -45,7 +45,7 @@ class AppDrawerBooking extends StatelessWidget {
             },
           ),
           ListTile(
-            title: const Text('Customer Management'),
+            title: const Text('Customer'),
             onTap: () {
               safePush(
                 context,

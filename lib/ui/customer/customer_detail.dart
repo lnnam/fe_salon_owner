@@ -3,6 +3,7 @@ import 'package:salonapp/model/customer.dart';
 import 'package:salonapp/model/booking.dart';
 import 'package:salonapp/ui/customer/customer_form.dart';
 import 'package:salonapp/api/api_manager.dart';
+import 'package:salonapp/api/http/customer.dart';
 import 'package:salonapp/config/app_config.dart';
 
 class CustomerDetailPage extends StatefulWidget {
@@ -15,6 +16,7 @@ class CustomerDetailPage extends StatefulWidget {
 }
 
 class _CustomerDetailPageState extends State<CustomerDetailPage> {
+  late Customer _customer;
   bool _isVip = false;
   bool _loadingBookings = true;
   List<Booking> _bookings = [];
@@ -23,6 +25,8 @@ class _CustomerDetailPageState extends State<CustomerDetailPage> {
   @override
   void initState() {
     super.initState();
+    _customer = widget.customer;
+    _isVip = _customer.isvip == 1;
     _loadBookings();
   }
 
@@ -41,8 +45,7 @@ class _CustomerDetailPageState extends State<CustomerDetailPage> {
         final customerBookings = data
             .where((booking) =>
                 booking is Map &&
-                booking['customerkey'] ==
-                    widget.customer.customerkey.toString())
+                booking['customerkey'] == _customer.customerkey.toString())
             .cast<Map<String, dynamic>>()
             .map((json) => Booking.fromJson(json))
             .toList();
@@ -93,14 +96,14 @@ class _CustomerDetailPageState extends State<CustomerDetailPage> {
                 children: [
                   // Customer Name
                   Text(
-                    widget.customer.fullname,
+                    _customer.fullname,
                     style: Theme.of(context).textTheme.headlineSmall,
                     textAlign: TextAlign.center,
                   ),
                   const SizedBox(height: 8),
                   // Customer ID
                   Text(
-                    'ID: ${widget.customer.customerkey}',
+                    'ID: ${_customer.customerkey}',
                     style: Theme.of(context).textTheme.bodySmall?.copyWith(
                           color: Colors.grey[600],
                         ),
@@ -146,21 +149,21 @@ class _CustomerDetailPageState extends State<CustomerDetailPage> {
                   _buildDetailCard(
                     icon: Icons.phone,
                     label: 'Phone Number',
-                    value: widget.customer.phone,
+                    value: _customer.phone,
                   ),
                   const SizedBox(height: 12),
                   _buildDetailCard(
                     icon: Icons.email,
                     label: 'Email Address',
-                    value: widget.customer.email,
+                    value: _customer.email,
                   ),
                   const SizedBox(height: 12),
                   _buildDetailCard(
                     icon: Icons.calendar_today,
                     label: 'Birthday',
-                    value: widget.customer.birthday.isEmpty
+                    value: _customer.birthday.isEmpty
                         ? 'Not provided'
-                        : widget.customer.birthday,
+                        : _customer.birthday,
                   ),
                   const SizedBox(height: 20),
 
@@ -172,14 +175,8 @@ class _CustomerDetailPageState extends State<CustomerDetailPage> {
                     ),
                     child: CheckboxListTile(
                       title: const Text('Mark as VIP Customer'),
-                      subtitle:
-                          const Text('VIP customers get priority service'),
                       value: _isVip,
-                      onChanged: (value) {
-                        setState(() {
-                          _isVip = value ?? false;
-                        });
-                      },
+                      onChanged: (value) => _toggleVip(value ?? false),
                       activeColor: Colors.amber,
                     ),
                   ),
@@ -404,19 +401,87 @@ class _CustomerDetailPageState extends State<CustomerDetailPage> {
     }
   }
 
+  Future<void> _reloadCustomerData() async {
+    try {
+      final customerApi = CustomerApi(apiManager);
+      final updatedCustomer =
+          await customerApi.getCustomer(_customer.customerkey);
+
+      if (updatedCustomer != null && mounted) {
+        setState(() {
+          _customer = updatedCustomer;
+          _isVip = _customer.isvip == 1;
+        });
+      }
+    } catch (e) {
+      print('Error reloading customer: $e');
+    }
+  }
+
+  Future<void> _toggleVip(bool value) async {
+    try {
+      final customerApi = CustomerApi(apiManager);
+      final success = await customerApi.setVip(
+        customerId: _customer.customerkey,
+        isVip: value ? 1 : 0,
+      );
+
+      if (mounted) {
+        if (success) {
+          setState(() {
+            _isVip = value;
+            _customer.isvip = value ? 1 : 0;
+          });
+
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content:
+                  Text(value ? 'Customer marked as VIP' : 'VIP status removed'),
+              backgroundColor: Colors.green,
+              duration: const Duration(seconds: 2),
+            ),
+          );
+        } else {
+          // Revert the change if API call fails
+          setState(() {
+            _isVip = !value;
+          });
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Failed to update VIP status'),
+              backgroundColor: Colors.red,
+              duration: Duration(seconds: 2),
+            ),
+          );
+        }
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _isVip = !value;
+        });
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error: ${e.toString()}'),
+            backgroundColor: Colors.red,
+            duration: const Duration(seconds: 2),
+          ),
+        );
+      }
+    }
+  }
+
   Future<void> _editCustomer() async {
     final result = await Navigator.push<bool>(
       context,
       MaterialPageRoute(
-        builder: (context) => CustomerFormPage(customer: widget.customer),
+        builder: (context) => CustomerFormPage(customer: _customer),
       ),
     );
 
     if (result == true) {
-      // Refresh the detail page by popping and letting list refresh
-      if (mounted) {
-        Navigator.pop(context, true);
-      }
+      // Reload the customer data to show updated values
+      await _reloadCustomerData();
     }
   }
 }
