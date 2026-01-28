@@ -18,7 +18,6 @@ class Customer {
   });
 
   factory Customer.fromJson(Map<String, dynamic> json) {
-    print('[DEBUG] Customer.fromJson input: $json');
     // Check for 'type' field from database (type = 1 means VIP)
     // Handle both string and int types from API
     int vipStatus = 0;
@@ -26,26 +25,36 @@ class Customer {
     if (json['type'] != null) {
       if (json['type'] is String) {
         vipStatus = int.tryParse(json['type']) ?? 0;
-      } else {
+      } else if (json['type'] is int) {
         vipStatus = json['type'] as int;
       }
     } else if (json['isvip'] != null) {
       if (json['isvip'] is String) {
         vipStatus = int.tryParse(json['isvip']) ?? 0;
-      } else {
+      } else if (json['isvip'] is int) {
         vipStatus = json['isvip'] as int;
       }
     }
 
+    // Safely parse customerkey - handle both int and string
+    int customerKey = 0;
+    if (json['pkey'] != null) {
+      if (json['pkey'] is int) {
+        customerKey = json['pkey'] as int;
+      } else if (json['pkey'] is String) {
+        customerKey = int.tryParse(json['pkey']) ?? 0;
+      }
+    }
+
     return Customer(
-      customerkey: json['pkey'] ?? 0,
-      fullname: json['fullname'] ?? 'Unknown',
-      email: json['email'] ?? 'Unknown',
-      phone: json['phone'] ?? 'Unknown',
+      customerkey: customerKey,
+      fullname: json['fullname']?.toString() ?? 'Unknown',
+      email: json['email']?.toString() ?? 'Unknown',
+      phone: json['phone']?.toString() ?? 'Unknown',
       photo: json['photobase64'] != null && json['photobase64'] != ''
-          ? json['photobase64']
+          ? json['photobase64'].toString()
           : 'Unknown',
-      birthday: json['dob'] ?? json['birthday'] ?? '',
+      birthday: (json['dob']?.toString() ?? json['birthday']?.toString() ?? ''),
       isvip: vipStatus,
     );
   }

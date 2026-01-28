@@ -4,7 +4,7 @@ import 'package:salonapp/model/booking.dart';
 import 'package:salonapp/ui/customer/customer_form.dart';
 import 'package:salonapp/api/api_manager.dart';
 import 'package:salonapp/api/http/customer.dart';
-import 'package:salonapp/config/app_config.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 class CustomerDetailPage extends StatefulWidget {
   final Customer customer;
@@ -37,30 +37,22 @@ class _CustomerDetailPageState extends State<CustomerDetailPage> {
     });
 
     try {
-      // Fetch bookings for this customer
-      final data =
-          await apiManager.fetchFromServer(AppConfig.api_url_booking_home);
+      // Fetch bookings for this customer using the dedicated endpoint
+      final customerApi = CustomerApi(apiManager);
+      final bookings =
+          await customerApi.getCustomerBookings(_customer.customerkey);
 
-      if (data is List) {
-        final customerBookings = data
-            .where((booking) =>
-                booking is Map &&
-                booking['customerkey'] == _customer.customerkey.toString())
-            .cast<Map<String, dynamic>>()
-            .map((json) => Booking.fromJson(json))
-            .toList();
+      print('[UI] Received ${bookings.length} bookings from API');
 
-        setState(() {
-          _bookings = customerBookings;
-          _loadingBookings = false;
-        });
-      } else {
-        setState(() {
-          _loadingBookings = false;
-          _bookingError = 'Failed to load bookings';
-        });
-      }
+      setState(() {
+        _bookings = bookings;
+        _loadingBookings = false;
+        if (_bookings.isEmpty) {
+          print('[UI] Bookings list is empty after setState');
+        }
+      });
     } catch (e) {
+      print('[UI] Error loading bookings: $e');
       setState(() {
         _loadingBookings = false;
         _bookingError = 'Error loading bookings: ${e.toString()}';
@@ -182,18 +174,48 @@ class _CustomerDetailPageState extends State<CustomerDetailPage> {
                   ),
                   const SizedBox(height: 20),
 
-                  // Edit Button
-                  SizedBox(
-                    width: double.infinity,
-                    child: ElevatedButton.icon(
-                      onPressed: _editCustomer,
-                      icon: const Icon(Icons.edit),
-                      label: const Text('Edit Customer'),
-                      style: ElevatedButton.styleFrom(
-                        padding: const EdgeInsets.symmetric(vertical: 12),
-                        backgroundColor: Colors.blue,
+                  // Action Buttons Row
+                  Row(
+                    children: [
+                      // Call Button
+                      Expanded(
+                        child: ElevatedButton.icon(
+                          onPressed: () => _makeCall(_customer.phone),
+                          icon: const Icon(Icons.call, size: 18),
+                          label: const Text('Call'),
+                          style: ElevatedButton.styleFrom(
+                            padding: const EdgeInsets.symmetric(vertical: 10),
+                            backgroundColor: Colors.green,
+                          ),
+                        ),
                       ),
-                    ),
+                      const SizedBox(width: 8),
+                      // SMS Button
+                      Expanded(
+                        child: ElevatedButton.icon(
+                          onPressed: () => _sendSms(_customer.phone),
+                          icon: const Icon(Icons.sms, size: 18),
+                          label: const Text('SMS'),
+                          style: ElevatedButton.styleFrom(
+                            padding: const EdgeInsets.symmetric(vertical: 10),
+                            backgroundColor: Colors.orange,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      // Email Button
+                      Expanded(
+                        child: ElevatedButton.icon(
+                          onPressed: () => _sendEmail(_customer.email),
+                          icon: const Icon(Icons.email, size: 18),
+                          label: const Text('Email'),
+                          style: ElevatedButton.styleFrom(
+                            padding: const EdgeInsets.symmetric(vertical: 10),
+                            backgroundColor: Colors.blue,
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
                   const SizedBox(height: 24),
 
@@ -380,6 +402,20 @@ class _CustomerDetailPageState extends State<CustomerDetailPage> {
                 ),
               ],
             ),
+            const SizedBox(height: 8),
+            Row(
+              children: [
+                Icon(Icons.add_circle_outline,
+                    size: 16, color: Colors.grey[600]),
+                const SizedBox(width: 6),
+                Text(
+                  'Created on: ${booking.created_datetime.year}-${booking.created_datetime.month.toString().padLeft(2, '0')}-${booking.created_datetime.day.toString().padLeft(2, '0')}',
+                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                        color: Colors.grey[600],
+                      ),
+                ),
+              ],
+            ),
           ],
         ),
       ),
@@ -468,6 +504,84 @@ class _CustomerDetailPageState extends State<CustomerDetailPage> {
           ),
         );
       }
+    }
+  }
+
+  Future<void> _makeCall(String phoneNumber) async {
+    final Uri launchUri = Uri(
+      scheme: 'tel',
+      path: phoneNumber,
+    );
+    try {
+      if (await canLaunchUrl(launchUri)) {
+        await launchUrl(launchUri);
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Unable to make call'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Error: ${e.toString()}'),
+          backgroundColor: Colors.red,
+        ),
+      );
+    }
+  }
+
+  Future<void> _sendSms(String phoneNumber) async {
+    final Uri launchUri = Uri(
+      scheme: 'sms',
+      path: phoneNumber,
+    );
+    try {
+      if (await canLaunchUrl(launchUri)) {
+        await launchUrl(launchUri);
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Unable to send SMS'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Error: ${e.toString()}'),
+          backgroundColor: Colors.red,
+        ),
+      );
+    }
+  }
+
+  Future<void> _sendEmail(String email) async {
+    final Uri launchUri = Uri(
+      scheme: 'mailto',
+      path: email,
+    );
+    try {
+      if (await canLaunchUrl(launchUri)) {
+        await launchUrl(launchUri);
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Unable to send email'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Error: ${e.toString()}'),
+          backgroundColor: Colors.red,
+        ),
+      );
     }
   }
 

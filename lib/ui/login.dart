@@ -255,7 +255,7 @@ class _LoginState extends State<Login> {
             print('[Login] Failed to fetch app settings');
           }
 
-          safePushReplacementNamed(context, '/dashboard');
+          safePushReplacementNamed(context, '/booking');
         } else {
           showAlertDialog(context, 'Couldn\'t Authenticate'.tr(),
               'Login failed, Please try again.'.tr());

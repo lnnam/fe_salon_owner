@@ -23,15 +23,21 @@ class _CustomerListPageState extends State<CustomerListPage> {
   bool _loadingMore = false;
   String? _error;
   String _searchQuery = '';
-  final int _pageSize = 50;
+  final int _pageSize = 5;
   int _currentPage = 0;
   final ScrollController _scrollController = ScrollController();
+
+  // Upcoming birthdays
+  List<Customer> _upcomingBirthdays = [];
+  bool _loadingBirthdays = false;
+  String? _birthdaysError;
 
   @override
   void initState() {
     super.initState();
     _scrollController.addListener(_onScroll);
     _fetchCustomers();
+    _fetchUpcomingBirthdays();
   }
 
   @override
@@ -64,22 +70,16 @@ class _CustomerListPageState extends State<CustomerListPage> {
       // Handle response - API returns a List containing a Map with customer data
       final List<dynamic> customerList;
       if (data is List && data.isNotEmpty) {
-        print('[DEBUG] Response is a List with ${data.length} items');
         // Check if first item is a Map containing all customers
         if (data[0] is Map) {
-          print('[DEBUG] First item is a Map, extracting customer values');
           final Map<dynamic, dynamic> customerMap = data[0];
           customerList = customerMap.values.toList();
-          print('[DEBUG] Extracted ${customerList.length} customers from Map');
         } else {
           // List of individual customer objects
           customerList = data;
-          print('[DEBUG] List contains ${data.length} customer items');
         }
       } else if (data is Map) {
-        print('[DEBUG] Response is directly a Map');
         customerList = data.values.toList();
-        print('[DEBUG] Extracted ${customerList.length} customers from Map');
       } else {
         throw Exception('Unexpected data format from API: ${data.runtimeType}');
       }
@@ -96,8 +96,7 @@ class _CustomerListPageState extends State<CustomerListPage> {
         return json.containsKey('fullname') && json.containsKey('pkey');
       }).map((json) {
         final customer = Customer.fromJson(json as Map<String, dynamic>);
-        print(
-            '[DEBUG] Parsed customer: key=${customer.customerkey}, name=${customer.fullname}, email=${customer.email}, phone=${customer.phone}');
+
         return customer;
       }).toList();
 
@@ -111,9 +110,6 @@ class _CustomerListPageState extends State<CustomerListPage> {
         _filteredCustomers = _displayedCustomers;
         _loading = false;
       });
-
-      print('[DEBUG] Total customers: ${_allCustomers.length}');
-      print('[DEBUG] Displaying: ${_displayedCustomers.length}');
     } catch (e) {
       setState(() {
         _error = e.toString();
@@ -149,7 +145,6 @@ class _CustomerListPageState extends State<CustomerListPage> {
         _filteredCustomers = _displayedCustomers;
         _loadingMore = false;
       });
-      print('[DEBUG] Loaded page ${nextPage + 1}');
     } else {
       setState(() {
         _loadingMore = false;
@@ -257,6 +252,88 @@ class _CustomerListPageState extends State<CustomerListPage> {
     }
   }
 
+  Future<void> _fetchUpcomingBirthdays() async {
+    setState(() {
+      _loadingBirthdays = true;
+      _birthdaysError = null;
+    });
+    try {
+      final data = await apiManager.fetchFromServer(
+          '${AppConfig.api_url}/api/customer/upcoming-birthday');
+      print('[Birthdays] API Response: $data');
+      print('[Birthdays] Response type: ${data.runtimeType}');
+
+      final List<dynamic> birthdayList;
+      if (data is List && data.isNotEmpty) {
+        print('[Birthdays] Response is a List with ${data.length} items');
+        print('[Birthdays] First item type: ${data[0].runtimeType}');
+        print('[Birthdays] First item: ${data[0]}');
+        // List of individual customer objects
+        birthdayList = data;
+        print('[Birthdays] List contains ${data.length} customer items');
+      } else if (data is Map) {
+        print('[Birthdays] Response is directly a Map');
+        print('[Birthdays] Map keys: ${data.keys}');
+        print('[Birthdays] Map values count: ${data.values.length}');
+        // If it's a single map with customer data, wrap it in a list
+        if (data.containsKey('pkey') || data.containsKey('fullname')) {
+          print(
+              '[Birthdays] Map contains customer data, treating as single customer');
+          birthdayList = [data];
+        } else {
+          // Map of customers
+          birthdayList = data.values.toList();
+        }
+      } else {
+        print('[Birthdays] Response is neither List nor Map');
+        birthdayList = [];
+      }
+
+      final customers = birthdayList.map((customer) {
+        print('[Birthdays] Parsing customer: $customer');
+        print('[Birthdays] Customer type: ${customer.runtimeType}');
+        // Ensure customer is a Map before parsing
+        if (customer is Map<String, dynamic>) {
+          print('[Birthdays] Customer fields: ${customer.keys}');
+          return Customer.fromJson(customer);
+        } else if (customer is Map) {
+          print('[Birthdays] Casting Map to Map<String, dynamic>');
+          return Customer.fromJson(customer.cast<String, dynamic>());
+        } else {
+          print(
+              '[Birthdays] WARNING: Customer is not a Map, type: ${customer.runtimeType}, value: $customer');
+          // Return empty customer or skip
+          return Customer(
+            customerkey: 0,
+            fullname: 'Unknown',
+            email: 'Unknown',
+            phone: 'Unknown',
+            photo: 'Unknown',
+          );
+        }
+      }).toList();
+
+      setState(() {
+        _upcomingBirthdays = customers;
+        _loadingBirthdays = false;
+      });
+
+      print(
+          '[Birthdays] Total upcoming birthdays: ${_upcomingBirthdays.length}');
+      for (var i = 0; i < _upcomingBirthdays.length; i++) {
+        print(
+            '[Birthdays] Customer $i: ${_upcomingBirthdays[i].fullname} - ${_upcomingBirthdays[i].birthday}');
+      }
+    } catch (e) {
+      setState(() {
+        _birthdaysError = e.toString();
+        _loadingBirthdays = false;
+      });
+      print('[Birthdays] Error: $e');
+      print('[Birthdays] Stack trace: ${StackTrace.current}');
+    }
+  }
+
   Future<void> _addCustomer() async {
     final result = await Navigator.push<bool>(
       context,
@@ -312,26 +389,127 @@ class _CustomerListPageState extends State<CustomerListPage> {
               ),
             ),
           Expanded(
-            child: _loading
-                ? const Center(child: CircularProgressIndicator())
-                : _error != null
-                    ? Center(child: Text(_error!))
-                    : _filteredCustomers.isEmpty
-                        ? const Center(child: Text('No customers found'))
-                        : ListView.builder(
-                            controller: _scrollController,
-                            itemCount: _filteredCustomers.length +
-                                (_loadingMore && _searchQuery.isEmpty ? 1 : 0),
-                            itemBuilder: (context, index) {
-                              // Loading indicator at the bottom
-                              if (index == _filteredCustomers.length) {
-                                return const Padding(
-                                  padding: EdgeInsets.all(16.0),
-                                  child: CircularProgressIndicator(),
-                                );
-                              }
+            child: SingleChildScrollView(
+              child: Column(
+                children: [
+                  // Customer List Section - Only show when searching
+                  if (_searchQuery.isNotEmpty)
+                    SizedBox(
+                      height: 400,
+                      child: _loading
+                          ? const Center(child: CircularProgressIndicator())
+                          : _error != null
+                              ? Center(child: Text(_error!))
+                              : _filteredCustomers.isEmpty
+                                  ? const Center(
+                                      child: Text('No customers found'))
+                                  : ListView.builder(
+                                      controller: _scrollController,
+                                      itemCount: _filteredCustomers.length +
+                                          (_loadingMore && _searchQuery.isEmpty
+                                              ? 1
+                                              : 0),
+                                      itemBuilder: (context, index) {
+                                        // Loading indicator at the bottom
+                                        if (index ==
+                                            _filteredCustomers.length) {
+                                          return const Padding(
+                                            padding: EdgeInsets.all(16.0),
+                                            child: CircularProgressIndicator(),
+                                          );
+                                        }
 
-                              final customer = _filteredCustomers[index];
+                                        final customer =
+                                            _filteredCustomers[index];
+                                        Uint8List? photoBytes;
+                                        if (customer.photo != 'Unknown' &&
+                                            customer.photo.isNotEmpty) {
+                                          try {
+                                            photoBytes =
+                                                base64Decode(customer.photo);
+                                          } catch (_) {
+                                            photoBytes = null;
+                                          }
+                                        }
+                                        return ListTile(
+                                          leading: CircleAvatar(
+                                            child: (photoBytes == null)
+                                                ? const Icon(Icons.person)
+                                                : null,
+                                            backgroundImage:
+                                                (photoBytes != null)
+                                                    ? MemoryImage(photoBytes)
+                                                    : null,
+                                          ),
+                                          title: Text(customer.fullname),
+                                          subtitle: Text(
+                                              '${customer.phone} | ${customer.email}'),
+                                          trailing: Row(
+                                            mainAxisSize: MainAxisSize.min,
+                                            children: [
+                                              IconButton(
+                                                icon: const Icon(Icons.delete),
+                                                onPressed: () =>
+                                                    _deleteCustomer(customer),
+                                              ),
+                                            ],
+                                          ),
+                                          onTap: () =>
+                                              _openCustomerDetail(customer),
+                                        );
+                                      },
+                                    ),
+                    ),
+
+                  // Upcoming Birthdays Section
+                  Padding(
+                    padding: const EdgeInsets.all(16.0),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Upcoming Birthdays',
+                          style:
+                              Theme.of(context).textTheme.titleMedium?.copyWith(
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                        ),
+                        const SizedBox(height: 12),
+                        if (_loadingBirthdays)
+                          const Center(child: CircularProgressIndicator())
+                        else if (_birthdaysError != null)
+                          Container(
+                            padding: const EdgeInsets.all(12),
+                            decoration: BoxDecoration(
+                              color: Colors.orange.shade100,
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            child: Text(
+                              _birthdaysError!,
+                              style: TextStyle(color: Colors.orange[700]),
+                            ),
+                          )
+                        else if (_upcomingBirthdays.isEmpty)
+                          Container(
+                            padding: const EdgeInsets.all(20),
+                            alignment: Alignment.center,
+                            child: Text(
+                              'No upcoming birthdays',
+                              style: Theme.of(context)
+                                  .textTheme
+                                  .bodyMedium
+                                  ?.copyWith(
+                                    color: Colors.grey[600],
+                                  ),
+                            ),
+                          )
+                        else
+                          ListView.builder(
+                            shrinkWrap: true,
+                            physics: const NeverScrollableScrollPhysics(),
+                            itemCount: _upcomingBirthdays.length,
+                            itemBuilder: (context, index) {
+                              final customer = _upcomingBirthdays[index];
                               Uint8List? photoBytes;
                               if (customer.photo != 'Unknown' &&
                                   customer.photo.isNotEmpty) {
@@ -341,32 +519,58 @@ class _CustomerListPageState extends State<CustomerListPage> {
                                   photoBytes = null;
                                 }
                               }
-                              return ListTile(
-                                leading: CircleAvatar(
-                                  child: (photoBytes == null)
-                                      ? const Icon(Icons.person)
+                              
+                              // Check if birthday is today
+                              bool isBirthdayToday = false;
+                              if (customer.birthday.isNotEmpty) {
+                                try {
+                                  final birthdayDate = DateTime.parse(customer.birthday);
+                                  final today = DateTime.now();
+                                  isBirthdayToday = birthdayDate.month == today.month && 
+                                                   birthdayDate.day == today.day;
+                                } catch (e) {
+                                  print('[Birthdays] Error parsing birthday: ${customer.birthday} - $e');
+                                }
+                              }
+                              
+                              return Card(
+                                margin: const EdgeInsets.only(bottom: 8),
+                                color: isBirthdayToday ? Colors.pink.shade100 : null,
+                                child: ListTile(
+                                  leading: CircleAvatar(
+                                    child: (photoBytes == null)
+                                        ? const Icon(Icons.person)
+                                        : null,
+                                    backgroundImage: (photoBytes != null)
+                                        ? MemoryImage(photoBytes)
+                                        : null,
+                                  ),
+                                  title: Text(
+                                    customer.fullname,
+                                    style: isBirthdayToday 
+                                      ? const TextStyle(
+                                          fontWeight: FontWeight.bold,
+                                          color: Colors.pink,
+                                        )
                                       : null,
-                                  backgroundImage: (photoBytes != null)
-                                      ? MemoryImage(photoBytes)
-                                      : null,
+                                  ),
+                                  subtitle:
+                                      Text('Birthday: ${customer.birthday}'),
+                                  trailing: Icon(
+                                    Icons.cake,
+                                    color: isBirthdayToday ? Colors.pink : Colors.pink,
+                                  ),
+                                  onTap: () => _openCustomerDetail(customer),
                                 ),
-                                title: Text(customer.fullname),
-                                subtitle: Text(
-                                    '${customer.phone} | ${customer.email}'),
-                                trailing: Row(
-                                  mainAxisSize: MainAxisSize.min,
-                                  children: [
-                                    IconButton(
-                                      icon: const Icon(Icons.delete),
-                                      onPressed: () =>
-                                          _deleteCustomer(customer),
-                                    ),
-                                  ],
-                                ),
-                                onTap: () => _openCustomerDetail(customer),
                               );
                             },
                           ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
           ),
         ],
       ),

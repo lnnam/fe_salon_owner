@@ -126,7 +126,7 @@ class AuthChecker extends StatelessWidget {
           if (snapshot.hasData && snapshot.data == true) {
             // Token is saved, proceed to main app
             // Update currentUser in MyAppState
-            return const Dashboard();
+            return const BookingHomeScreen();
           } else {
             // Token is not saved, navigate to login page
             return const Login();

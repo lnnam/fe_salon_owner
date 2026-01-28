@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:salonapp/config/app_config.dart';
 import 'package:salonapp/model/user.dart';
 import 'package:salonapp/model/customer.dart';
+import 'package:salonapp/model/booking.dart';
 import 'package:salonapp/api/http/http.dart';
 import 'package:salonapp/services/helper.dart' show getCurrentUser;
 
@@ -217,6 +218,59 @@ class CustomerApi {
     } catch (e) {
       print('[HTTP] setVip: ERROR - $e');
       return false;
+    }
+  }
+
+  Future<List<Booking>> getCustomerBookings(int customerKey) async {
+    try {
+      final User currentUser = await getCurrentUser();
+      final String token = currentUser.token;
+
+      print('[API] Fetching bookings for customer $customerKey');
+
+      final response = await http.get(
+        Uri.parse('${AppConfig.api_url}/api/customer/$customerKey/listbooking'),
+        headers: <String, String>{
+          'Authorization': 'Bearer $token',
+          'Content-Type': 'application/json; charset=UTF-8',
+        },
+      );
+
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        print('[API] Customer bookings fetched successfully');
+        final dynamic data = jsonDecode(response.body);
+        print('[API] Raw response data: $data');
+        print('[API] Response data type: ${data.runtimeType}');
+
+        // Handle both list and map responses
+        List<dynamic> bookingList = [];
+        if (data is List) {
+          print('[API] Response is a List with ${data.length} items');
+          bookingList = data;
+        } else if (data is Map && data.containsKey('bookings')) {
+          print('[API] Response is a Map with bookings key');
+          bookingList = data['bookings'] ?? [];
+        } else if (data is Map) {
+          print('[API] Response is a Map, extracting values');
+          bookingList = data.values.toList();
+        }
+
+        print('[API] Processing ${bookingList.length} bookings');
+        final result = bookingList.map<Booking>((item) {
+          print('[API] Parsing booking: $item');
+          return Booking.fromJson(item as Map<String, dynamic>);
+        }).toList();
+        print('[API] Successfully parsed ${result.length} bookings');
+        return result;
+      } else {
+        print(
+            '[HTTP] getCustomerBookings: Failed with status ${response.statusCode}');
+        print('[HTTP] Response: ${response.body}');
+        return [];
+      }
+    } catch (e) {
+      print('[HTTP] getCustomerBookings: ERROR - $e');
+      return [];
     }
   }
 }
