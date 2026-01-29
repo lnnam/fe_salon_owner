@@ -21,6 +21,7 @@ class Booking {
   final String note;
   final String? createdby;
   final String status;
+  final String customerbirthday;
 
   Booking({
     required this.pkey, // <-- Add this line
@@ -43,6 +44,7 @@ class Booking {
     required this.note,
     this.createdby,
     this.status = '',
+    this.customerbirthday = '',
   });
 
   factory Booking.fromJson(Map<String, dynamic> json) {
@@ -111,6 +113,7 @@ class Booking {
           json['bookingstatus'] ??
           json['statusbooking'] ??
           (json['statuskey'] != null ? json['statuskey'].toString() : ''),
+      customerbirthday: json['birthday']?.toString() ?? '',
     );
   }
 

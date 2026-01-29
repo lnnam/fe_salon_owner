@@ -114,12 +114,76 @@ class _BookingHomeScreenState extends State<BookingHomeScreen> {
     super.dispose();
   }
 
+  /// Get background color based on age
+  Color _getAgeGroupColor(String birthdayStr) {
+    if (birthdayStr.isEmpty) return Colors.white;
+    try {
+      final parts = birthdayStr.split('-');
+      if (parts.length != 3) return Colors.white;
+
+      final year = int.parse(parts[0]);
+      final month = int.parse(parts[1]);
+      final day = int.parse(parts[2]);
+
+      final birthday = DateTime(year, month, day);
+      final today = DateTime.now();
+      int age = today.year - birthday.year;
+
+      // Adjust if birthday hasn't occurred this year
+      if (today.month < month || (today.month == month && today.day < day)) {
+        age--;
+      }
+
+      // age > 50: dark purple
+      if (age > 50) return Colors.deepPurple[200]!;
+
+      // age between 15 and 25: blue
+      if (age >= 15 && age <= 25) return Colors.blue[100]!;
+
+      // age < 15: pink
+      if (age < 15) return Colors.pink[100]!;
+
+      // else (age 25-50): white
+      return Colors.white;
+    } catch (e) {
+      return Colors.white;
+    }
+  }
+
+  /// Check if a birthday date is this week
+  bool _isBirthdayThisWeek(String birthdayStr) {
+    if (birthdayStr.isEmpty) return false;
+    try {
+      // Parse birthday (assuming format YYYY-MM-DD)
+      final parts = birthdayStr.split('-');
+      if (parts.length != 3) return false;
+
+      final month = int.parse(parts[1]);
+      final day = int.parse(parts[2]);
+
+      // Create a birthday for this year
+      final now = DateTime.now();
+      final birthdayThisYear = DateTime(now.year, month, day);
+
+      // Get the start of this week (Monday)
+      final weekStart = now.subtract(Duration(days: now.weekday - 1));
+      final weekEnd = weekStart.add(const Duration(days: 6));
+
+      return birthdayThisYear
+              .isAfter(weekStart.subtract(const Duration(days: 1))) &&
+          birthdayThisYear.isBefore(weekEnd.add(const Duration(days: 1)));
+    } catch (e) {
+      return false;
+    }
+  }
+
   /// Booking card
   Widget _buildBookingCard(Booking booking, Color color) {
     final isPastLocal = isBookingInPast(booking);
     final bookingProvider =
         Provider.of<BookingProvider>(context, listen: false);
     final isLogView = bookingProvider.currentViewOption == 'new';
+    final isBirthdayThisWeek = _isBirthdayThisWeek(booking.customerbirthday);
 
     return Container(
       margin: const EdgeInsets.symmetric(vertical: 6.0, horizontal: 16.0),
@@ -226,17 +290,6 @@ class _BookingHomeScreenState extends State<BookingHomeScreen> {
                         ],
                       ),
                     ),
-                    if (booking.createdby?.toLowerCase() != 'salon')
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 8, vertical: 4),
-                        decoration: BoxDecoration(
-                          color: Colors.blue[600],
-                          borderRadius: BorderRadius.circular(20),
-                        ),
-                        child: const Icon(Icons.language,
-                            color: Colors.white, size: 12),
-                      ),
                     if (booking.status.isNotEmpty)
                       Container(
                         padding: const EdgeInsets.symmetric(
@@ -270,8 +323,22 @@ class _BookingHomeScreenState extends State<BookingHomeScreen> {
                     color: color,
                     muted: isPastLocal,
                     badgeCount: int.tryParse(booking.numbooked),
-                    boxed: true),
+                    boxed: true,
+                    backgroundColor:
+                        _getAgeGroupColor(booking.customerbirthday)),
                 const SizedBox(height: 4),
+                if (isBirthdayThisWeek)
+                  _infoRow(
+                      icon: Icons.cake,
+                      text: 'Birthday: ${booking.customerbirthday}',
+                      color: Colors.pink,
+                      muted: isPastLocal,
+                      textStyle: const TextStyle(
+                        fontSize: 12,
+                        color: Colors.pink,
+                        fontWeight: FontWeight.bold,
+                      )),
+                if (isBirthdayThisWeek) const SizedBox(height: 4),
                 _infoRow(
                     icon: Icons.spa,
                     text: booking.servicename,
@@ -285,13 +352,31 @@ class _BookingHomeScreenState extends State<BookingHomeScreen> {
                     color: color,
                     muted: isPastLocal),
                 const SizedBox(height: 4),
-                _infoRow(
-                    icon: Icons.schedule,
-                    text:
-                        'Created on: ${_formatSchedule(booking.created_datetime)}',
-                    color: color,
-                    muted: isPastLocal,
-                    textStyle: const TextStyle(fontSize: 12)),
+                Row(
+                  children: [
+                    Expanded(
+                      child: _infoRow(
+                          icon: Icons.schedule,
+                          text:
+                              'Created on: ${_formatSchedule(booking.created_datetime)}',
+                          color: color,
+                          muted: isPastLocal,
+                          textStyle: const TextStyle(fontSize: 12)),
+                    ),
+                    if (booking.createdby?.toLowerCase() != 'salon')
+                      Container(
+                        margin: const EdgeInsets.only(left: 8),
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 8, vertical: 4),
+                        decoration: BoxDecoration(
+                          color: Colors.blue[600],
+                          borderRadius: BorderRadius.circular(20),
+                        ),
+                        child: const Icon(Icons.language,
+                            color: Colors.white, size: 12),
+                      ),
+                  ],
+                ),
               ],
             ),
           ),
@@ -308,6 +393,7 @@ class _BookingHomeScreenState extends State<BookingHomeScreen> {
     TextStyle? textStyle,
     int? badgeCount,
     bool boxed = false,
+    Color? backgroundColor,
   }) {
     final showBadge =
         (badgeCount != null && badgeCount > 1 && badgeCount < 100);
@@ -325,7 +411,8 @@ class _BookingHomeScreenState extends State<BookingHomeScreen> {
           child: Container(
             padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
             decoration: BoxDecoration(
-              color: muted ? Colors.grey[200] : Colors.grey[100],
+              color: backgroundColor ??
+                  (muted ? Colors.grey[200] : Colors.grey[100]),
               borderRadius: BorderRadius.circular(8),
               border: Border.all(
                 color: muted ? Colors.grey[300]! : color.withOpacity(0.25),
