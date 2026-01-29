@@ -291,27 +291,12 @@ class _BookingHomeScreenState extends State<BookingHomeScreen> {
                       ),
                     ),
                     if (booking.status.isNotEmpty)
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 8, vertical: 4),
-                        decoration: BoxDecoration(
-                            color: _statusColor(booking.status, color)
-                                .withOpacity(0.95),
-                            borderRadius: BorderRadius.circular(20)),
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            const Icon(Icons.info_outline,
-                                color: Colors.white, size: 12),
-                            const SizedBox(width: 6),
-                            Text(
-                              booking.status,
-                              style: const TextStyle(
-                                  color: Colors.white,
-                                  fontSize: 12,
-                                  fontWeight: FontWeight.w600),
-                            ),
-                          ],
+                      Text(
+                        booking.status,
+                        style: TextStyle(
+                          color: _statusColor(booking.status, color),
+                          fontSize: 12,
+                          fontWeight: FontWeight.w600,
                         ),
                       ),
                   ],
