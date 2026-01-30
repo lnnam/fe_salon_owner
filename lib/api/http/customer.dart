@@ -14,9 +14,7 @@ class CustomerApi {
 
   Future<List<Customer>> listCustomer() async {
     try {
-      final currentUser = await getCurrentUser();
-      final storeName = Uri.encodeComponent(currentUser.salonname);
-      final url = '${AppConfig.api_url}/api/getdata?storename=$storeName';
+      final url = '${AppConfig.api_url_booking_customer}';
       final response = await _http.fetchFromServer(url);
       List<dynamic> data = response;
       return data.map<Customer>((item) => Customer.fromJson(item)).toList();

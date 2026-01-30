@@ -313,8 +313,9 @@ class MyHttp {
     String customerEmail,
     String customerPhone,
     String staffName,
-    String serviceName,
-  ) async {
+    String serviceName, {
+    int numBooking = 1,
+  }) async {
     //  print('url test: ${AppConfig.api_url_booking_add}');
     try {
       // Get current user and token
@@ -334,6 +335,7 @@ class MyHttp {
         'customerphone': customerPhone,
         'staffname': staffName,
         'servicename': serviceName,
+        'numbooking': numBooking.toString(),
         'userkey': '1',
       };
 

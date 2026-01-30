@@ -10,7 +10,6 @@ import 'package:salonapp/services/helper.dart';
 import 'package:salonapp/ui/common/drawer_booking.dart';
 import 'package:salonapp/ui/booking/staff.dart';
 import 'summary.dart';
-import 'schedule.dart';
 
 class BookingHomeScreen extends StatefulWidget {
   final String? initialView;
@@ -593,21 +592,77 @@ class _BookingHomeScreenState extends State<BookingHomeScreen> {
   }
 
   Future<void> _showDatePickerForFind(BookingProvider bookingProvider) async {
-    final pickedDate = await showDatePicker(
+    DateTime selectedDate = DateTime.now();
+
+    await showDialog(
       context: context,
-      initialDate: DateTime.now(),
-      firstDate: DateTime(2020),
-      lastDate: DateTime(2100),
+      builder: (context) => Dialog(
+        child: StatefulBuilder(
+          builder: (context, setState) => SizedBox(
+            width: 300,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Padding(
+                  padding: const EdgeInsets.all(16.0),
+                  child: Text(
+                    '${selectedDate.year}-${selectedDate.month.toString().padLeft(2, '0')}-${selectedDate.day.toString().padLeft(2, '0')}',
+                    style: const TextStyle(
+                      fontSize: 20,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ),
+                SizedBox(
+                  height: 300,
+                  child: CalendarDatePicker(
+                    initialDate: selectedDate,
+                    firstDate: DateTime(2020),
+                    lastDate: DateTime(2100),
+                    onDateChanged: (date) {
+                      selectedDate = date;
+                      // Auto-confirm on date selection
+                      Navigator.pop(context);
+                      _loadSelectedDate(bookingProvider, date);
+                    },
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
     );
+  }
 
-    if (pickedDate == null) return;
-
-    final formattedDate = DateFormat('yyyy-MM-dd').format(pickedDate);
+  void _loadSelectedDate(BookingProvider bookingProvider, DateTime date) {
+    final formattedDate = DateFormat('yyyy-MM-dd').format(date);
     setState(() => _isLogView = false);
     bookingProvider.setCurrentViewOption(formattedDate);
+
+    // Show loading indicator immediately
+    if (mounted) {
+      showDialog(
+        context: context,
+        barrierDismissible: false,
+        builder: (context) => const Dialog(
+          backgroundColor: Colors.transparent,
+          elevation: 0,
+          child: Center(
+            child: CircularProgressIndicator(
+              valueColor: AlwaysStoppedAnimation<Color>(
+                Color(COLOR_PRIMARY),
+              ),
+            ),
+          ),
+        ),
+      );
+    }
+
     bookingProvider.loadBookingsWithDate(formattedDate);
     bookingProvider.bookingStream.first.then((list) {
       if (mounted) {
+        Navigator.pop(context); // Close loading dialog
         setState(() {
           _dateCount = list.length;
         });
@@ -654,36 +709,6 @@ class _BookingHomeScreenState extends State<BookingHomeScreen> {
       appBar: AppBar(
         title: const Text('Appointment', style: TextStyle(color: Colors.white)),
         backgroundColor: _primaryColor,
-        actions: [
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 12.0),
-            child: ElevatedButton(
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.white,
-                foregroundColor: _primaryColor,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(20),
-                ),
-                elevation: 0,
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-              ),
-              onPressed: () {
-                Navigator.of(context).push(
-                  MaterialPageRoute(builder: (context) => const SchedulePage()),
-                );
-              },
-              child: const Text(
-                'Book Now',
-                style: TextStyle(
-                  color: Color(COLOR_PRIMARY),
-                  fontWeight: FontWeight.bold,
-                  fontSize: 16,
-                ),
-              ),
-            ),
-          ),
-        ],
       ),
       drawer: const AppDrawerBooking(),
       body:

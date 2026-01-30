@@ -20,8 +20,9 @@ Future<void> saveBooking(
   String customerEmail,
   String customerPhone,
   String staffName,
-  String serviceName,
-) async {
+  String serviceName, {
+  int numBooking = 1,
+}) async {
   setLoading(true);
 
   // debug data omitted in production
@@ -39,6 +40,7 @@ Future<void> saveBooking(
     customerPhone,
     staffName,
     serviceName,
+    numBooking: numBooking,
   );
 
   setLoading(false);
@@ -76,7 +78,6 @@ Future<void> saveBooking(
             ],
           ),
         ),
-       
         actions: [
           Center(
             child: ElevatedButton.icon(

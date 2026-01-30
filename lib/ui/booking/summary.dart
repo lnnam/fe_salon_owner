@@ -28,6 +28,7 @@ class SummaryPage extends StatefulWidget {
 class _SummaryPageState extends State<SummaryPage> {
   bool isLoading = false;
   String note = '';
+  int numBooking = 1;
 
   late String customerKey;
   late String serviceKey;
@@ -652,6 +653,44 @@ class _SummaryPageState extends State<SummaryPage> {
                     icon: Icons.star,
                     onTap: () => safePush(context, const ServicePage()),
                   ),
+                    const SizedBox(height: 16),
+                  const Text(
+                    'Number of Bookings:',
+                    style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.black),
+                  ),
+                 
+                   const SizedBox(height: 8),
+                  DropdownButtonFormField<int>(
+                    value: numBooking,
+                    decoration: const InputDecoration(
+                      border: OutlineInputBorder(),
+                      contentPadding:
+                          EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                      focusedBorder: OutlineInputBorder(
+                        borderSide: BorderSide(color: Colors.blue, width: 2),
+                      ),
+                      enabledBorder: OutlineInputBorder(
+                        borderSide: BorderSide(color: Colors.grey, width: 1),
+                      ),
+                    ),
+                    items: List.generate(10, (index) {
+                      int value = index + 1;
+                      return DropdownMenuItem<int>(
+                        value: value,
+                        child: Text(value.toString()),
+                      );
+                    }),
+                    onChanged: (value) {
+                      if (value != null) {
+                        setState(() {
+                          numBooking = value;
+                        });
+                      }
+                    },
+                  ),
                   const SizedBox(height: 12),
                   const Text(
                     'Note:',
@@ -682,6 +721,7 @@ class _SummaryPageState extends State<SummaryPage> {
                           .setNote(value);
                     },
                   ),
+                
                   const SizedBox(height: 16),
                   Column(
                     children: [
@@ -707,6 +747,7 @@ class _SummaryPageState extends State<SummaryPage> {
                                         customerPhone,
                                         staffName,
                                         serviceName,
+                                        numBooking: numBooking,
                                       ),
                               style: ElevatedButton.styleFrom(
                                 backgroundColor: const Color(COLOR_PRIMARY),
