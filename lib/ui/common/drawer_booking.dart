@@ -4,6 +4,7 @@ import 'package:salonapp/services/helper.dart';
 import 'package:salonapp/ui/booking/setting.dart';
 import 'package:salonapp/ui/customer/customer_list.dart';
 import 'package:salonapp/ui/staff/home.dart';
+import 'package:salonapp/ui/dashboard.dart';
 
 class AppDrawerBooking extends StatelessWidget {
   const AppDrawerBooking({super.key});
@@ -29,7 +30,7 @@ class AppDrawerBooking extends StatelessWidget {
           ListTile(
             title: const Text('Dashboard'),
             onTap: () {
-              safePushReplacementNamed(context, '/dashboard');
+              safePush(context, const Dashboard());
             },
           ),
           ListTile(
