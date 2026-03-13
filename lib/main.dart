@@ -7,6 +7,7 @@ import 'package:salonapp/ui/dashboard.dart';
 import 'package:salonapp/model/user.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:salonapp/ui/pos/home.dart';
+import 'package:salonapp/ui/pos/receipt.dart';
 import 'package:salonapp/ui/booking/home.dart';
 import 'package:flutter/rendering.dart';
 import 'package:salonapp/provider/booking.provider.dart';
@@ -99,6 +100,7 @@ class MyAppState extends State<MyApp> with WidgetsBindingObserver {
         '/dashboard': (context) => const AuthChecker(),
         '/booking': (context) => const BookingHomeScreen(),
         '/pos': (context) => const SaleScreen(),
+        '/receipt': (context) => const ReceiptScreen(),
         '/checkin': (context) => const CheckInScreen(),
         '/checkout': (context) => const CheckOutScreen(),
         '/login': (context) => const Login(),
