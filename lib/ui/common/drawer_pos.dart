@@ -5,13 +5,6 @@ import 'package:salonapp/services/helper.dart';
 class AppDrawerPos extends StatelessWidget {
   const AppDrawerPos({super.key});
 
-  void _showComingSoon(BuildContext context, String label) {
-    Navigator.of(context).pop();
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text('$label is not available yet')),
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
     return Drawer(
@@ -43,8 +36,16 @@ class AppDrawerPos extends StatelessWidget {
             },
           ),
           ListTile(
-            title: const Text('Report'),
-            onTap: () => _showComingSoon(context, 'Report'),
+            title: const Text('Report Summary'),
+            onTap: () {
+              safePushReplacementNamed(context, '/report');
+            },
+          ),
+          ListTile(
+            title: const Text('Daily Report'),
+            onTap: () {
+              safePushReplacementNamed(context, '/report-daily');
+            },
           ),
         ],
       ),

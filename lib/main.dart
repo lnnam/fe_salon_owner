@@ -8,6 +8,8 @@ import 'package:salonapp/model/user.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:salonapp/ui/pos/home.dart';
 import 'package:salonapp/ui/pos/receipt.dart';
+import 'package:salonapp/ui/pos/report_daily.dart';
+import 'package:salonapp/ui/pos/report_summary.dart';
 import 'package:salonapp/ui/booking/home.dart';
 import 'package:flutter/rendering.dart';
 import 'package:salonapp/provider/booking.provider.dart';
@@ -101,6 +103,8 @@ class MyAppState extends State<MyApp> with WidgetsBindingObserver {
         '/booking': (context) => const BookingHomeScreen(),
         '/pos': (context) => const SaleScreen(),
         '/receipt': (context) => const ReceiptScreen(),
+        '/report-daily': (context) => const ReportDailyScreen(),
+        '/report': (context) => const ReportScreen(),
         '/checkin': (context) => const CheckInScreen(),
         '/checkout': (context) => const CheckOutScreen(),
         '/login': (context) => const Login(),
@@ -128,7 +132,7 @@ class AuthChecker extends StatelessWidget {
           if (snapshot.hasData && snapshot.data == true) {
             // Token is saved, proceed to main app
             // Update currentUser in MyAppState
-            return const BookingHomeScreen();
+            return const Dashboard();
           } else {
             // Token is not saved, navigate to login page
             return const Login();
