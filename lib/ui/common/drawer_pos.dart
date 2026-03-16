@@ -36,7 +36,7 @@ class AppDrawerPos extends StatelessWidget {
             },
           ),
           ListTile(
-            title: const Text('Report Summary'),
+            title: const Text('Summary Report'),
             onTap: () {
               safePushReplacementNamed(context, '/report');
             },
