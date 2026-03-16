@@ -15,6 +15,7 @@ class _SaleScreenState extends State<SaleScreen> {
   List<Service> _services = [];
   bool _isLoading = true;
   String? _error;
+  late DateTime _dateActivated;
 
   // Cart: service -> quantity
   final Map<int, int> _cart = {};
@@ -22,7 +23,47 @@ class _SaleScreenState extends State<SaleScreen> {
   @override
   void initState() {
     super.initState();
+    _dateActivated = DateTime.now();
     _fetchServices();
+  }
+
+  String _fmtDateTime(DateTime d) {
+    final y = d.year.toString().padLeft(4, '0');
+    final m = d.month.toString().padLeft(2, '0');
+    final day = d.day.toString().padLeft(2, '0');
+    final hh = d.hour.toString().padLeft(2, '0');
+    final mm = d.minute.toString().padLeft(2, '0');
+    return '$y-$m-$day $hh:$mm';
+  }
+
+  Future<void> _pickDateActivated() async {
+    final picked = await showDatePicker(
+      context: context,
+      initialDate: _dateActivated,
+      firstDate: DateTime(2020),
+      lastDate: DateTime(2100),
+    );
+    if (picked == null) return;
+
+    final now = DateTime.now();
+    setState(() {
+      _dateActivated = DateTime(
+        picked.year,
+        picked.month,
+        picked.day,
+        now.hour,
+        now.minute,
+        now.second,
+      );
+    });
+
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text('Date activated: ${_fmtDateTime(_dateActivated)}'),
+        duration: const Duration(seconds: 2),
+      ),
+    );
   }
 
   Future<void> _fetchServices() async {
@@ -175,6 +216,7 @@ class _SaleScreenState extends State<SaleScreen> {
       final body = jsonEncode({
         'servicekey': serviceKeys,
         'payment_method': method.toLowerCase(),
+        'dateactivated': _dateActivated.toIso8601String(),
       });
 
       final response = await http.post(
@@ -217,6 +259,7 @@ class _SaleScreenState extends State<SaleScreen> {
             content: Text(
               'Paid \$${total.toStringAsFixed(2)} by $method - sale #${data['pkey']} saved!',
             ),
+            duration: const Duration(seconds: 1),
             backgroundColor: Colors.green,
           ),
         );
@@ -243,6 +286,13 @@ class _SaleScreenState extends State<SaleScreen> {
         backgroundColor: const Color(0xFF3E66C5),
         foregroundColor: Colors.white,
         elevation: 0,
+        actions: [
+          IconButton(
+            tooltip: 'Date activated: ${_fmtDateTime(_dateActivated)}',
+            onPressed: _pickDateActivated,
+            icon: const Icon(Icons.calendar_month_rounded),
+          ),
+        ],
       ),
       body: _isLoading
           ? const Center(
