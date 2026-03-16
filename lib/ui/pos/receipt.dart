@@ -19,6 +19,9 @@ class _ReceiptScreenState extends State<ReceiptScreen> {
   _ReceiptResponse? _response;
 
   int? _selectedIndex;
+  bool _isDeleting = false;
+  bool _isDeleteDialogOpen = false;
+  String? _activeDeleteSaleKey;
 
   static String _formatDate(DateTime date) {
     final y = date.year.toString().padLeft(4, '0');
@@ -72,6 +75,97 @@ class _ReceiptScreenState extends State<ReceiptScreen> {
     if (picked == null) return;
     final date = _formatDate(picked);
     await _loadReceipts(date: date, page: 1);
+  }
+
+  Future<void> _deleteSelectedReceipt(_ReceiptItem selected) async {
+    if (_isDeleting || _isDeleteDialogOpen) return;
+
+    final saleKey = selected.pkey.trim();
+    if (saleKey.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Cannot delete: invalid sale key from server response'),
+          backgroundColor: Colors.red,
+        ),
+      );
+      return;
+    }
+
+    if (_activeDeleteSaleKey == saleKey) return;
+    _activeDeleteSaleKey = saleKey;
+
+    _isDeleteDialogOpen = true;
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Delete Receipt'),
+        content: Text(
+            'Delete ${selected.receiptNo} permanently? This action cannot be undone.'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(false),
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(true),
+            child: const Text(
+              'Delete',
+              style: TextStyle(color: Colors.red),
+            ),
+          ),
+        ],
+      ),
+    );
+    _isDeleteDialogOpen = false;
+
+    if (confirmed != true) {
+      if (_activeDeleteSaleKey == saleKey) {
+        _activeDeleteSaleKey = null;
+      }
+      return;
+    }
+
+    setState(() => _isDeleting = true);
+
+    try {
+      final deleted = await apiManager.deletePosSale(saleKey);
+
+      if (!deleted) {
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Delete already in progress'),
+            backgroundColor: Colors.orange,
+          ),
+        );
+        return;
+      }
+
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Deleted ${selected.receiptNo}'),
+          backgroundColor: Colors.green,
+        ),
+      );
+
+      await _loadReceipts(date: _selectedDate, page: _selectedPage);
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Failed to delete receipt: $e'),
+          backgroundColor: Colors.red,
+        ),
+      );
+    } finally {
+      if (_activeDeleteSaleKey == saleKey) {
+        _activeDeleteSaleKey = null;
+      }
+      if (mounted) {
+        setState(() => _isDeleting = false);
+      }
+    }
   }
 
   @override
@@ -358,9 +452,7 @@ class _ReceiptScreenState extends State<ReceiptScreen> {
                                 ],
                               ),
                               const SizedBox(height: 6),
-                              Text('PKey: ${selected.pkey}'),
                               Text('Service: ${selected.serviceName}'),
-                              Text('Receipt No: ${selected.receiptNo}'),
                               Text('Date: ${selected.dateactivated}'),
                               Text('Payment: ${selected.paymentMethod}'),
                               const SizedBox(height: 8),
@@ -401,16 +493,40 @@ class _ReceiptScreenState extends State<ReceiptScreen> {
                                     ),
                                   ),
                               const SizedBox(height: 10),
-                              Align(
-                                alignment: Alignment.centerRight,
-                                child: Text(
-                                  'Total: \$${selected.total.toStringAsFixed(2)}',
-                                  style: const TextStyle(
-                                    fontSize: 18,
-                                    fontWeight: FontWeight.bold,
-                                    color: Color(0xFF3E66C5),
+                              Row(
+                                children: [
+                                  TextButton.icon(
+                                    onPressed: _isDeleting
+                                        ? null
+                                        : () =>
+                                            _deleteSelectedReceipt(selected),
+                                    icon: _isDeleting
+                                        ? const SizedBox(
+                                            width: 14,
+                                            height: 14,
+                                            child: CircularProgressIndicator(
+                                              strokeWidth: 2,
+                                            ),
+                                          )
+                                        : const Icon(
+                                            Icons.delete_outline_rounded),
+                                    label: Text(
+                                      _isDeleting ? 'Deleting...' : 'Delete',
+                                      style: const TextStyle(
+                                        color: Colors.red,
+                                      ),
+                                    ),
                                   ),
-                                ),
+                                  const Spacer(),
+                                  Text(
+                                    'Total: \$${selected.total.toStringAsFixed(2)}',
+                                    style: const TextStyle(
+                                      fontSize: 18,
+                                      fontWeight: FontWeight.bold,
+                                      color: Color(0xFF3E66C5),
+                                    ),
+                                  ),
+                                ],
                               ),
                             ],
                           ),
@@ -536,7 +652,7 @@ class _ReceiptPagination {
 }
 
 class _ReceiptItem {
-  final int pkey;
+  final String pkey;
   final String receiptNo;
   final String serviceName;
   final List<_ReceiptService> services;
@@ -554,20 +670,70 @@ class _ReceiptItem {
     required this.dateactivated,
   });
 
+  static List<_ReceiptService> _parseServices(Map<String, dynamic> json) {
+    final dynamic rawList =
+        json['services'] ?? json['items'] ?? json['details'] ?? json['lines'];
+
+    if (rawList is List) {
+      return rawList
+          .whereType<Map>()
+          .map((e) {
+            final map = Map<String, dynamic>.from(e);
+            return _ReceiptService(
+              name: (map['name'] ??
+                      map['service_name'] ??
+                      map['servicename'] ??
+                      '')
+                  .toString(),
+              price: _ReceiptResponse._toDouble(
+                map['price'] ?? map['amount'] ?? map['total'] ?? 0,
+              ),
+            );
+          })
+          .where((s) => s.name.isNotEmpty || s.price > 0)
+          .toList();
+    }
+
+    if (rawList is String && rawList.trim().isNotEmpty) {
+      return rawList
+          .split(',')
+          .map((e) => e.trim())
+          .where((e) => e.isNotEmpty)
+          .map((name) => _ReceiptService(name: name, price: 0))
+          .toList();
+    }
+
+    return <_ReceiptService>[];
+  }
+
   factory _ReceiptItem.fromJson(Map<String, dynamic> json) {
-    final servicesRaw = (json['services'] as List<dynamic>? ?? []);
+    final parsedServices = _parseServices(json);
+    final primaryName = (json['service_name'] ??
+            json['servicename'] ??
+            json['customer_name'] ??
+            json['service'])
+        ?.toString();
+
+    final fallbackName = parsedServices.isNotEmpty
+        ? parsedServices
+            .map((s) => s.name)
+            .where((n) => n.isNotEmpty)
+            .join(', ')
+        : '';
+
     return _ReceiptItem(
-      pkey: _ReceiptResponse._toInt(json['pkey']),
-      receiptNo: (json['receipt_no'] ?? '').toString(),
-      serviceName: (json['service_name'] ??
-              json['servicename'] ??
-              json['customer_name'] ??
+      pkey: (json['pkey'] ??
+              json['sale_key'] ??
+              json['salekey'] ??
+              json['id'] ??
+              json['key'] ??
               '')
           .toString(),
-      services: servicesRaw
-          .whereType<Map>()
-          .map((e) => _ReceiptService.fromJson(Map<String, dynamic>.from(e)))
-          .toList(),
+      receiptNo: (json['receipt_no'] ?? '').toString(),
+      serviceName: (primaryName == null || primaryName.isEmpty)
+          ? fallbackName
+          : primaryName,
+      services: parsedServices,
       paymentMethod: (json['payment_method'] ?? '').toString(),
       total: _ReceiptResponse._toDouble(json['total']),
       dateactivated: (json['dateactivated'] ?? '').toString(),
@@ -583,11 +749,4 @@ class _ReceiptService {
     required this.name,
     required this.price,
   });
-
-  factory _ReceiptService.fromJson(Map<String, dynamic> json) {
-    return _ReceiptService(
-      name: (json['name'] ?? '').toString(),
-      price: _ReceiptResponse._toDouble(json['price']),
-    );
-  }
 }

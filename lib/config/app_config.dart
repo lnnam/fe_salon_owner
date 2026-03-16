@@ -1,7 +1,6 @@
 class AppConfig {
-  static const api_url = 'https://apiclient.greatyarmouthnails.com';
-  static const api_url_pos = 'http://localhost:8080';
-  //static const api_url = 'http://localhost:8080';
+  //static const api_url = 'https://apiclient.greatyarmouthnails.com';
+  static const api_url = 'http://localhost:8080';
   static const api_url_login = '$api_url/api/auth/signin';
   static const api_url_booking_home = '$api_url/api/booking/owner/list';
   static const api_url_booking_staff = '$api_url/api/booking/staff';
@@ -34,7 +33,9 @@ class AppConfig {
   static const api_url_staff_delete = '$api_url/api/staff/delete';
 
   // POS REPORTING
-  static const api_url_pos_summary_daily = '$api_url_pos/api/pos/summary/daily';
-  static const api_url_pos_report_daily = '$api_url_pos/api/pos/report/daily';
-  static const api_url_pos_receipt = '$api_url_pos/api/pos/receipt';
+  static const api_url_pos_service = '$api_url/api/pos/service';
+  static const api_url_pos_sale = '$api_url/api/pos/sale';
+  static const api_url_pos_summary_daily = '$api_url/api/pos/summary/daily';
+  static const api_url_pos_report_daily = '$api_url/api/pos/report/daily';
+  static const api_url_pos_receipt = '$api_url/api/pos/receipt';
 }

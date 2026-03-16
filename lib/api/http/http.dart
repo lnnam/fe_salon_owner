@@ -20,6 +20,8 @@ class ServerException implements Exception {
 }
 
 class MyHttp {
+  final Set<String> _voidingSaleKeys = <String>{};
+
   Future<dynamic> saveBooking(Map<String, dynamic> bookingData) async {
     const String url = AppConfig.api_url_booking_save;
     print('[API] Booking Save URL: $url');
@@ -811,6 +813,166 @@ class MyHttp {
         message: 'Server connection issue',
         originalError: e,
       );
+    }
+  }
+
+  Future<List<Service>> getPosServices() async {
+    try {
+      final uri = Uri.parse(AppConfig.api_url_pos_service);
+
+      print('[API] Loading POS services from: $uri');
+
+      final response = await http.get(
+        uri,
+        headers: const <String, String>{
+          'Content-Type': 'application/json; charset=UTF-8',
+        },
+      );
+
+      if (response.statusCode >= 200 && response.statusCode < 300) {
+        final dynamic decoded = jsonDecode(response.body);
+        if (decoded is List) {
+          return decoded
+              .whereType<Map>()
+              .map((item) => Service.fromJson(Map<String, dynamic>.from(item)))
+              .toList();
+        }
+        return <Service>[];
+      }
+
+      String message = 'Failed to load POS services';
+      try {
+        final err = jsonDecode(response.body) as Map<String, dynamic>;
+        message = (err['error'] ?? err['message'] ?? message).toString();
+      } catch (_) {
+        if (response.body.trim().isNotEmpty) {
+          message = response.body;
+        }
+      }
+
+      throw ServerException(
+        message: message,
+        originalError: response.statusCode,
+      );
+    } catch (e) {
+      if (e is ServerException) rethrow;
+      throw ServerException(
+        message: 'Server connection issue',
+        originalError: e,
+      );
+    }
+  }
+
+  Future<Map<String, dynamic>> savePosSale({
+    required List<int> serviceKeys,
+    required String paymentMethod,
+    required String dateActivated,
+  }) async {
+    try {
+      final uri = Uri.parse(AppConfig.api_url_pos_sale);
+      final body = jsonEncode(<String, dynamic>{
+        'servicekey': serviceKeys,
+        'payment_method': paymentMethod,
+        'dateactivated': dateActivated,
+      });
+
+      print('[API] Saving POS sale to: $uri');
+
+      final response = await http.post(
+        uri,
+        headers: const <String, String>{
+          'Content-Type': 'application/json; charset=UTF-8',
+        },
+        body: body,
+      );
+
+      if (response.statusCode >= 200 && response.statusCode < 300) {
+        final decoded = jsonDecode(response.body);
+        if (decoded is Map<String, dynamic>) {
+          return decoded;
+        }
+        if (decoded is Map) {
+          return Map<String, dynamic>.from(decoded);
+        }
+        return <String, dynamic>{};
+      }
+
+      String message = 'Failed to save sale';
+      try {
+        final err = jsonDecode(response.body) as Map<String, dynamic>;
+        message = (err['error'] ?? err['message'] ?? message).toString();
+      } catch (_) {
+        if (response.body.trim().isNotEmpty) {
+          message = response.body;
+        }
+      }
+
+      throw ServerException(
+        message: message,
+        originalError: response.statusCode,
+      );
+    } catch (e) {
+      if (e is ServerException) rethrow;
+      throw ServerException(
+        message: 'Server connection issue',
+        originalError: e,
+      );
+    }
+  }
+
+  Future<bool> deletePosSale(String saleKey) async {
+    final normalizedKey = saleKey.trim();
+    if (normalizedKey.isEmpty) {
+      throw ServerException(message: 'Invalid sale key');
+    }
+    if (_voidingSaleKeys.contains(normalizedKey)) {
+      print(
+          '[API] Skipping duplicate void request for sale key: $normalizedKey');
+      return false;
+    }
+
+    _voidingSaleKeys.add(normalizedKey);
+    try {
+      final uri = Uri.parse(
+        '${AppConfig.api_url_pos_sale}/${Uri.encodeComponent(normalizedKey)}/void',
+      );
+
+      print('[API] Voiding POS sale: $uri');
+
+      // Backend contract: PUT /api/pos/sale/:pkey/void
+      final response = await http.put(
+        uri,
+        headers: const <String, String>{
+          'Content-Type': 'application/json; charset=UTF-8',
+        },
+      );
+
+      if (response.statusCode >= 200 && response.statusCode < 300) {
+        return true;
+      }
+
+      String message = 'Failed to delete sale';
+      try {
+        final err = jsonDecode(response.body) as Map<String, dynamic>;
+        message = (err['error'] ?? err['message'] ?? message).toString();
+      } catch (_) {
+        if (response.body.trim().isNotEmpty) {
+          message = response.body;
+        }
+      }
+
+      throw ServerException(
+        message: message,
+        originalError: response.statusCode,
+      );
+    } catch (e) {
+      if (e is ServerException) rethrow;
+      throw ServerException(
+        message: 'Server connection issue',
+        originalError: e,
+      );
+    } finally {
+      _voidingSaleKeys.remove(normalizedKey);
     }
   }
 }

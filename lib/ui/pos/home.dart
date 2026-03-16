@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
-import 'dart:convert';
-import 'package:http/http.dart' as http;
+import 'package:salonapp/api/api_manager.dart';
 import 'package:salonapp/ui/common/drawer_pos.dart';
 import '../../model/service.dart';
 
@@ -68,27 +67,14 @@ class _SaleScreenState extends State<SaleScreen> {
 
   Future<void> _fetchServices() async {
     try {
-      final response = await http.get(
-        Uri.parse('http://localhost:8080/api/pos/service'),
-      );
-
-      if (response.statusCode == 200) {
-        final List<dynamic> jsonData = jsonDecode(response.body);
-        setState(() {
-          _services = jsonData
-              .map((item) => Service.fromJson(item as Map<String, dynamic>))
-              .toList();
-          _isLoading = false;
-        });
-      } else {
-        setState(() {
-          _error = 'Failed to load services: ${response.statusCode}';
-          _isLoading = false;
-        });
-      }
+      final services = await apiManager.getPosServices();
+      setState(() {
+        _services = services;
+        _isLoading = false;
+      });
     } catch (e) {
       setState(() {
-        _error = 'Error: $e';
+        _error = e.toString();
         _isLoading = false;
       });
     }
@@ -213,43 +199,11 @@ class _SaleScreenState extends State<SaleScreen> {
     }
 
     try {
-      final body = jsonEncode({
-        'servicekey': serviceKeys,
-        'payment_method': method.toLowerCase(),
-        'dateactivated': _dateActivated.toIso8601String(),
-      });
-
-      final response = await http.post(
-        Uri.parse('http://localhost:8080/api/pos/sale'),
-        headers: {'Content-Type': 'application/json'},
-        body: body,
+      final data = await apiManager.savePosSale(
+        serviceKeys: serviceKeys,
+        paymentMethod: method.toLowerCase(),
+        dateActivated: _dateActivated.toIso8601String(),
       );
-
-      debugPrint(
-          'POST /api/pos/sale [${response.statusCode}]: ${response.body}');
-
-      if (response.statusCode != 200 && response.statusCode != 201) {
-        String msg = 'Unknown error';
-        try {
-          final data = jsonDecode(response.body);
-          msg = data['error']?.toString() ??
-              data['message']?.toString() ??
-              response.body;
-        } catch (_) {
-          msg = response.body;
-        }
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text('Failed to save sale: $msg'),
-              backgroundColor: Colors.red,
-            ),
-          );
-        }
-        return;
-      }
-
-      final data = jsonDecode(response.body);
 
       setState(() => _cart.clear());
 
@@ -268,7 +222,7 @@ class _SaleScreenState extends State<SaleScreen> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Error saving sale: $e'),
+            content: Text('Failed to save sale: $e'),
             backgroundColor: Colors.red,
           ),
         );
