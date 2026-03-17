@@ -39,7 +39,7 @@ class _ReportScreenState extends State<ReportScreen> {
     });
 
     try {
-      final data = await apiManager.getPosDailySummary(
+      final data = await apiManager.pos.getPosDailySummary(
         from: _formatDate(_fromDate),
         to: _formatDate(_toDate),
       );

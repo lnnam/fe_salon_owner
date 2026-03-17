@@ -28,24 +28,28 @@ class AppDrawerBooking extends StatelessWidget {
             ),
           ),
           ListTile(
+            leading: const Icon(Icons.dashboard_outlined),
             title: const Text('Dashboard'),
             onTap: () {
               safePush(context, const Dashboard());
             },
           ),
           ListTile(
+            leading: const Icon(Icons.point_of_sale_outlined),
             title: const Text('Go Sale'),
             onTap: () {
               safePushReplacementNamed(context, '/setting');
             },
           ),
           ListTile(
+            leading: const Icon(Icons.shopping_cart_checkout_outlined),
             title: const Text('Go Checkout'),
             onTap: () {
               safePushReplacementNamed(context, '/setting');
             },
           ),
           ListTile(
+            leading: const Icon(Icons.people_outline),
             title: const Text('Customer'),
             onTap: () {
               safePush(
@@ -55,6 +59,7 @@ class AppDrawerBooking extends StatelessWidget {
             },
           ),
           ListTile(
+            leading: const Icon(Icons.badge_outlined),
             title: const Text('Staff'),
             onTap: () {
               safePush(
@@ -64,6 +69,7 @@ class AppDrawerBooking extends StatelessWidget {
             },
           ),
           ListTile(
+            leading: const Icon(Icons.settings_outlined),
             title: const Text('Setting'),
             onTap: () {
               safePush(

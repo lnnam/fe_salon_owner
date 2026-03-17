@@ -67,7 +67,7 @@ class _SaleScreenState extends State<SaleScreen> {
 
   Future<void> _fetchServices() async {
     try {
-      final services = await apiManager.getPosServices();
+      final services = await apiManager.pos.getPosServices();
       setState(() {
         _services = services;
         _isLoading = false;
@@ -199,7 +199,7 @@ class _SaleScreenState extends State<SaleScreen> {
     }
 
     try {
-      final data = await apiManager.savePosSale(
+      final data = await apiManager.pos.savePosSale(
         serviceKeys: serviceKeys,
         paymentMethod: method.toLowerCase(),
         dateActivated: _dateActivated.toIso8601String(),

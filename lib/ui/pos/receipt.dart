@@ -21,7 +21,57 @@ class _ReceiptScreenState extends State<ReceiptScreen> {
   int? _selectedIndex;
   bool _isDeleting = false;
   bool _isDeleteDialogOpen = false;
+  bool _isDeleteActionRunning = false;
   String? _activeDeleteSaleKey;
+  final Set<String> _hiddenSaleKeys = <String>{};
+  final Set<String> _hiddenReceiptNos = <String>{};
+
+  void _removeDeletedReceiptFromState(_ReceiptItem deletedItem) {
+    _hiddenSaleKeys.add(deletedItem.pkey.trim());
+    _hiddenReceiptNos.add(deletedItem.receiptNo.trim());
+
+    final current = _response;
+    if (current == null) {
+      _selectedIndex = null;
+      return;
+    }
+
+    final receipts = List<_ReceiptItem>.from(current.receipts);
+    final removedIndex = receipts.indexWhere(
+      (item) =>
+          item.pkey.trim() == deletedItem.pkey.trim() ||
+          item.receiptNo.trim() == deletedItem.receiptNo.trim(),
+    );
+
+    if (removedIndex < 0) {
+      _selectedIndex = null;
+      return;
+    }
+
+    receipts.removeAt(removedIndex);
+    final nextTotal = (current.pagination.total - 1).clamp(0, 1 << 30);
+    final nextTotalPages = nextTotal == 0
+        ? 1
+        : ((nextTotal + current.pagination.limit - 1) /
+                current.pagination.limit)
+            .ceil();
+    final nextPage = current.pagination.page > nextTotalPages
+        ? nextTotalPages
+        : current.pagination.page;
+
+    _response = _ReceiptResponse(
+      date: current.date,
+      pagination: _ReceiptPagination(
+        page: nextPage,
+        limit: current.pagination.limit,
+        total: nextTotal,
+        totalPages: nextTotalPages,
+      ),
+      receipts: receipts,
+    );
+    _selectedIndex = null;
+    _selectedPage = nextPage;
+  }
 
   static String _formatDate(DateTime date) {
     final y = date.year.toString().padLeft(4, '0');
@@ -43,15 +93,26 @@ class _ReceiptScreenState extends State<ReceiptScreen> {
     });
 
     try {
-      final data = await apiManager.getPosReceipts(
+      final data = await apiManager.pos.getPosReceipts(
         date: date,
         page: page,
         limit: _pageLimit,
       );
 
       final parsed = _ReceiptResponse.fromJson(data);
+      final filteredReceipts = parsed.receipts.where((item) {
+        final saleKey = item.pkey.trim();
+        final receiptNo = item.receiptNo.trim();
+        return !_hiddenSaleKeys.contains(saleKey) &&
+            !_hiddenReceiptNos.contains(receiptNo);
+      }).toList();
+
       setState(() {
-        _response = parsed;
+        _response = _ReceiptResponse(
+          date: parsed.date,
+          pagination: parsed.pagination,
+          receipts: filteredReceipts,
+        );
         _selectedDate = parsed.date.isEmpty ? date : parsed.date;
         _selectedPage = parsed.pagination.page;
         _selectedIndex = null;
@@ -78,57 +139,59 @@ class _ReceiptScreenState extends State<ReceiptScreen> {
   }
 
   Future<void> _deleteSelectedReceipt(_ReceiptItem selected) async {
-    if (_isDeleting || _isDeleteDialogOpen) return;
-
+    if (_isDeleteActionRunning || _isDeleting || _isDeleteDialogOpen) return;
+    _isDeleteActionRunning = true;
     final saleKey = selected.pkey.trim();
-    if (saleKey.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Cannot delete: invalid sale key from server response'),
-          backgroundColor: Colors.red,
-        ),
-      );
-      return;
-    }
-
-    if (_activeDeleteSaleKey == saleKey) return;
-    _activeDeleteSaleKey = saleKey;
-
-    _isDeleteDialogOpen = true;
-    final confirmed = await showDialog<bool>(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        title: const Text('Delete Receipt'),
-        content: Text(
-            'Delete ${selected.receiptNo} permanently? This action cannot be undone.'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(ctx).pop(false),
-            child: const Text('Cancel'),
-          ),
-          TextButton(
-            onPressed: () => Navigator.of(ctx).pop(true),
-            child: const Text(
-              'Delete',
-              style: TextStyle(color: Colors.red),
-            ),
-          ),
-        ],
-      ),
-    );
-    _isDeleteDialogOpen = false;
-
-    if (confirmed != true) {
-      if (_activeDeleteSaleKey == saleKey) {
-        _activeDeleteSaleKey = null;
-      }
-      return;
-    }
-
-    setState(() => _isDeleting = true);
 
     try {
-      final deleted = await apiManager.deletePosSale(saleKey);
+      if (saleKey.isEmpty) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content:
+                Text('Cannot delete: invalid sale key from server response'),
+            backgroundColor: Colors.red,
+          ),
+        );
+        return;
+      }
+
+      if (_activeDeleteSaleKey == saleKey) return;
+      _activeDeleteSaleKey = saleKey;
+
+      _isDeleteDialogOpen = true;
+      final confirmed = await showDialog<bool>(
+        context: context,
+        builder: (ctx) => AlertDialog(
+          title: const Text('Delete Receipt'),
+          content: Text(
+              'Delete ${selected.receiptNo} permanently? This action cannot be undone.'),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(ctx).pop(false),
+              child: const Text('Cancel'),
+            ),
+            TextButton(
+              onPressed: () => Navigator.of(ctx).pop(true),
+              child: const Text(
+                'Delete',
+                style: TextStyle(color: Colors.red),
+              ),
+            ),
+          ],
+        ),
+      );
+      _isDeleteDialogOpen = false;
+
+      if (confirmed != true) {
+        if (_activeDeleteSaleKey == saleKey) {
+          _activeDeleteSaleKey = null;
+        }
+        return;
+      }
+
+      setState(() => _isDeleting = true);
+
+      final deleted = await apiManager.pos.deletePosSale(saleKey);
 
       if (!deleted) {
         if (!mounted) return;
@@ -142,6 +205,10 @@ class _ReceiptScreenState extends State<ReceiptScreen> {
       }
 
       if (!mounted) return;
+      setState(() {
+        _removeDeletedReceiptFromState(selected);
+      });
+
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text('Deleted ${selected.receiptNo}'),
@@ -149,7 +216,10 @@ class _ReceiptScreenState extends State<ReceiptScreen> {
         ),
       );
 
-      await _loadReceipts(date: _selectedDate, page: _selectedPage);
+      final refreshPage = (_response?.pagination.page ?? _selectedPage) < 1
+          ? 1
+          : (_response?.pagination.page ?? _selectedPage);
+      await _loadReceipts(date: _selectedDate, page: refreshPage);
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
@@ -165,6 +235,8 @@ class _ReceiptScreenState extends State<ReceiptScreen> {
       if (mounted) {
         setState(() => _isDeleting = false);
       }
+      _isDeleteDialogOpen = false;
+      _isDeleteActionRunning = false;
     }
   }
 
@@ -413,122 +485,149 @@ class _ReceiptScreenState extends State<ReceiptScreen> {
                           ),
                         ),
                       if (selected != null)
-                        Container(
-                          width: double.infinity,
-                          margin: const EdgeInsets.all(12),
-                          padding: const EdgeInsets.all(14),
-                          decoration: BoxDecoration(
-                            color: Colors.white,
-                            borderRadius: BorderRadius.circular(14),
-                            boxShadow: const [
-                              BoxShadow(
-                                color: Colors.black12,
-                                blurRadius: 8,
-                                offset: Offset(0, 2),
-                              ),
-                            ],
+                        ConstrainedBox(
+                          constraints: BoxConstraints(
+                            maxHeight:
+                                MediaQuery.of(context).size.height * 0.55,
                           ),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Row(
-                                children: [
-                                  Expanded(
-                                    child: Text(
-                                      'Receipt Detail ${selected.receiptNo}',
-                                      style: const TextStyle(
-                                        fontWeight: FontWeight.bold,
-                                        fontSize: 16,
-                                      ),
-                                    ),
-                                  ),
-                                  IconButton(
-                                    tooltip: 'Close detail',
-                                    onPressed: () {
-                                      setState(() => _selectedIndex = null);
-                                    },
-                                    icon: const Icon(Icons.close_rounded),
-                                  ),
-                                ],
-                              ),
-                              const SizedBox(height: 6),
-                              Text('Service: ${selected.serviceName}'),
-                              Text('Date: ${selected.dateactivated}'),
-                              Text('Payment: ${selected.paymentMethod}'),
-                              const SizedBox(height: 8),
-                              const Divider(height: 1),
-                              const SizedBox(height: 8),
-                              const Text(
-                                'Services',
-                                style: TextStyle(fontWeight: FontWeight.w600),
-                              ),
-                              const SizedBox(height: 6),
-                              if (selected.services.isEmpty)
+                          child: Container(
+                            width: double.infinity,
+                            margin: const EdgeInsets.all(12),
+                            padding: const EdgeInsets.all(14),
+                            decoration: BoxDecoration(
+                              color: Colors.white,
+                              borderRadius: BorderRadius.circular(14),
+                              boxShadow: const [
+                                BoxShadow(
+                                  color: Colors.black12,
+                                  blurRadius: 8,
+                                  offset: Offset(0, 2),
+                                ),
+                              ],
+                            ),
+                            child: Column(
+                              mainAxisSize: MainAxisSize.min,
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                // Header — always visible
                                 Row(
                                   children: [
-                                    Expanded(child: Text(selected.serviceName)),
-                                    Text(
-                                      '\$${selected.total.toStringAsFixed(2)}',
-                                      style: const TextStyle(
-                                        fontWeight: FontWeight.w600,
+                                    Expanded(
+                                      child: Text(
+                                        'Receipt Detail ${selected.receiptNo}',
+                                        style: const TextStyle(
+                                          fontWeight: FontWeight.bold,
+                                          fontSize: 16,
+                                        ),
                                       ),
                                     ),
+                                    IconButton(
+                                      tooltip: 'Close detail',
+                                      onPressed: () {
+                                        setState(() => _selectedIndex = null);
+                                      },
+                                      icon: const Icon(Icons.close_rounded),
+                                    ),
                                   ],
-                                )
-                              else
-                                for (final s in selected.services)
-                                  Padding(
-                                    padding:
-                                        const EdgeInsets.symmetric(vertical: 2),
-                                    child: Row(
+                                ),
+                                // Scrollable body
+                                Flexible(
+                                  child: SingleChildScrollView(
+                                    child: Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
                                       children: [
-                                        Expanded(child: Text(s.name)),
+                                        const SizedBox(height: 6),
                                         Text(
-                                          '\$${s.price.toStringAsFixed(2)}',
-                                          style: const TextStyle(
-                                            fontWeight: FontWeight.w600,
-                                          ),
+                                            'Service: ${selected.serviceName}'),
+                                        Text('Date: ${selected.dateactivated}'),
+                                        Text(
+                                            'Payment: ${selected.paymentMethod}'),
+                                        const SizedBox(height: 8),
+                                        const Divider(height: 1),
+                                        const SizedBox(height: 8),
+                                        const Text(
+                                          'Services',
+                                          style: TextStyle(
+                                              fontWeight: FontWeight.w600),
                                         ),
+                                        const SizedBox(height: 6),
+                                        if (selected.services.isEmpty)
+                                          Row(
+                                            children: [
+                                              Expanded(
+                                                  child: Text(
+                                                      selected.serviceName)),
+                                              Text(
+                                                '\$${selected.total.toStringAsFixed(2)}',
+                                                style: const TextStyle(
+                                                  fontWeight: FontWeight.w600,
+                                                ),
+                                              ),
+                                            ],
+                                          )
+                                        else
+                                          for (final s in selected.services)
+                                            Padding(
+                                              padding:
+                                                  const EdgeInsets.symmetric(
+                                                      vertical: 2),
+                                              child: Row(
+                                                children: [
+                                                  Expanded(child: Text(s.name)),
+                                                  Text(
+                                                    '\$${s.price.toStringAsFixed(2)}',
+                                                    style: const TextStyle(
+                                                      fontWeight:
+                                                          FontWeight.w600,
+                                                    ),
+                                                  ),
+                                                ],
+                                              ),
+                                            ),
                                       ],
                                     ),
                                   ),
-                              const SizedBox(height: 10),
-                              Row(
-                                children: [
-                                  TextButton.icon(
-                                    onPressed: _isDeleting
-                                        ? null
-                                        : () =>
-                                            _deleteSelectedReceipt(selected),
-                                    icon: _isDeleting
-                                        ? const SizedBox(
-                                            width: 14,
-                                            height: 14,
-                                            child: CircularProgressIndicator(
-                                              strokeWidth: 2,
-                                            ),
-                                          )
-                                        : const Icon(
-                                            Icons.delete_outline_rounded),
-                                    label: Text(
-                                      _isDeleting ? 'Deleting...' : 'Delete',
-                                      style: const TextStyle(
-                                        color: Colors.red,
+                                ),
+                                // Footer — always visible
+                                const SizedBox(height: 10),
+                                Row(
+                                  children: [
+                                    TextButton.icon(
+                                      onPressed: _isDeleting
+                                          ? null
+                                          : () =>
+                                              _deleteSelectedReceipt(selected),
+                                      icon: _isDeleting
+                                          ? const SizedBox(
+                                              width: 14,
+                                              height: 14,
+                                              child: CircularProgressIndicator(
+                                                strokeWidth: 2,
+                                              ),
+                                            )
+                                          : const Icon(
+                                              Icons.delete_outline_rounded),
+                                      label: Text(
+                                        _isDeleting ? 'Deleting...' : 'Delete',
+                                        style: const TextStyle(
+                                          color: Colors.red,
+                                        ),
                                       ),
                                     ),
-                                  ),
-                                  const Spacer(),
-                                  Text(
-                                    'Total: \$${selected.total.toStringAsFixed(2)}',
-                                    style: const TextStyle(
-                                      fontSize: 18,
-                                      fontWeight: FontWeight.bold,
-                                      color: Color(0xFF3E66C5),
+                                    const Spacer(),
+                                    Text(
+                                      'Total: \$${selected.total.toStringAsFixed(2)}',
+                                      style: const TextStyle(
+                                        fontSize: 18,
+                                        fontWeight: FontWeight.bold,
+                                        color: Color(0xFF3E66C5),
+                                      ),
                                     ),
-                                  ),
-                                ],
-                              ),
-                            ],
+                                  ],
+                                ),
+                              ],
+                            ),
                           ),
                         ),
                     ],
@@ -706,6 +805,32 @@ class _ReceiptItem {
     return <_ReceiptService>[];
   }
 
+  static String _extractDeleteKey(Map<String, dynamic> json, String receiptNo) {
+    final candidates = <dynamic>[
+      json['sale_key'],
+      json['salekey'],
+      json['sale_pkey'],
+      json['saleid'],
+      json['sale_id'],
+      json['void_key'],
+      json['delete_key'],
+      json['pkey'],
+      json['id'],
+      json['key'],
+    ];
+
+    for (final candidate in candidates) {
+      final value = (candidate ?? '').toString().trim();
+      if (value.isNotEmpty) {
+        return value;
+      }
+    }
+
+    // Common display format: R-ABCDE -> backend key ABCDE
+    final fromReceipt = receiptNo.replaceFirst(RegExp(r'^R-'), '').trim();
+    return fromReceipt;
+  }
+
   factory _ReceiptItem.fromJson(Map<String, dynamic> json) {
     final parsedServices = _parseServices(json);
     final primaryName = (json['service_name'] ??
@@ -721,15 +846,12 @@ class _ReceiptItem {
             .join(', ')
         : '';
 
+    final receiptNo = (json['receipt_no'] ?? '').toString();
+    final deleteKey = _extractDeleteKey(json, receiptNo);
+
     return _ReceiptItem(
-      pkey: (json['pkey'] ??
-              json['sale_key'] ??
-              json['salekey'] ??
-              json['id'] ??
-              json['key'] ??
-              '')
-          .toString(),
-      receiptNo: (json['receipt_no'] ?? '').toString(),
+      pkey: deleteKey,
+      receiptNo: receiptNo,
       serviceName: (primaryName == null || primaryName.isEmpty)
           ? fallbackName
           : primaryName,

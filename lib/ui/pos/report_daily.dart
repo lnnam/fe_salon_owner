@@ -55,7 +55,7 @@ class _ReportDailyScreenState extends State<ReportDailyScreen> {
     });
 
     try {
-      final data = await apiManager.getPosReportDaily(
+      final data = await apiManager.pos.getPosReportDaily(
         from: _fmtDate(_fromDate),
         to: _fmtDate(_toDate),
       );
@@ -294,16 +294,43 @@ class _ReportDailyScreenState extends State<ReportDailyScreen> {
                                             vertical: 3),
                                         child: Row(
                                           children: [
-                                            Expanded(
-                                              flex: 2,
-                                              child: Text(
-                                                _fmtReceiptDateTime(
-                                                    receipt.datetime),
-                                                style: const TextStyle(
-                                                  color: Colors.grey,
-                                                  fontSize: 12,
-                                                ),
-                                              ),
+                                            Builder(
+                                              builder: (_) {
+                                                final shownId = receipt
+                                                        .receiptNo
+                                                        .trim()
+                                                        .isNotEmpty
+                                                    ? receipt.receiptNo
+                                                    : receipt.saleKey;
+                                                return Expanded(
+                                                  flex: 2,
+                                                  child: Column(
+                                                    crossAxisAlignment:
+                                                        CrossAxisAlignment
+                                                            .start,
+                                                    children: [
+                                                      Text(
+                                                        shownId,
+                                                        overflow: TextOverflow
+                                                            .ellipsis,
+                                                        style: const TextStyle(
+                                                          fontWeight:
+                                                              FontWeight.w600,
+                                                          fontSize: 12,
+                                                        ),
+                                                      ),
+                                                      Text(
+                                                        _fmtReceiptDateTime(
+                                                            receipt.datetime),
+                                                        style: const TextStyle(
+                                                          color: Colors.grey,
+                                                          fontSize: 11,
+                                                        ),
+                                                      ),
+                                                    ],
+                                                  ),
+                                                );
+                                              },
                                             ),
                                             Expanded(
                                               flex: 3,
@@ -567,6 +594,7 @@ class _ReportDay {
 
 class _ReportReceipt {
   final String saleKey;
+  final String receiptNo;
   final String datetime;
   final String label;
   final String paymentMethod;
@@ -574,6 +602,7 @@ class _ReportReceipt {
 
   const _ReportReceipt({
     required this.saleKey,
+    required this.receiptNo,
     required this.datetime,
     required this.label,
     required this.paymentMethod,
@@ -581,10 +610,59 @@ class _ReportReceipt {
   });
 
   factory _ReportReceipt.fromJson(Map<String, dynamic> json) {
+    String parseSaleKey() {
+      for (final key in const [
+        'sale_key',
+        'saleKey',
+        'salekey',
+        'sale_id',
+        'saleId',
+        'pkey',
+        'p_key',
+        'id',
+      ]) {
+        final v = (json[key] ?? '').toString().trim();
+        if (v.isNotEmpty &&
+            v.toLowerCase() != 'null' &&
+            v.toLowerCase() != 'nan') {
+          return v;
+        }
+      }
+      return '';
+    }
+
+    final parsedSaleKey = parseSaleKey();
+
+    // receipt_no may arrive as a number – stringify then check for 'null'/'nan'
+    String parseReceiptNo() {
+      for (final key in const [
+        'receipt_no',
+        'receiptNo',
+        'receipt_number',
+      ]) {
+        final v = (json[key] ?? '').toString().trim();
+        if (v.isNotEmpty &&
+            v.toLowerCase() != 'null' &&
+            v.toLowerCase() != 'nan') {
+          return v;
+        }
+      }
+      return parsedSaleKey;
+    }
+
+    String parseLabel() {
+      final raw = (json['label'] ?? '').toString();
+      // strip NaN artifacts produced by some backends
+      final cleaned =
+          raw.replaceAll(RegExp(r'NaN', caseSensitive: false), '').trim();
+      return cleaned;
+    }
+
     return _ReportReceipt(
-      saleKey: (json['sale_key'] ?? '').toString(),
+      saleKey: parsedSaleKey,
+      receiptNo: parseReceiptNo(),
       datetime: (json['datetime'] ?? '').toString(),
-      label: (json['label'] ?? '').toString(),
+      label: parseLabel(),
       paymentMethod: (json['payment_method'] ?? '').toString(),
       amount: _DailyReport._toDouble(json['amount']),
     );

@@ -24,24 +24,28 @@ class AppDrawerDashboard extends StatelessWidget {
             ),
           ),
           ListTile(
+            leading: const Icon(Icons.person_outline),
             title: const Text('Profile'),
             onTap: () {
               safePushReplacementNamed(context, '/profile');
             },
           ),
-           ListTile(
+          ListTile(
+            leading: const Icon(Icons.people_outline),
             title: const Text('Customers'),
             onTap: () {
               safePushReplacementNamed(context, '/customers');
             },
           ),
           ListTile(
+            leading: const Icon(Icons.settings_outlined),
             title: const Text('Setting'),
             onTap: () {
               safePushReplacementNamed(context, '/setting');
             },
           ),
           ListTile(
+            leading: const Icon(Icons.logout_outlined),
             title: const Text('Logout'),
             onTap: () {
               logout(context);
