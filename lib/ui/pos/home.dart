@@ -232,6 +232,9 @@ class _SaleScreenState extends State<SaleScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final isIpad = MediaQuery.of(context).size.shortestSide >= 600;
+    final gridColumns = isIpad ? 5 : 3;
+
     return Scaffold(
       backgroundColor: const Color(0xFFF4F6FA),
       drawer: const AppDrawerPos(),
@@ -285,8 +288,8 @@ class _SaleScreenState extends State<SaleScreen> {
                         child: GridView.builder(
                           itemCount: _services.length,
                           gridDelegate:
-                              const SliverGridDelegateWithFixedCrossAxisCount(
-                            crossAxisCount: 3,
+                              SliverGridDelegateWithFixedCrossAxisCount(
+                            crossAxisCount: gridColumns,
                             mainAxisSpacing: 8,
                             crossAxisSpacing: 8,
                             childAspectRatio: 1.3,

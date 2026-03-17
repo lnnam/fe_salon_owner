@@ -11,12 +11,13 @@ class AppDrawerPos extends StatelessWidget {
       child: ListView(
         padding: EdgeInsets.zero,
         children: <Widget>[
-          const DrawerHeader(
-            decoration: BoxDecoration(
-              color: Color(COLOR_PRIMARY),
-            ),
-            child: Text(
-              'Salon POS',
+          Container(
+            height: 96,
+            width: double.infinity,
+            color: const Color(COLOR_PRIMARY),
+            alignment: Alignment.center,
+            child: const Text(
+              'Menu',
               style: TextStyle(
                 color: Colors.white,
                 fontSize: 24,

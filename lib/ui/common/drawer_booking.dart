@@ -15,12 +15,13 @@ class AppDrawerBooking extends StatelessWidget {
       child: ListView(
         padding: EdgeInsets.zero,
         children: <Widget>[
-          const DrawerHeader(
-            decoration: BoxDecoration(
-              color: Color(COLOR_PRIMARY),
-            ),
-            child: Text(
-              'Salon name ',
+          Container(
+            height: 76,
+            width: double.infinity,
+            color: const Color(COLOR_PRIMARY),
+            alignment: Alignment.center,
+            child: const Text(
+              'Menu',
               style: TextStyle(
                 color: Colors.white,
                 fontSize: 24,
@@ -38,7 +39,7 @@ class AppDrawerBooking extends StatelessWidget {
             leading: const Icon(Icons.point_of_sale_outlined),
             title: const Text('Go Sale'),
             onTap: () {
-              safePushReplacementNamed(context, '/setting');
+              safePushReplacementNamed(context, '/pos');
             },
           ),
           ListTile(

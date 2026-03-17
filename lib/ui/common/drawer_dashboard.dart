@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:salonapp/services/helper.dart';
 import 'package:salonapp/constants.dart';
+import 'package:salonapp/ui/customer/customer_list.dart';
+import 'package:salonapp/ui/booking/setting.dart';
 
 class AppDrawerDashboard extends StatelessWidget {
   const AppDrawerDashboard({super.key});
@@ -11,12 +13,13 @@ class AppDrawerDashboard extends StatelessWidget {
       child: ListView(
         padding: EdgeInsets.zero,
         children: <Widget>[
-          const DrawerHeader(
-            decoration: BoxDecoration(
-              color: Color(COLOR_PRIMARY),
-            ),
-            child: Text(
-              'Salon name ',
+          Container(
+            height: 76,
+            width: double.infinity,
+            color: const Color(COLOR_PRIMARY),
+            alignment: Alignment.center,
+            child: const Text(
+              'Menu',
               style: TextStyle(
                 color: Colors.white,
                 fontSize: 24,
@@ -34,14 +37,20 @@ class AppDrawerDashboard extends StatelessWidget {
             leading: const Icon(Icons.people_outline),
             title: const Text('Customers'),
             onTap: () {
-              safePushReplacementNamed(context, '/customers');
+              safePush(
+                context,
+                const CustomerListPage(),
+              );
             },
           ),
           ListTile(
             leading: const Icon(Icons.settings_outlined),
             title: const Text('Setting'),
             onTap: () {
-              safePushReplacementNamed(context, '/setting');
+              safePush(
+                context,
+                const SettingPage(),
+              );
             },
           ),
           ListTile(
