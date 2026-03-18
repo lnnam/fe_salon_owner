@@ -122,9 +122,7 @@ class PosApi {
         },
       );
 
-      print('dsadasdsa');
 
-      print('[API] Loading POS daily report from: $uri');
 
       final response = await http.get(
         uri,
@@ -133,9 +131,7 @@ class PosApi {
         },
       );
 
-      print('[API] POS daily report response status: ${response.statusCode}');
-      print('[API] POS daily report response body: ${response.body}');
-      
+
       if (response.statusCode >= 200 && response.statusCode < 300) {
         return Map<String, dynamic>.from(jsonDecode(response.body));
       }

@@ -80,6 +80,18 @@ class _ReceiptScreenState extends State<ReceiptScreen> {
     return '$y-$m-$d';
   }
 
+  static String _fmtTime(String dateactivated) {
+    try {
+      final dt = DateTime.tryParse(dateactivated);
+      if (dt == null) return dateactivated;
+      final h = dt.hour.toString().padLeft(2, '0');
+      final m = dt.minute.toString().padLeft(2, '0');
+      return '$h:$m';
+    } catch (e) {
+      return dateactivated;
+    }
+  }
+
   @override
   void initState() {
     super.initState();
@@ -98,6 +110,8 @@ class _ReceiptScreenState extends State<ReceiptScreen> {
         page: page,
         limit: _pageLimit,
       );
+
+      print('[Receipt] Server data: $data');
 
       final parsed = _ReceiptResponse.fromJson(data);
       final filteredReceipts = parsed.receipts.where((item) {
@@ -418,7 +432,7 @@ class _ReceiptScreenState extends State<ReceiptScreen> {
                                             fontWeight: FontWeight.w600),
                                       ),
                                       subtitle: Text(
-                                        '${item.dateactivated}  •  ${item.paymentMethod}',
+                                        '${_fmtTime(item.dateactivated)}  •  ${item.paymentMethod}',
                                       ),
                                       trailing: Text(
                                         '\$${item.total.toStringAsFixed(2)}',

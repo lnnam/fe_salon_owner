@@ -21,7 +21,7 @@ class _ReportScreenState extends State<ReportScreen> {
     super.initState();
     final now = DateTime.now();
     _toDate = DateTime(now.year, now.month, now.day);
-    _fromDate = _toDate.subtract(const Duration(days: 13));
+    _fromDate = _toDate.subtract(Duration(days: _toDate.weekday - 1));
     _loadDailySummary();
   }
 
@@ -88,16 +88,14 @@ class _ReportScreenState extends State<ReportScreen> {
     return Scaffold(
       drawer: const AppDrawerPos(),
       appBar: AppBar(
-        title: const Text('Report'),
+        title: const Text('Summary Report'),
         actions: [
           TextButton.icon(
-            onPressed: () {
-              Navigator.pushNamed(context, '/report-daily');
-            },
-            icon:
-                const Icon(Icons.today_rounded, color: Colors.white, size: 18),
+            onPressed: _loadDailySummary,
+            icon: const Icon(Icons.refresh_rounded,
+                color: Colors.white, size: 18),
             label: const Text(
-              'Daily',
+              'Reload',
               style: TextStyle(color: Colors.white),
             ),
           ),
@@ -153,7 +151,7 @@ class _ReportScreenState extends State<ReportScreen> {
               Expanded(
                 child: _DatePickTile(
                   label: 'Date From',
-                  value: _formatDate(_fromDate),
+                  value: _formatDate(_toDate),
                   onTap: _pickFromDate,
                 ),
               ),

@@ -22,7 +22,7 @@ class _ReportDailyScreenState extends State<ReportDailyScreen> {
     super.initState();
     final now = DateTime.now();
     _toDate = DateTime(now.year, now.month, now.day);
-    _fromDate = _toDate.subtract(const Duration(days: 11));
+    _fromDate = _toDate.subtract(Duration(days: _toDate.weekday - 1));
     _loadReport();
   }
 
@@ -33,19 +33,34 @@ class _ReportDailyScreenState extends State<ReportDailyScreen> {
     return '$y-$m-$day';
   }
 
-  String _fmtShort(DateTime d) {
-    final m = d.month.toString().padLeft(2, '0');
-    final day = d.day.toString().padLeft(2, '0');
-    return '$m-$day';
-  }
-
   String _fmtReceiptDateTime(String value) {
     final dt = DateTime.tryParse(value.replaceAll(' ', 'T'));
     if (dt == null) return value;
 
     final hh = dt.hour.toString().padLeft(2, '0');
     final mm = dt.minute.toString().padLeft(2, '0');
-    return '${_fmtShort(dt)} $hh:$mm';
+    return '$hh:$mm';
+  }
+
+  String _fmtDayLabel(String value) {
+    final dt = DateTime.tryParse(value.replaceAll(' ', 'T'));
+    if (dt == null) return value;
+
+    const dayNames = <String>[
+      'Monday',
+      'Tuesday',
+      'Wednesday',
+      'Thursday',
+      'Friday',
+      'Saturday',
+      'Sunday',
+    ];
+
+    final dayName = dayNames[dt.weekday - 1];
+    final dd = dt.day.toString().padLeft(2, '0');
+    final mm = dt.month.toString().padLeft(2, '0');
+    final yyyy = dt.year.toString().padLeft(4, '0');
+    return '$dayName , $dd - $mm - $yyyy';
   }
 
   Future<void> _loadReport() async {
@@ -272,7 +287,7 @@ class _ReportDailyScreenState extends State<ReportDailyScreen> {
                                       children: [
                                         Expanded(
                                           child: Text(
-                                            'Day ${day.date}',
+                                            _fmtDayLabel(day.date),
                                             style: const TextStyle(
                                               fontWeight: FontWeight.w700,
                                             ),
@@ -309,16 +324,7 @@ class _ReportDailyScreenState extends State<ReportDailyScreen> {
                                                         CrossAxisAlignment
                                                             .start,
                                                     children: [
-                                                      Text(
-                                                        shownId,
-                                                        overflow: TextOverflow
-                                                            .ellipsis,
-                                                        style: const TextStyle(
-                                                          fontWeight:
-                                                              FontWeight.w600,
-                                                          fontSize: 12,
-                                                        ),
-                                                      ),
+                                                      
                                                       Text(
                                                         _fmtReceiptDateTime(
                                                             receipt.datetime),
