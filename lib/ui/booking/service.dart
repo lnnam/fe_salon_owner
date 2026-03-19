@@ -86,7 +86,7 @@ class ServicePageState extends State<ServicePage> {
                               fontSize: 18, fontWeight: FontWeight.bold),
                         ),
                         subtitle: Text(
-                          'Price: \$${service.price}',
+                          'Price: \£${service.price}',
                           style:
                               TextStyle(fontSize: 14, color: Colors.grey[600]),
                         ),

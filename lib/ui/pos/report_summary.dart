@@ -172,7 +172,7 @@ class _ReportScreenState extends State<ReportScreen> {
             Expanded(
               child: _ReportCard(
                 title: 'Total Sales',
-                value: '\$${summary.totalSales.toStringAsFixed(2)}',
+                value: '\£${summary.totalSales.toStringAsFixed(2)}',
                 icon: Icons.payments_rounded,
               ),
             ),
@@ -192,7 +192,7 @@ class _ReportScreenState extends State<ReportScreen> {
             Expanded(
               child: _ReportCard(
                 title: 'Cash Total',
-                value: '\$${summary.cashTotal.toStringAsFixed(2)}',
+                value: '\£${summary.cashTotal.toStringAsFixed(2)}',
                 icon: Icons.money_rounded,
               ),
             ),
@@ -200,7 +200,7 @@ class _ReportScreenState extends State<ReportScreen> {
             Expanded(
               child: _ReportCard(
                 title: 'Card Total',
-                value: '\$${summary.cardTotal.toStringAsFixed(2)}',
+                value: '\£${summary.cardTotal.toStringAsFixed(2)}',
                 icon: Icons.credit_card_rounded,
               ),
             ),
@@ -209,7 +209,7 @@ class _ReportScreenState extends State<ReportScreen> {
         const SizedBox(height: 8),
         _ReportCard(
           title: 'Average Ticket',
-          value: '\$${summary.averageTicket.toStringAsFixed(2)}',
+          value: '\£${summary.averageTicket.toStringAsFixed(2)}',
           icon: Icons.analytics_rounded,
         ),
         const SizedBox(height: 10),
@@ -281,7 +281,7 @@ class _ReportScreenState extends State<ReportScreen> {
                         Text('x${s.quantity}'),
                         const SizedBox(width: 10),
                         Text(
-                          '\$${s.amount.toStringAsFixed(2)}',
+                          '\£${s.amount.toStringAsFixed(2)}',
                           style: const TextStyle(
                             color: Color(0xFF2E7D32),
                             fontWeight: FontWeight.w700,
@@ -426,7 +426,7 @@ class _PaymentBar extends StatelessWidget {
           children: [
             Expanded(child: Text(label)),
             Text(
-                '\$${amount.toStringAsFixed(2)} (${percentage.toStringAsFixed(0)}%)'),
+                '\£${amount.toStringAsFixed(2)} (${percentage.toStringAsFixed(0)}%)'),
           ],
         ),
         const SizedBox(height: 4),

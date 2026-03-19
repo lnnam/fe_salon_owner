@@ -141,7 +141,7 @@ class _SaleScreenState extends State<SaleScreen> {
               ),
               const SizedBox(height: 6),
               Text(
-                'Total: \$${total.toStringAsFixed(2)}',
+                'Total: \£${total.toStringAsFixed(2)}',
                 style: const TextStyle(
                   fontSize: 22,
                   fontWeight: FontWeight.bold,
@@ -211,7 +211,7 @@ class _SaleScreenState extends State<SaleScreen> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(
-              'Paid \$${total.toStringAsFixed(2)} by $method - sale #${data['pkey']} saved!',
+              'Paid \£${total.toStringAsFixed(2)} by $method - sale #${data['pkey']} saved!',
             ),
             duration: const Duration(seconds: 1),
             backgroundColor: Colors.green,
@@ -352,7 +352,7 @@ class _SaleScreenState extends State<SaleScreen> {
                                             ),
                                             const SizedBox(height: 2),
                                             Text(
-                                              '\$${service.price.toStringAsFixed(2)}',
+                                              '\£${service.price.toStringAsFixed(2)}',
                                               style: TextStyle(
                                                 fontSize: 11,
                                                 fontWeight: FontWeight.bold,
@@ -502,7 +502,7 @@ class _SaleScreenState extends State<SaleScreen> {
                                         SizedBox(
                                           width: 60,
                                           child: Text(
-                                            '\$${(svc.price * qty).toStringAsFixed(2)}',
+                                            '\£${(svc.price * qty).toStringAsFixed(2)}',
                                             textAlign: TextAlign.right,
                                             style: const TextStyle(
                                               fontWeight: FontWeight.w600,
@@ -533,7 +533,7 @@ class _SaleScreenState extends State<SaleScreen> {
                                 ),
                                 const Spacer(),
                                 Text(
-                                  '\$${_total.toStringAsFixed(2)}',
+                                  '\£${_total.toStringAsFixed(2)}',
                                   style: const TextStyle(
                                     fontSize: 20,
                                     fontWeight: FontWeight.bold,

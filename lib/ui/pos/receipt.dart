@@ -362,7 +362,7 @@ class _ReceiptScreenState extends State<ReceiptScreen> {
                                 Expanded(
                                   child: _SummaryCard(
                                     label: 'Day Total',
-                                    value: '\$${dayTotal.toStringAsFixed(2)}',
+                                    value: '\£${dayTotal.toStringAsFixed(2)}',
                                     icon: Icons.attach_money_rounded,
                                   ),
                                 ),
@@ -374,7 +374,7 @@ class _ReceiptScreenState extends State<ReceiptScreen> {
                                 Expanded(
                                   child: _SummaryCard(
                                     label: 'Cash Total',
-                                    value: '\$${cashTotal.toStringAsFixed(2)}',
+                                    value: '\£${cashTotal.toStringAsFixed(2)}',
                                     icon: Icons.payments_rounded,
                                   ),
                                 ),
@@ -382,7 +382,7 @@ class _ReceiptScreenState extends State<ReceiptScreen> {
                                 Expanded(
                                   child: _SummaryCard(
                                     label: 'Card Total',
-                                    value: '\$${cardTotal.toStringAsFixed(2)}',
+                                    value: '\£${cardTotal.toStringAsFixed(2)}',
                                     icon: Icons.credit_card_rounded,
                                   ),
                                 ),
@@ -427,15 +427,15 @@ class _ReceiptScreenState extends State<ReceiptScreen> {
                                         vertical: 6,
                                       ),
                                       title: Text(
-                                        '${item.receiptNo} • ${item.serviceName}',
+                                        '${_fmtTime(item.dateactivated)} • ${item.paymentMethod}',
                                         style: const TextStyle(
                                             fontWeight: FontWeight.w600),
                                       ),
                                       subtitle: Text(
-                                        '${_fmtTime(item.dateactivated)}  •  ${item.paymentMethod}',
+                                        '${item.receiptNo} • ${item.serviceName}',
                                       ),
                                       trailing: Text(
-                                        '\$${item.total.toStringAsFixed(2)}',
+                                        '\£${item.total.toStringAsFixed(2)}',
                                         style: const TextStyle(
                                           fontWeight: FontWeight.w700,
                                           color: Color(0xFF2E7D32),
@@ -573,7 +573,7 @@ class _ReceiptScreenState extends State<ReceiptScreen> {
                                                   child: Text(
                                                       selected.serviceName)),
                                               Text(
-                                                '\$${selected.total.toStringAsFixed(2)}',
+                                                '\£${selected.total.toStringAsFixed(2)}',
                                                 style: const TextStyle(
                                                   fontWeight: FontWeight.w600,
                                                 ),
@@ -590,7 +590,7 @@ class _ReceiptScreenState extends State<ReceiptScreen> {
                                                 children: [
                                                   Expanded(child: Text(s.name)),
                                                   Text(
-                                                    '\$${s.price.toStringAsFixed(2)}',
+                                                    '\£${s.price.toStringAsFixed(2)}',
                                                     style: const TextStyle(
                                                       fontWeight:
                                                           FontWeight.w600,
@@ -631,7 +631,7 @@ class _ReceiptScreenState extends State<ReceiptScreen> {
                                     ),
                                     const Spacer(),
                                     Text(
-                                      'Total: \$${selected.total.toStringAsFixed(2)}',
+                                      'Total: \£${selected.total.toStringAsFixed(2)}',
                                       style: const TextStyle(
                                         fontSize: 18,
                                         fontWeight: FontWeight.bold,

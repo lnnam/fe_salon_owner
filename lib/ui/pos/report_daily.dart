@@ -202,7 +202,7 @@ class _ReportDailyScreenState extends State<ReportDailyScreen> {
               Expanded(
                 child: _MetricCard(
                   title: 'Total Income',
-                  value: '\$${totalIncome.toStringAsFixed(2)}',
+                  value: '\£${totalIncome.toStringAsFixed(2)}',
                   color: const Color(0xFF3E66C5),
                 ),
               ),
@@ -210,7 +210,7 @@ class _ReportDailyScreenState extends State<ReportDailyScreen> {
               Expanded(
                 child: _MetricCard(
                   title: 'Cash',
-                  value: '\$${cashIncome.toStringAsFixed(2)}',
+                  value: '\£${cashIncome.toStringAsFixed(2)}',
                   color: const Color(0xFF2E7D32),
                 ),
               ),
@@ -218,7 +218,7 @@ class _ReportDailyScreenState extends State<ReportDailyScreen> {
               Expanded(
                 child: _MetricCard(
                   title: 'Card',
-                  value: '\$${cardIncome.toStringAsFixed(2)}',
+                  value: '\£${cardIncome.toStringAsFixed(2)}',
                   color: const Color(0xFF1565C0),
                 ),
               ),
@@ -263,7 +263,7 @@ class _ReportDailyScreenState extends State<ReportDailyScreen> {
                                   ),
                                 ),
                                 Text(
-                                  '\$${week.total.toStringAsFixed(2)}',
+                                  '\£${week.total.toStringAsFixed(2)}',
                                   style: const TextStyle(
                                     color: Color(0xFF3E66C5),
                                     fontWeight: FontWeight.bold,
@@ -294,7 +294,7 @@ class _ReportDailyScreenState extends State<ReportDailyScreen> {
                                           ),
                                         ),
                                         Text(
-                                          '\$${day.total.toStringAsFixed(2)}',
+                                          '\£${day.total.toStringAsFixed(2)}',
                                           style: const TextStyle(
                                             color: Color(0xFF2E7D32),
                                             fontWeight: FontWeight.w700,
@@ -370,7 +370,7 @@ class _ReportDailyScreenState extends State<ReportDailyScreen> {
                                             SizedBox(
                                               width: 70,
                                               child: Text(
-                                                '\$${receipt.amount.toStringAsFixed(2)}',
+                                                '\£${receipt.amount.toStringAsFixed(2)}',
                                                 textAlign: TextAlign.right,
                                                 style: const TextStyle(
                                                   fontWeight: FontWeight.w700,
