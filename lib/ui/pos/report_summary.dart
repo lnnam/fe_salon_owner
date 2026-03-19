@@ -21,7 +21,7 @@ class _ReportScreenState extends State<ReportScreen> {
     super.initState();
     final now = DateTime.now();
     _toDate = DateTime(now.year, now.month, now.day);
-    _fromDate = _toDate.subtract(Duration(days: _toDate.weekday - 1));
+    _fromDate = _toDate;
     _loadDailySummary();
   }
 
