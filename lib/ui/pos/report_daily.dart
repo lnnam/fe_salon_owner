@@ -251,25 +251,12 @@ class _ReportDailyScreenState extends State<ReportDailyScreen> {
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Row(
-                              children: [
-                                Expanded(
-                                  child: Text(
-                                    'Week ${week.weekStart}',
-                                    style: const TextStyle(
-                                      fontWeight: FontWeight.bold,
-                                      fontSize: 16,
-                                    ),
-                                  ),
-                                ),
-                                Text(
-                                  '\£${week.total.toStringAsFixed(2)}',
-                                  style: const TextStyle(
-                                    color: Color(0xFF3E66C5),
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                ),
-                              ],
+                            _SectionTotalsRow(
+                              title: 'Week ${week.weekStart}',
+                              total: week.total,
+                              totalColor: const Color(0xFF3E66C5),
+                              cashTotal: week.cashTotal,
+                              cardTotal: week.cardTotal,
                             ),
                             const SizedBox(height: 8),
                             for (final day in week.days) ...[
@@ -283,24 +270,15 @@ class _ReportDailyScreenState extends State<ReportDailyScreen> {
                                 child: Column(
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
-                                    Row(
-                                      children: [
-                                        Expanded(
-                                          child: Text(
-                                            _fmtDayLabel(day.date),
-                                            style: const TextStyle(
-                                              fontWeight: FontWeight.w700,
-                                            ),
-                                          ),
-                                        ),
-                                        Text(
-                                          '\£${day.total.toStringAsFixed(2)}',
-                                          style: const TextStyle(
-                                            color: Color(0xFF2E7D32),
-                                            fontWeight: FontWeight.w700,
-                                          ),
-                                        ),
-                                      ],
+                                    _SectionTotalsRow(
+                                      title: _fmtDayLabel(day.date),
+                                      titleStyle: const TextStyle(
+                                        fontWeight: FontWeight.w700,
+                                      ),
+                                      total: day.total,
+                                      totalColor: const Color(0xFF2E7D32),
+                                      cashTotal: day.cashTotal,
+                                      cardTotal: day.cardTotal,
                                     ),
                                     const SizedBox(height: 6),
                                     for (final receipt in day.receipts)
@@ -309,34 +287,16 @@ class _ReportDailyScreenState extends State<ReportDailyScreen> {
                                             vertical: 3),
                                         child: Row(
                                           children: [
-                                            Builder(
-                                              builder: (_) {
-                                                final shownId = receipt
-                                                        .receiptNo
-                                                        .trim()
-                                                        .isNotEmpty
-                                                    ? receipt.receiptNo
-                                                    : receipt.saleKey;
-                                                return Expanded(
-                                                  flex: 2,
-                                                  child: Column(
-                                                    crossAxisAlignment:
-                                                        CrossAxisAlignment
-                                                            .start,
-                                                    children: [
-                                                      
-                                                      Text(
-                                                        _fmtReceiptDateTime(
-                                                            receipt.datetime),
-                                                        style: const TextStyle(
-                                                          color: Colors.grey,
-                                                          fontSize: 11,
-                                                        ),
-                                                      ),
-                                                    ],
-                                                  ),
-                                                );
-                                              },
+                                            Expanded(
+                                              flex: 2,
+                                              child: Text(
+                                                _fmtReceiptDateTime(
+                                                    receipt.datetime),
+                                                style: const TextStyle(
+                                                  color: Colors.grey,
+                                                  fontSize: 11,
+                                                ),
+                                              ),
                                             ),
                                             Expanded(
                                               flex: 3,
@@ -485,6 +445,101 @@ class _MetricCard extends StatelessWidget {
   }
 }
 
+class _SectionTotalsRow extends StatelessWidget {
+  final String title;
+  final TextStyle? titleStyle;
+  final double total;
+  final Color totalColor;
+  final double cashTotal;
+  final double cardTotal;
+
+  const _SectionTotalsRow({
+    required this.title,
+    this.titleStyle,
+    required this.total,
+    required this.totalColor,
+    required this.cashTotal,
+    required this.cardTotal,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Expanded(
+          child: Padding(
+            padding: const EdgeInsets.only(top: 6),
+            child: Text(
+              title,
+              style: titleStyle ??
+                  const TextStyle(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 16,
+                  ),
+            ),
+          ),
+        ),
+        const SizedBox(width: 8),
+        Flexible(
+          child: Align(
+            alignment: Alignment.centerRight,
+            child: SingleChildScrollView(
+              scrollDirection: Axis.horizontal,
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                mainAxisAlignment: MainAxisAlignment.end,
+                children: [
+                  _AmountText(
+                    label: 'Total',
+                    amount: total,
+                    color: totalColor,
+                  ),
+                  const SizedBox(width: 8),
+                  _AmountText(
+                    label: 'Cash',
+                    amount: cashTotal,
+                    color: const Color(0xFF2E7D32),
+                  ),
+                  const SizedBox(width: 8),
+                  _AmountText(
+                    label: 'Card',
+                    amount: cardTotal,
+                    color: const Color(0xFF1565C0),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _AmountText extends StatelessWidget {
+  final String label;
+  final double amount;
+  final Color color;
+
+  const _AmountText({
+    required this.label,
+    required this.amount,
+    required this.color,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Text(
+      '$label: \£${amount.toStringAsFixed(2)}',
+      style: TextStyle(
+        color: color,
+        fontWeight: FontWeight.bold,
+      ),
+    );
+  }
+}
+
 class _DailyReport {
   final DateTime dateFrom;
   final DateTime dateTo;
@@ -501,6 +556,32 @@ class _DailyReport {
   static double _toDouble(dynamic value) {
     if (value is num) return value.toDouble();
     return double.tryParse(value?.toString() ?? '') ?? 0.0;
+  }
+
+  static double _readPaymentTotal(
+    Map<String, dynamic> json,
+    List<String> keys, {
+    required double fallback,
+  }) {
+    for (final key in keys) {
+      if (json.containsKey(key) && json[key] != null) {
+        return _toDouble(json[key]);
+      }
+    }
+    return fallback;
+  }
+
+  static double _sumReceiptsByMethod(
+    Iterable<_ReportReceipt> receipts,
+    String method,
+  ) {
+    final normalizedMethod = method.trim().toLowerCase();
+    return receipts
+        .where(
+          (receipt) =>
+              receipt.paymentMethod.trim().toLowerCase() == normalizedMethod,
+        )
+        .fold<double>(0, (sum, receipt) => sum + receipt.amount);
   }
 
   static DateTime _toDate(dynamic value) {
@@ -551,11 +632,15 @@ class _ReportTotals {
 class _ReportWeek {
   final String weekStart;
   final double total;
+  final double cashTotal;
+  final double cardTotal;
   final List<_ReportDay> days;
 
   const _ReportWeek({
     required this.weekStart,
     required this.total,
+    required this.cashTotal,
+    required this.cardTotal,
     required this.days,
   });
 
@@ -565,9 +650,22 @@ class _ReportWeek {
         .map((m) => _ReportDay.fromJson(Map<String, dynamic>.from(m)))
         .toList();
 
+    final cashTotal = _DailyReport._readPaymentTotal(
+      json,
+      ['cash_total', 'cash'],
+      fallback: dayRaw.fold<double>(0, (sum, day) => sum + day.cashTotal),
+    );
+    final cardTotal = _DailyReport._readPaymentTotal(
+      json,
+      ['card_total', 'card'],
+      fallback: dayRaw.fold<double>(0, (sum, day) => sum + day.cardTotal),
+    );
+
     return _ReportWeek(
       weekStart: (json['week_start'] ?? '').toString(),
       total: _DailyReport._toDouble(json['total']),
+      cashTotal: cashTotal,
+      cardTotal: cardTotal,
       days: dayRaw,
     );
   }
@@ -576,11 +674,15 @@ class _ReportWeek {
 class _ReportDay {
   final String date;
   final double total;
+  final double cashTotal;
+  final double cardTotal;
   final List<_ReportReceipt> receipts;
 
   const _ReportDay({
     required this.date,
     required this.total,
+    required this.cashTotal,
+    required this.cardTotal,
     required this.receipts,
   });
 
@@ -590,9 +692,22 @@ class _ReportDay {
         .map((m) => _ReportReceipt.fromJson(Map<String, dynamic>.from(m)))
         .toList();
 
+    final cashTotal = _DailyReport._readPaymentTotal(
+      json,
+      ['cash_total', 'cash'],
+      fallback: _DailyReport._sumReceiptsByMethod(receiptRaw, 'cash'),
+    );
+    final cardTotal = _DailyReport._readPaymentTotal(
+      json,
+      ['card_total', 'card'],
+      fallback: _DailyReport._sumReceiptsByMethod(receiptRaw, 'card'),
+    );
+
     return _ReportDay(
       date: (json['date'] ?? '').toString(),
       total: _DailyReport._toDouble(json['total']),
+      cashTotal: cashTotal,
+      cardTotal: cardTotal,
       receipts: receiptRaw,
     );
   }

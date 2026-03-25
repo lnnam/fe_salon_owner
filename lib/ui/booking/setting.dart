@@ -16,6 +16,7 @@ class SettingPage extends StatefulWidget {
 
 class _SettingPageState extends State<SettingPage> {
   late TextEditingController _numStaffController;
+  late TextEditingController _bookingLeadTimeController;
   late TextEditingController _hoursOffController;
   bool _autoBooking = true;
   bool _openSunday = false;
@@ -27,6 +28,7 @@ class _SettingPageState extends State<SettingPage> {
   void initState() {
     super.initState();
     _numStaffController = TextEditingController(text: '4');
+    _bookingLeadTimeController = TextEditingController(text: '0');
     _hoursOffController = TextEditingController(text: '18,19,20,');
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -58,11 +60,16 @@ class _SettingPageState extends State<SettingPage> {
         _numStaffController.text = value.toString();
       }
 
+      if (settings['booking_lead_time'] != null) {
+        _bookingLeadTimeController.text =
+            settings['booking_lead_time'].toString();
+      }
+
       // Load boolean values - database stores as strings 'true'/'false'
       _autoBooking = _parseBooleanString(settings['onoff']);
       _openSunday = _parseBooleanString(settings['sundayoff']);
       _autoconfirm = _parseBooleanString(settings['autoconfirm']);
-       _aicheck = _parseBooleanString(settings['aicheck']);
+      _aicheck = _parseBooleanString(settings['aicheck']);
       print(
           '[SettingPage] Parsed booleans - onoff: ${settings['onoff']} -> $_autoBooking, sundayoff: ${settings['sundayoff']} -> $_openSunday, autoconfirm: ${settings['autoconfirm']} -> $_autoconfirm');
 
@@ -140,6 +147,7 @@ class _SettingPageState extends State<SettingPage> {
   void _setDefaultValues() {
     setState(() {
       _numStaffController.text = '1';
+      _bookingLeadTimeController.text = '0';
       _hoursOffController.text = '';
       _autoBooking = true;
       _openSunday = false;
@@ -161,6 +169,7 @@ class _SettingPageState extends State<SettingPage> {
   @override
   void dispose() {
     _numStaffController.dispose();
+    _bookingLeadTimeController.dispose();
     _hoursOffController.dispose();
     super.dispose();
   }
@@ -207,6 +216,7 @@ class _SettingPageState extends State<SettingPage> {
         'sundayoff': _openSunday ? 'true' : 'false',
         'autoconfirm': _autoconfirm ? 'true' : 'false',
         'aicheck': _aicheck ? 'yes' : 'no',
+        'booking_lead_time': _bookingLeadTimeController.text.trim(),
         'listoffday': daysOffString,
         'listhouroff': hoursOff,
       };
@@ -222,6 +232,7 @@ class _SettingPageState extends State<SettingPage> {
         'sundayoff': _openSunday ? 'true' : 'false',
         'autoconfirm': _autoconfirm ? 'true' : 'false',
         'aicheck': _aicheck ? 'yes' : 'no',
+        'booking_lead_time': _bookingLeadTimeController.text.trim(),
         'listoffday': daysOffString,
         'listhouroff': hoursOff,
       };
@@ -327,6 +338,48 @@ class _SettingPageState extends State<SettingPage> {
                       width: 80,
                       child: TextField(
                         controller: _numStaffController,
+                        textAlign: TextAlign.center,
+                        keyboardType: TextInputType.number,
+                        decoration: InputDecoration(
+                          filled: true,
+                          fillColor: Colors.grey[300],
+                          border: InputBorder.none,
+                          isDense: true,
+                          contentPadding: const EdgeInsets.symmetric(
+                            vertical: 8,
+                            horizontal: 12,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 12),
+
+              // BOOKING LEAD TIME
+              Container(
+                padding: const EdgeInsets.all(12.0),
+                decoration: BoxDecoration(
+                  border: Border.all(color: Colors.grey[300]!),
+                  borderRadius: BorderRadius.circular(4),
+                ),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    const Expanded(
+                      child: Text(
+                        'BOOKING LEAD TIME (MIN)',
+                        style: TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    ),
+                    SizedBox(
+                      width: 80,
+                      child: TextField(
+                        controller: _bookingLeadTimeController,
                         textAlign: TextAlign.center,
                         keyboardType: TextInputType.number,
                         decoration: InputDecoration(

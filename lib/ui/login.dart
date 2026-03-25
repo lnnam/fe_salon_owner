@@ -73,7 +73,6 @@ class _LoginState extends State<Login> {
                               fontWeight: FontWeight.bold,
                             ),
                           ).tr(),
-                         
                           const SizedBox(height: 18),
                           TextFormField(
                             initialValue: 'uk0001',
@@ -249,6 +248,7 @@ class _LoginState extends State<Login> {
               'aicheck': settings['ai_check'] ?? 'no',
               'listoffday': settings['listoffday'] ?? '',
               'listhouroff': settings['listhouroff'] ?? '',
+              'booking_lead_time': settings['booking_lead_time'] ?? 0,
             };
             settingProvider.updateBookingSettings(bookingSettingsData);
           } else {
