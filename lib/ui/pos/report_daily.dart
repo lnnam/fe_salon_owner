@@ -467,13 +467,29 @@ class _SectionTotalsRow extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
-          title,
-          style: titleStyle ??
-              const TextStyle(
-                fontWeight: FontWeight.bold,
-                fontSize: 16,
+        Row(
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            Expanded(
+              child: Text(
+                title,
+                style: (titleStyle ??
+                        const TextStyle(
+                          fontWeight: FontWeight.w700,
+                          fontSize: 14,
+                        ))
+                    .copyWith(fontSize: 14),
               ),
+            ),
+            const SizedBox(width: 8),
+            _AmountText(
+              label: 'Total',
+              amount: total,
+              color: totalColor,
+              fontSize: 13,
+              fontWeight: FontWeight.w700,
+            ),
+          ],
         ),
         const SizedBox(height: 8),
         SingleChildScrollView(
@@ -482,21 +498,19 @@ class _SectionTotalsRow extends StatelessWidget {
             mainAxisSize: MainAxisSize.min,
             children: [
               _AmountText(
-                label: 'Total',
-                amount: total,
-                color: totalColor,
-              ),
-              const SizedBox(width: 16),
-              _AmountText(
                 label: 'Cash',
                 amount: cashTotal,
                 color: const Color(0xFF2E7D32),
+                fontSize: 12,
+                fontWeight: FontWeight.w600,
               ),
               const SizedBox(width: 16),
               _AmountText(
                 label: 'Card',
                 amount: cardTotal,
                 color: const Color(0xFF1565C0),
+                fontSize: 12,
+                fontWeight: FontWeight.w600,
               ),
             ],
           ),
@@ -510,11 +524,15 @@ class _AmountText extends StatelessWidget {
   final String label;
   final double amount;
   final Color color;
+  final double fontSize;
+  final FontWeight fontWeight;
 
   const _AmountText({
     required this.label,
     required this.amount,
     required this.color,
+    this.fontSize = 12,
+    this.fontWeight = FontWeight.w600,
   });
 
   @override
@@ -523,7 +541,8 @@ class _AmountText extends StatelessWidget {
       '$label: \£${amount.toStringAsFixed(2)}',
       style: TextStyle(
         color: color,
-        fontWeight: FontWeight.bold,
+        fontSize: fontSize,
+        fontWeight: fontWeight,
       ),
     );
   }
