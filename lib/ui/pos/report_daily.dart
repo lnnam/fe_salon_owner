@@ -464,52 +464,41 @@ class _SectionTotalsRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Row(
+    return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Expanded(
-          child: Padding(
-            padding: const EdgeInsets.only(top: 6),
-            child: Text(
-              title,
-              style: titleStyle ??
-                  const TextStyle(
-                    fontWeight: FontWeight.bold,
-                    fontSize: 16,
-                  ),
-            ),
-          ),
-        ),
-        const SizedBox(width: 8),
-        Flexible(
-          child: Align(
-            alignment: Alignment.centerRight,
-            child: SingleChildScrollView(
-              scrollDirection: Axis.horizontal,
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                mainAxisAlignment: MainAxisAlignment.end,
-                children: [
-                  _AmountText(
-                    label: 'Total',
-                    amount: total,
-                    color: totalColor,
-                  ),
-                  const SizedBox(width: 8),
-                  _AmountText(
-                    label: 'Cash',
-                    amount: cashTotal,
-                    color: const Color(0xFF2E7D32),
-                  ),
-                  const SizedBox(width: 8),
-                  _AmountText(
-                    label: 'Card',
-                    amount: cardTotal,
-                    color: const Color(0xFF1565C0),
-                  ),
-                ],
+        Text(
+          title,
+          style: titleStyle ??
+              const TextStyle(
+                fontWeight: FontWeight.bold,
+                fontSize: 16,
               ),
-            ),
+        ),
+        const SizedBox(height: 8),
+        SingleChildScrollView(
+          scrollDirection: Axis.horizontal,
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              _AmountText(
+                label: 'Total',
+                amount: total,
+                color: totalColor,
+              ),
+              const SizedBox(width: 16),
+              _AmountText(
+                label: 'Cash',
+                amount: cashTotal,
+                color: const Color(0xFF2E7D32),
+              ),
+              const SizedBox(width: 16),
+              _AmountText(
+                label: 'Card',
+                amount: cardTotal,
+                color: const Color(0xFF1565C0),
+              ),
+            ],
           ),
         ),
       ],

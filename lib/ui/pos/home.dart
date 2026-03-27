@@ -205,7 +205,10 @@ class _SaleScreenState extends State<SaleScreen> {
         dateActivated: _dateActivated.toIso8601String(),
       );
 
-      setState(() => _cart.clear());
+      setState(() {
+        _cart.clear();
+        _dateActivated = DateTime.now();
+      });
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -243,13 +246,6 @@ class _SaleScreenState extends State<SaleScreen> {
         backgroundColor: const Color(0xFF3E66C5),
         foregroundColor: Colors.white,
         elevation: 0,
-        actions: [
-          IconButton(
-            tooltip: 'Date activated: ${_fmtDateTime(_dateActivated)}',
-            onPressed: _pickDateActivated,
-            icon: const Icon(Icons.calendar_month_rounded),
-          ),
-        ],
       ),
       body: _isLoading
           ? const Center(
@@ -518,6 +514,32 @@ class _SaleScreenState extends State<SaleScreen> {
                             ),
 
                           const Divider(height: 1),
+
+                          // Set Date button
+                          Padding(
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 16, vertical: 12),
+                            child: SizedBox(
+                              width: double.infinity,
+                              child: ElevatedButton.icon(
+                                onPressed: _pickDateActivated,
+                                icon: const Icon(Icons.calendar_month_rounded,
+                                    size: 18),
+                                label: Text(
+                                    'Set Date: ${_fmtDateTime(_dateActivated)}'),
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: Colors.grey.shade200,
+                                  foregroundColor: Colors.black87,
+                                  padding:
+                                      const EdgeInsets.fromLTRB(20, 12, 0, 12),
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(10),
+                                  ),
+                                  alignment: Alignment.centerLeft,
+                                ),
+                              ),
+                            ),
+                          ),
 
                           // Total + Save button
                           Padding(
