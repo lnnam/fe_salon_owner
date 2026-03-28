@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:salonapp/api/api_manager.dart';
 import 'package:salonapp/ui/common/drawer_pos.dart';
@@ -15,6 +17,8 @@ class _SaleScreenState extends State<SaleScreen> {
   bool _isLoading = true;
   String? _error;
   late DateTime _dateActivated;
+  late final Timer _dateActivatedTimer;
+  bool _useCurrentDateActivated = true;
 
   // Cart: service -> quantity
   final Map<int, int> _cart = {};
@@ -23,7 +27,22 @@ class _SaleScreenState extends State<SaleScreen> {
   void initState() {
     super.initState();
     _dateActivated = DateTime.now();
+    _dateActivatedTimer = Timer.periodic(const Duration(seconds: 1), (_) {
+      if (!mounted || !_useCurrentDateActivated) {
+        return;
+      }
+
+      setState(() {
+        _dateActivated = DateTime.now();
+      });
+    });
     _fetchServices();
+  }
+
+  @override
+  void dispose() {
+    _dateActivatedTimer.cancel();
+    super.dispose();
   }
 
   String _fmtDateTime(DateTime d) {
@@ -45,7 +64,11 @@ class _SaleScreenState extends State<SaleScreen> {
     if (picked == null) return;
 
     final now = DateTime.now();
+    final isToday = picked.year == now.year &&
+        picked.month == now.month &&
+        picked.day == now.day;
     setState(() {
+      _useCurrentDateActivated = isToday;
       _dateActivated = DateTime(
         picked.year,
         picked.month,

@@ -115,29 +115,6 @@ class _BookingCalendarPageState extends State<BookingCalendarPage> {
     return converted;
   }
 
-  /*List<DateTimeRange> convertStreamResultMock({required dynamic streamResult}) {
-    DateTime first = now;
-    DateTime tomorrow = now.add(const Duration(days: 1));
-    DateTime second = now.add(const Duration(minutes: 55));
-    DateTime third = now.subtract(const Duration(minutes: 240));
-    DateTime fourth = now.subtract(const Duration(minutes: 500));
-    converted.add(
-        DateTimeRange(start: first, end: now.add(const Duration(minutes: 30))));
-    converted.add(DateTimeRange(
-        start: second, end: second.add(const Duration(minutes: 23))));
-    converted.add(DateTimeRange(
-        start: third, end: third.add(const Duration(minutes: 15))));
-    converted.add(DateTimeRange(
-        start: fourth, end: fourth.add(const Duration(minutes: 50))));
-
-    //book whole day example
-    converted.add(DateTimeRange(
-        start: DateTime(tomorrow.year, tomorrow.month, tomorrow.day, 5, 0),
-        end: DateTime(tomorrow.year, tomorrow.month, tomorrow.day, 23, 0)));
-    return converted; 
-    return [];
-  }*/
-
   Stream<List<DateTimeRange>> getBookingStreamFromServer({
     required DateTime start,
     required DateTime end,
@@ -145,11 +122,15 @@ class _BookingCalendarPageState extends State<BookingCalendarPage> {
     final bookingProvider =
         Provider.of<BookingProvider>(context, listen: false);
     final staffKey = bookingProvider.bookingDetails['staffkey'] ?? 'any';
+    final serviceKey = int.tryParse(
+          bookingProvider.bookingDetails['servicekey']?.toString() ?? '',
+        ) ??
+        0;
 
     final dynamic response = await apiManager.fetchAvailability(
       date: start,
       staffKey: staffKey,
-      serviceDuration: 45,
+      serviceKey: serviceKey,
     );
 
     // debug: fetchAvailability result omitted

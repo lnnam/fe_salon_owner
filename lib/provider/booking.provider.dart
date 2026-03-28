@@ -200,7 +200,9 @@ class BookingProvider with ChangeNotifier {
       'staffname': _onbooking.staff?['fullname'].toString(),
       'staffkey': _onbooking.staff?['staffkey'].toString(),
       'servicename': _onbooking.service?['name'].toString(),
-      'servicekey': _onbooking.service?['servicekey'].toString(),
+      'servicekey':
+          (_onbooking.service?['servicekey'] ?? _onbooking.service?['pkey'])
+              ?.toString(),
       'note': _onbooking.note,
     };
   }

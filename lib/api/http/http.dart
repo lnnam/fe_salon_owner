@@ -420,7 +420,7 @@ class MyHttp {
   Future<List<Map<String, dynamic>>> fetchAvailability({
     required DateTime date,
     String staffKey = 'any',
-    int serviceDuration = 45,
+    int serviceKey = 0,
   }) async {
     try {
       final User currentUser = await getCurrentUser();
@@ -428,8 +428,9 @@ class MyHttp {
 
       final String formattedDate = date.toIso8601String().substring(0, 10);
       final Uri uri = Uri.parse(
-        '${AppConfig.api_url_booking_getavailability}?date=$formattedDate&staffkey=$staffKey&service_duration=$serviceDuration',
+        '${AppConfig.api_url_booking_getavailability}?date=$formattedDate&staffkey=$staffKey&servicekey=$serviceKey',
       );
+      print('[HTTP] fetchAvailability URI: $uri');
 
       final response = await http.get(
         uri,
